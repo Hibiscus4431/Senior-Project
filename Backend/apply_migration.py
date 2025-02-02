@@ -1,0 +1,1 @@
+## This script reads and applies the migration files to your MySQL database hosted on AWS.
