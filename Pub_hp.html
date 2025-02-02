@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+    <style>
+            /* Style for dropdown menu*/
+        .dropbtn {
+          background-color: indigo; 
+          color: white;
+          padding: 10px;
+          font-size: 16px;
+          border: none;
+        }
+        
+        .dropdown {
+          position: relative;
+          display: inline-block;
+        }
+        
+        .dropdown-content {
+          display: none;
+          position: absolute;
+          background-color: #f1f1f1;
+          min-width: 160px;
+          box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+          z-index: 1;
+        }
+        
+        .dropdown-content a {
+          color: black;
+          padding: 10px 15px;
+          text-decoration: none;
+          display: block;
+        }
+        
+        .dropdown-content a:hover {background-color: #ddd;}
+        
+        .dropdown:hover .dropdown-content {display: block;}
+        
+        .dropdown:hover .dropbtn {background-color: indigo;}
+
+    /* changing style of create button */
+    .button {
+      background-color: indigo;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+    </style>
+        </head>
+<body>
+<!-- This page is where the publisher selects a textbooks or adds a new textbook -->
+    <h1>Textbook Selection</h1>
+
+    Please select or add a textbook:
+    <br>
+    <br>
+    <!--selecting a course will be a drop down menu with all previous courses-->
+    <div class="dropdown">
+        <button class="dropbtn">Select Textbook</button>
+        <div class="dropdown-content">
+          <a href="#">Textbook 1</a>
+          <a href="#">Textbook 2</a>
+          <a href="#">Textbook 3</a>
+        </div>
+      </div>
+    <!--creating a new course will take user to new page-->
+    <a href="#">
+        <button class = "button">Add New Textbook</button>
+    </a>
+    <br>
+</body>
+</html> 
