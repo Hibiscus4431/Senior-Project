@@ -1,0 +1,12 @@
+class Starter:
+    # Just a class to show that I know how to code 
+
+    def __init__(self, name):
+        self.name = name 
+        
+    def message(self):
+        print("Hello " + self.name)
+
+myMessage = Starter("RJ")
+myMessage.message()
+
