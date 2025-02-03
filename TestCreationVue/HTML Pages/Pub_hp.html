@@ -4,10 +4,10 @@
     <style>
             /* Style for dropdown menu*/
         .dropbtn {
-          background-color: indigo; 
-          color: white;
+          background-color:rgb(48, 191, 223); 
+          color: black;
           padding: 10px;
-          font-size: 16px;
+          font-size: 20px;
           border: none;
         }
         
@@ -32,31 +32,58 @@
           display: block;
         }
         
-        .dropdown-content a:hover {background-color: #ddd;}
+        .dropdown-content a:hover {background-color: rgb(48, 191, 223);}
         
         .dropdown:hover .dropdown-content {display: block;}
         
-        .dropdown:hover .dropbtn {background-color: indigo;}
+        .dropdown:hover .dropbtn {background-color: rgb(40, 151, 176);}
 
     /* changing style of create button */
     .button {
-      background-color: indigo;
+      background-color: rgb(48, 191, 223);
       border: none;
-      color: white;
+      color: black;
       padding: 10px 15px;
       text-align: center;
       text-decoration: none;
       display: inline-block;
-      font-size: 16px;
+      font-size: 20px;
       margin: 4px 2px;
       cursor: pointer;
     }
+
+    .center {
+        color: whitesmoke;
+        text-align: center;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+      }
+  
+      .large-heading {
+        font-size: 40px;
+      }
+  
+      .large-paragraph {
+        font-size: 25px;
+      }
+  
+      body {
+        background-color: #256d3b;
+        font-family: Arial, sans-serif;
+      }
+
+
     </style>
         </head>
 <body>
 <!-- This page is where the publisher selects a textbooks or adds a new textbook -->
-    <h1>Textbook Selection</h1>
+    <div class="center large-heading">  
+<h1>Textbook Selection</h1>
+</div>  
 
+<div class="center large-paragraph">
     Please select or add a textbook:
     <br>
     <br>
@@ -74,5 +101,6 @@
         <button class = "button">Add New Textbook</button>
     </a>
     <br>
+    </div>
 </body>
 </html> 

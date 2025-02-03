@@ -1,10 +1,47 @@
 <!DOCTYPE html>
 <html lang="en-US">
+  <head>
+    <style>
+      .center {
+        color: whitesmoke;
+        text-align: center;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+      }
+  
+      .large-heading {
+        font-size: 40px;
+      }
+  
+      .large-paragraph {
+        font-size: 25px;
+      }
+  
+      /* Larger submit button */
+      input[type="submit"] {
+        background-color: rgb(48, 191, 223);
+        color: black;
+        font-size: 20px;
+        padding: 10px 20px;
+      }
+  
+      body {
+        background-color: #256d3b;
+        font-family: Arial, sans-serif;
+      }
+    </style>
+  
+  </head>
+
 <body>
 
-
+<div class="center large-heading">
 <h1>Publisher Login</h1>
+</div>
 
+<div class="center large-paragraph">
 Please enter your publisher username and password:
 <br>
 <br>
@@ -14,10 +51,12 @@ Please enter your publisher username and password:
     <label for="uname">Username:</label><br>
     <input type="text" id="uname" name="uname" value=""><br>
     <!-- create password textbox-->
+     <br>
     <label for="pass">Password:</label><br>
     <input type="text" id="pass" name="pass" value=""><br><br>
     <!-- submit button, when pressed it takes user to url specified-->
     <input type="submit" value="Submit">
+</div>
   </form> 
 
 </body>
