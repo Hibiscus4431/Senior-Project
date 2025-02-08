@@ -1,57 +1,44 @@
 <!DOCTYPE html>
 <html lang="en-US">
-
-
-<head>
-
+  <head>
     <style>
-
-
-        /* Centered heading and background styling */
-        .center {
-            color: whitesmoke;
-            text-align: center;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
-        }
-
-
-        .large-heading {
-            font-size: 35px;
-        }
-
-
-        .large-paragraph {
-            font-size: 25px;
-        }
-
-
-        body {
-            background-color: #43215a;
-            font-family: Arial, sans-serif;
-        }
-
-        input[type="submit"] {
-            background-color: rgb(84, 178, 150);
-            color: black;
-            font-size: 20px;
-            padding: 10px 20px;
-        }
+      .center {
+        color: whitesmoke;
+        text-align: center;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+      }
+  
+      .large-heading {
+        font-size: 35px;
+      }
+  
+      .large-paragraph {
+        font-size: 25px;
+      }
+  
+      /* Larger submit button */
+      input[type="submit"] {
+        background-color: rgb(48, 191, 223);
+        color: black;
+        font-size: 20px;
+        padding: 10px 20px;
+      }
+  
+      body {
+        background-color: #17552a;
+        font-family: Arial, sans-serif;
+      }
     </style>
-
-
-</head>
-
-
 <body>
     <div class="center large-heading sticky">
         <h1>Create New Test Bank</h1>
     </div>
     <div class="center large-paragraph">
-        <!-- This is the page where the teacher can create a new test bank-->
-        <form action="Teacher_question.html">
+        <!-- This is the page where the publisher can create a new test bank-->
+        <form action="Pub_question.html">
             <!-- create TB Name text box-->
             <label for="Tname">Name of Test Bank:</label>
             <input type="text" id="Tname" name="Tname" value="" style="height: 20px;"><br>
