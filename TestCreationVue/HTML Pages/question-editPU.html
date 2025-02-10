@@ -39,9 +39,9 @@
     this sets the location of the popup on the screen*/
     .form-popup {
       display: none;
-
-      bottom: 150px;
-      right: 400px;
+      position: center;
+      max-width: 75%;
+      margin: auto;
       border: 3px solid #f1f1f1;
       z-index: 9;
     }
@@ -114,10 +114,10 @@
     <form action="/action_page.php" class="form-container">
       <h1>Edit Question</h1>
 
-      <label for="ch"><b>Chapter Number</b></label>
+      <label for="ch"><b>Chapter Number</b></label><br>
       <input type="text" name="ch" required><br>
 
-      <label for="sec"><b>Section Number</b></label>
+      <label for="sec"><b>Section Number</b></label><br>
       <input type="text" name="sec" required><br>
 
       <label for="question"><b>Question</b></label>
@@ -130,7 +130,7 @@
       <label for="ans"><b>Answer</b></label><br>
       <input type="text" name="ans" required><br>
 
-      <label for="ans_c"><b>Answer Choices</b></label>
+      <label for="ans_c"><b>Answer Choices</b></label><br>
       <input type="text" name="ans_c"><br>
 
       <label for="points"><b>Points Worth</b></label><br>

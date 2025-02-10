@@ -111,7 +111,7 @@ Publisher style headers:
       }
   
       body {
-        background-color: #256d3b;
+        background-color: #17552a;
         font-family: Arial, sans-serif;
       }
     </style>
