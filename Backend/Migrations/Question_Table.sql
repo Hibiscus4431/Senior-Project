@@ -1,4 +1,4 @@
-CREATE TABLE Questions (
+CREATE TABLE IF NOT EXISTS Questions (
     id SERIAL PRIMARY KEY,
     course_id INT DEFAULT NULL,
     textbook_id INT DEFAULT NULL,

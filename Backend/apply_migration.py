@@ -1,11 +1,17 @@
 ## This script reads and applies the migration files to your MySQL database hosted on AWS.
 import psycopg2
 import os 
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-#load_dotenv()
-#DATABASE_URL = f"postgresql://{os.getenv('SUPABASE_DB_USER')}:{os.getenv('SUPABASE_DB_PASSWORD')}@{os.getenv('SUPABASE_DB_HOST')}:{os.getenv('SUPABASE_DB_PORT')}/{os.getenv('SUPABASE_DB_NAME')}"
-DATABASE_URL = "postgresql://postgres:V3k2WEXmk3kCI4Nn@db.kxhdlyrkvnpqvosxjdus.supabase.co:5432/postgres"
+load_dotenv()
+
+# test Statements to verifyit loaded correctly 
+print("DB HOST:", os.getenv("SUPABASE_DB_HOST"))
+print("DB PORT:", os.getenv("SUPABASE_DB_PORT")) 
+print("DB NAME:", os.getenv("SUPABASE_DB_NAME"))
+print("DB USER:", os.getenv("SUPABASE_DB_USER"))
+
+DATABASE_URL = f"postgresql://{os.getenv('SUPABASE_DB_USER')}:{os.getenv('SUPABASE_DB_PASSWORD')}@{os.getenv('SUPABASE_DB_HOST')}:{os.getenv('SUPABASE_DB_PORT')}/{os.getenv('SUPABASE_DB_NAME')}"
 
 def apply_migrations():
     try:
@@ -13,8 +19,9 @@ def apply_migrations():
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
-        #folder containg the migrations files 
-        migration_folder = "Migrations"
+        
+        script_dir = os.path.dirname(os.path.abspath(__file__))  # Get script's location
+        migration_folder = os.path.join(script_dir, "Migrations")  # Use absolute path
         if not os.path.exists(migration_folder):
             print ("No migrations folder found. Got to fix this issue!")
             return
