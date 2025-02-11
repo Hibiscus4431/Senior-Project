@@ -1,4 +1,4 @@
-CREATE TABLE Attachments_MetaData (
+CREATE TABLE IF NOT EXISTS Attachments_MetaData (
     id SERIAL PRIMARY KEY,
     attachment_id INT NOT NULL,
     reference_id INT NOT NULL,
