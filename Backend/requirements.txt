@@ -1,0 +1,4 @@
+psycopg2-binary  # PostgreSQL adapter for Python
+python-dotenv    # Loads .env files
+
+# pip freeze > requirements.txt - put this in the terminal to downlad everything at once

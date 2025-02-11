@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# test Statements to verifyit loaded correctly 
+# test Statements to verify it was loaded correctly 
 print("DB HOST:", os.getenv("SUPABASE_DB_HOST"))
 print("DB PORT:", os.getenv("SUPABASE_DB_PORT")) 
 print("DB NAME:", os.getenv("SUPABASE_DB_NAME"))
