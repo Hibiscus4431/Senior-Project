@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+
+<head>
+
+    <style>
+        /* Style for dropdown menu*/
+        .dropbtn {
+
+
+            background-color: rgb(84, 178, 150);
+            color: black;
+            padding: 10px;
+            font-size: 20px;
+            border: none;
+        }
+
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f1f1f1;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            font-size: 20px;
+        }
+
+
+        .dropdown-content a {
+            color: black;
+            padding: 10px 15px;
+            text-decoration: none;
+            display: block;
+        }
+
+
+        .dropdown-content a:hover {
+            background-color: rgb(60, 125, 106);
+        }
+
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+
+        .dropdown:hover .dropbtn {
+            background-color: rgb(60, 125, 106);
+        }
+
+
+        /* changing style of create button */
+        .button {
+            background-color: rgb(84, 178, 150);
+            border: none;
+            color: black;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 20px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+
+
+        /* Centered heading and background styling */
+        .center {
+            color: whitesmoke;
+            text-align: center;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+        }
+
+
+        .large-heading {
+            font-size: 35px;
+        }
+
+
+        .large-paragraph {
+            font-size: 25px;
+        }
+
+
+        body {
+            background-color: #43215a;
+            font-family: Arial, sans-serif;
+        }
+
+
+    </style>
+</head>
+
+
+<body>
+    <!-- This is the page where the teacher can see all of their questions-->
+    <div class="center large-heading sticky">
+        <h1> Question List</h1>
+    </div>
+    <div class="center large-paragraph">
+
+
+        <!--Button to go to view test bank page-->
+        <a href="Teacher_viewTB.html">
+            <button class="button">View Test Banks</button>
+        </a>
+        
+        <a href="Teacher_newTB.html">
+            <button class="button">New Test Bank</button>
+        </a>
+        <a href="#">
+            <button class="button">Import Test</button>
+        </a><br>
+
+
+        <div class="dropdown">
+            <button class="dropbtn">Question Type</button>
+            <div class="dropdown-content">
+                <a href="#">True/False</a>
+                <a href="#">Multiple Choice</a>
+                <a href="#">Matching</a>
+                <a href="#">Fill in the Blank</a>
+                <a href="#">Short Answer</a>
+                <a href="#">Essay</a>
+            </div>
+        </div>
+        <a href="#">
+            <button class="button">New Question</button>
+        </a>
+        <a href="#">
+            <button class="button">Publisher Textbook Page</button>
+        </a>
+
+   
+    </div>
+</body>
+

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <style>
+
+        .center {
+            color: whitesmoke;
+            text-align: left;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+            margin-right: 10%
+        }
+
+        .large-heading {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+            text-align: center;
+            font-size: 40px;
+        }
+
+        .large-paragraph {
+            font-size: 25px;
+        }
+
+
+        /* Larger submit button */
+        input[type="submit"] {
+            background-color: rgb(84, 178, 150);
+            color: black;
+            font-size: 20px;
+            padding: 10px 20px;
+        }
+
+        body {
+            background-color: #43215a;
+            font-family: Arial, sans-serif;
+        }
+
+        textarea{
+            height:10px;
+            width:30px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<!-- This page is where the teacher creates a new class -->
+<!-- TODO:
+course title, txtbk title, author, ISBN, Version, website link, course # textboxes
+back and save buttons
+connect to course homepage from save button
+ -->
+<div class="center large-heading">
+    <h1>Create New Class</h1>
+</div>
+<div class="center large-paragraph">
+    <form action="Teacher_hp.html">
+        
+        <label for="courseTitle">Course Title:</label>
+        <input type="text" id="courseTitle" name="courseTitle" style="height:20px"><br><br>
+
+        <label for="courseNumber">Course Number:</label>
+        <input type="text" id="courseNumber" name="courseNumber" style="height:20px"><br><br>
+
+        <label for="textbookTitle">Textbook Title:</label>
+        <input type="text" id="textbookTitle" name="textbookTitle"style="height:20px"><br><br>
+
+        <label for="author">Author:</label>
+        <input type="text" id="author" name="author"style="height:20px"><br><br>
+
+        <label for="ISBN">ISBN:</label>
+        <input type="text" id="ISBN" name="ISBN"style="height:20px"><br><br>
+
+        <label for="version">Version:</label>
+        <input type="text" id="version" name="version"style="height:20px"><br><br>
+
+        <label for="websiteLink">Website Link:</label>
+        <input type="text" id="websiteLink" name="websiteLink"style="height:20px"><br><br>
+
+        
+</div>
+<div class="center large-heading">
+        <input type="submit" value="Save">
+    </form>
+
+
+
+
+
+
+
+
+</body>
+
+</html>
