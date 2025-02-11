@@ -1,0 +1,6 @@
+CREATE TABLE Courses (
+    course_id SERIAL PRIMARY KEY,
+    course_name VARCHAR(255) NOT NULL,
+    teacher_id INT NOT NULL,
+    textbook_id INT NOT NULL,
+);
