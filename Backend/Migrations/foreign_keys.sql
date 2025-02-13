@@ -100,3 +100,6 @@ ADD CONSTRAINT fk_qti_imports_test
 FOREIGN KEY (test_id)
 REFERENCES Tests(tests_id)
 ON DELETE CASCADE;
+
+-- add publisher_id to the textbook table
+-- make sure that the user-role is a publisher
