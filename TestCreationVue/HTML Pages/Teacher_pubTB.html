@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html lang="en-US">
-    <head>
-    <style>
-       
-    /* changing style of create button */
-    .button {
-      background-color:  rgb(84, 178, 150);
-      border: none;
-      color:black;
-      padding: 10px 15px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 20px;
-      margin: 4px 2px;
-      cursor: pointer;
-    }
 
-    /* Centered heading and background styling */
-    .center {
+<head>
+    <style>
+        /* changing style of create button */
+        .button {
+            background-color: rgb(84, 178, 150);
+            border: none;
+            color: black;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 20px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+
+        /* Centered heading and background styling */
+        .center {
             color: whitesmoke;
             text-align: center;
             display: block;
@@ -40,24 +40,111 @@
             font-family: Arial, sans-serif;
         }
 
+                /* The popup form - hidden by default 
+    this sets the location of the popup on the screen*/
+    .form-popup {
+            display: none;
+            position: center;
+            max-width: 75%;
+            margin: auto;
+            border: 3px solid #f1f1f1;
+            z-index: 9;
+        }
 
+        /* Add styles to the form container */
+        /* this is the actual popup window*/
+        .form-container {
+            max-width: 300x;
+            padding: 10px;
+            background-color: white;
+        }
+
+        /* Full-width input fields */
+        /* styling of textboxes in the popup*/
+        .form-container input[type=text],
+        .form-container input[type=password] {
+            width: 90%;
+            padding: 15px;
+            margin: 5px 0 22px 0;
+            border: none;
+            background: lightgrey;
+        }
+
+        /* When the inputs get focus, do something */
+        /* styling of when user is typing in the textbox*/
+        .form-container input[type=text]:focus,
+        .form-container input[type=password]:focus {
+            background-color: #ddd;
+            outline: none;
+        }
+
+        /* Set a style for the submit/login button */
+        /* formatting for login and cancel buttons*/
+        .form-container .btn {
+            background-color: #04AA6D;
+            color: white;
+            padding: 16px 20px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        /* Add a red background color to the cancel button */
+        /* overrides color for cancel button
+    uses all other formatting*/
+        .form-container .cancel {
+            background-color: red;
+        }
+
+        /* Add some hover effects to login and cancel buttons */
+        .form-container .btn:hover,
+        .open-button:hover {
+            opacity: 1;
+        }
     </style>
-        </head>
+</head>
 
-        <body>
- 
-             <div class="center large-heading">
-                <h1>Testbank Name</h1>
-              </div>
-                <div class="center large-paragraph">
-                <a href="#">
-                    <button class = "button">Rate Testbank</button>
-                </a>
-                <br><hr>
-                Questions are generated here<br>
-                <a href="#">
-                    <button class = "button">Rate Question</button>
-                </a>
-            </body>
+<body>
+
+    <div class="center large-heading">
+        <h1>Testbank Name</h1>
+    </div>
+    <div class="center large-paragraph">
+            <button class="button" onclick="edit()">Rate Textbook</button>
+        <br>
+        <hr>
+        Questions are generated here<br>
+        <button class="button" onclick="edit()">Rate Question</button>
+    </div>
+
+
+     <!-- contents of popup-->
+     <div class="form-popup" id="rating">
+        <form action="/action_page.php" class="form-container">
+            <h1>Rating</h1>
+            <label for="star"><b>Enter whole number 1-5</b></label><br>
+            <input type="text" name="star" required><br>
+
+            <label for="comm"><b>Enter Comment</b></label><br>
+            <input type="text" name="comm" required><br>
+
+            <button type="submit" class="btn">Save</button>
+            <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+        </form>
+    </div>
+
+    <!--JavaScript that allows popup to function-->
+    <script>
+        function edit() {
+            document.getElementById("rating").style.display = "block";
+        }
+
+        function closeForm() {
+            document.getElementById("rating").style.display = "none";
+        }
+    </script>
+</body>
 
 </html>

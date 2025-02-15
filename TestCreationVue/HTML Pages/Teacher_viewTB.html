@@ -102,9 +102,9 @@
     this sets the location of the popup on the screen*/
         .form-popup {
             display: none;
-            position: fixed;
-            bottom: 300px;
-            right: 600px;
+            position: center;
+            max-width: 75%;
+            margin: auto;
             border: 3px solid #f1f1f1;
             z-index: 9;
         }
@@ -180,49 +180,50 @@
                 <a href="#">Bank 2</a>
                 <a href="#">Bank 3</a>
             </div>
-            </div>
-
-            <a href="Teacher_question.html">
-                <button class="button">Return to Question Page</button>
-            </a><br>
-
-            <a href="Teacher_newTest.html">
-                <button class="button">Create New Test</button>
-            </a>
-
-            <button class="button" onclick="edit()">View Drafts</button>
-            <br><hr>
-
-
-            <!--Test bank questions will be generated here-->
-            Questions go here
-
         </div>
 
+        <a href="Teacher_question.html">
+            <button class="button">Return to Question Page</button>
+        </a><br>
+
+        <a href="Teacher_newTest.html">
+            <button class="button">Create New Test</button>
+        </a>
+
+        <button class="button" onclick="edit()">View Drafts</button>
+        <br>
+        <hr>
+
+
+        <!--Test bank questions will be generated here-->
+        Questions go here
+
+    </div>
 
 
 
-            <!-- contents of popup-->
-            <div class="form-popup" id="test_view">
-                <form action="#" class="form-container">
-                    Please select draft version to view:
-                    <!--Figure out how to list theold test versions-->
-                    <!--When version is clicked it will send them to test view page-->
-                    <button type="submit" class="btn">Save</button>
-                    <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
-                </form>
-            </div>
 
-            <!--JavaScript that allows popup to function-->
-            <script>
-                function edit() {
-                    document.getElementById("test_view").style.display = "block";
-                }
+    <!-- contents of popup-->
+    <div class="form-popup" id="test_view">
+        <form action="#" class="form-container">
+            Please select draft version to view:
+            <!--Figure out how to list theold test versions-->
+            <!--When version is clicked it will send them to test view page-->
+            <button type="submit" class="btn">Save</button>
+            <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+        </form>
+    </div>
 
-                function closeForm() {
-                    document.getElementById("test_view").style.display = "none";
-                }
-            </script>
+    <!--JavaScript that allows popup to function-->
+    <script>
+        function edit() {
+            document.getElementById("test_view").style.display = "block";
+        }
+
+        function closeForm() {
+            document.getElementById("test_view").style.display = "none";
+        }
+    </script>
 
 
 </body>
