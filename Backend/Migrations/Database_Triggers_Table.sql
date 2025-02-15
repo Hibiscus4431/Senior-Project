@@ -507,7 +507,48 @@ EXECUTE FUNCTION enforce_test_link_on_import();
 
 -- Triggers for Question --- 
 
--- Auto-Publish a question when added to a published test
+    -- deptes a question if has been used on a publihed test 
+CREATE OR REPLACE FUNCTION prevent_deleting_published_question()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM Tests t
+        JOIN Test_MetaData tm ON t.tests_id = tm.test_id
+        WHERE tm.question_id = OLD.id AND t.status = 'Published'
+    ) THEN
+        RAISE EXCEPTION 'Cannot delete a question used in a published test.';
+    END IF;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER no_delete_published_question
+BEFORE DELETE ON Questions
+FOR EACH ROW
+EXECUTE FUNCTION prevent_deleting_published_question();
+
+    
+    -- To prevent modifying a question if it has been used in a published test. 
+CREATE OR REPLACE FUNCTION prevent_modifying_published_question()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM Tests t
+        JOIN Test_MetaData tm ON t.tests_id = tm.test_id
+        WHERE tm.question_id = NEW.id AND t.status = 'Published'
+    ) THEN
+        RAISE EXCEPTION 'Cannot modify a question used in a published test.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER no_modify_published_question
+BEFORE UPDATE ON Questions
+FOR EACH ROW
+EXECUTE FUNCTION prevent_modifying_published_question();
+
+    -- Auto-Publish a question when added to a published test
 CREATE FUNCTION auto_publish_question() RETURNS TRIGGER AS $$
 BEGIN
     IF EXISTS (
@@ -526,6 +567,7 @@ CREATE TRIGGER trg_auto_publish_question
 AFTER INSERT ON Test_MetaData
 FOR EACH ROW
 EXECUTE FUNCTION auto_publish_question();
+
 
     -- Links a question to a textbook and links to a course 
 CREATE FUNCTION enforce_valid_question_links() RETURNS TRIGGER AS $$
