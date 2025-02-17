@@ -26,3 +26,26 @@ Textbook version:
 
 Textbook website link:
 'websiteLink'
+
+
+For Teacher template creation:
+Cover:
+coverPage
+
+Options:
+selectedTemplate
+
+Embedded Graphic:
+uploadedImage
+
+Elapsed Time:
+timeAllowed
+
+
+For Teacher testbank creation:
+Name:
+
+Textbook Chapter:
+
+Textbook Section:
+

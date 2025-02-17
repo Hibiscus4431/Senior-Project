@@ -242,6 +242,46 @@
             color: black;
         }
     </style>
+    <script>
+        // Function to import a graphic after clicking embedded graphic button
+        function importGraphic() {
+            document.getElementById('fileInput').click();
+        }
+
+        // Function to handle the file upload process for user selected file
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Handle the file upload process here
+                console.log('File selected:', file.name);
+                // Store the file name in localStorage --> change to saving to database later
+                localStorage.setItem('uploadedImage', file.name);
+
+                // Code that connects file to the database/export test file will go here
+                // will probably have to appead the test/testkey export file and just add it to the end of the draft??
+            }
+        }
+
+        // Function to gather selected options and store in localStorage
+        function generateTest() {
+            const coverPage = document.querySelector('input[type="checkbox"]').checked;
+            const selectedTemplate = document.querySelector('input[name="template"]:checked') ? document.querySelector('input[name="template"]:checked').value : '';
+            const timeAllowed = document.getElementById('est').value;
+
+            const testOptions = {
+                coverPage,
+                selectedTemplate,
+                uploadedImage: localStorage.getItem('uploadedImage'),
+                timeAllowed
+            };
+
+            localStorage.setItem('testOptions', JSON.stringify(testOptions));
+            window.location.href = 'Teacher_Template.html';
+        }
+
+    </script>
+
+
 </head>
 
 
@@ -263,7 +303,7 @@
         <br>
         <a href="#">
             <!--Figure out how to add images-->
-            <button class="button">Add Embedded Graphic</button>
+            <button class="button" onclick="importGraphic()">Add Embedded Graphic</button>
         </a><br>
         <div class="box">
             <label for="est">Time Allowed:</label>
@@ -271,12 +311,15 @@
         </div><br>
 
         <a href="#">
-            <button class="button">Generate Test</button>
+            <button class="button" onclick="generateTest()">Generate Test</button>
         </a><br>
 
     </div>
 
 
+
+    <!-- file input element -->
+    <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
 
 
     <!-- contents of popup-->

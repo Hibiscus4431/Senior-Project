@@ -162,6 +162,45 @@
             opacity: 1;
         }
     </style>
+
+    <script>
+        // function that will populate the questions container with questions from the selected test bank
+        function populateQuestions(testBank) {
+            const questionsContainer = document.getElementById('questionsContainer');
+            questionsContainer.innerHTML = '';
+
+            // example questions data, replace with actual data from database
+            const questions = {
+                'Bank 1': ['Question 1 from Bank 1', 'Question 2 from Bank 1', 'Question 3 from Bank 1'],
+                'Bank 2': ['Question 1 from Bank 2', 'Question 2 from Bank 2', 'Question 3 from Bank 2'],
+                'Bank 3': ['Question 1 from Bank 3', 'Question 2 from Bank 3', 'Question 3 from Bank 3']
+            };
+
+            // check if the selected test bank exists in the questions data
+            if (questions[testBank]) {
+
+                // go through each question in the selected test bank
+                questions[testBank].forEach(question => {
+                    // create a paragraph element for each question and append it to the questions container
+                    //TODO: will need to add formatting or something here or in styles to display each question 
+                    //  with a white/contrasting background etc
+                    const thisQuestion = document.createElement('p');
+                    thisQuestion.textContent = question;
+                    questionsContainer.appendChild(thisQuestion);
+                });
+            }
+        }
+
+        function edit() {
+            document.getElementById("test_view").style.display = "block";
+        }
+
+        function closeForm() {
+            document.getElementById("test_view").style.display = "none";
+        }
+    </script>
+
+
 </head>
 
 
@@ -176,9 +215,9 @@
         <div class="dropdown">
             <button class="dropbtn">Select Test Bank</button>
             <div class="dropdown-content">
-                <a href="#">Bank 1</a>
-                <a href="#">Bank 2</a>
-                <a href="#">Bank 3</a>
+                <a href="#" onclick="populateQuestions('Bank 1')">Bank 1</a>
+                <a href="#" onclick="populateQuestions('Bank 2')">Bank 2</a>
+                <a href="#" onclick="populateQuestions('Bank 3')">Bank 3</a>
             </div>
         </div>
 
@@ -196,7 +235,9 @@
 
 
         <!--Test bank questions will be generated here-->
-        Questions go here
+        <div id="questionsContainer">
+            Questions will display after test bank selection.
+        </div>
 
     </div>
 

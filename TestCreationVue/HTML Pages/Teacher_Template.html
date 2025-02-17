@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en-US">
-    <head>
+
+<head>
     <style>
-       
-    /* Centered heading and background styling */
-    .center {
+        /* Centered heading and background styling */
+        .center {
             color: whitesmoke;
             text-align: center;
             display: block;
@@ -25,18 +25,37 @@
             background-color: #43215a;
             font-family: Arial, sans-serif;
         }
-
-
     </style>
-        </head>
 
-        <body>
- 
-             <div class="center large-heading">
-                <h1>Test Template</h1>
-              </div>
-                <div class="center large-paragraph">
-                    Questions will be generated here
-            </body>
+    <script>
+
+        // function that grabs the test options from local storage from Generate Test button
+        window.onload = function () {
+            const testOptions = JSON.parse(localStorage.getItem('testOptions'));
+            if (testOptions) {
+                document.getElementById('coverPage').textContent = testOptions.coverPage ? 'Yes' : 'No';
+                document.getElementById('timeAllowed').textContent = testOptions.timeAllowed;
+                document.getElementById('selectedTemplate').textContent = testOptions.selectedTemplate;
+                document.getElementById('uploadedImage').textContent = testOptions.uploadedImage ? testOptions.uploadedImage : 'No image uploaded';
+            }
+        }
+    </script>
+
+</head>
+
+<body>
+
+    <div class="center large-heading">
+        <h1>Test Template</h1>
+    </div>
+    <div class="center large-paragraph">
+        Questions will be generated here
+
+        <p>Cover Page: <span id="coverPage"></span></p>
+        <p>Time Allowed: <span id="timeAllowed"></span></p>
+        <p>Selected Template: <span id="selectedTemplate"></span></p>
+        <p>Uploaded Image: <span id="uploadedImage"></span></p>
+    </div>
+</body>
 
 </html>
