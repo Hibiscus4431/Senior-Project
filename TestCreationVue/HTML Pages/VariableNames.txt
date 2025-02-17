@@ -1,0 +1,28 @@
+Names and reasons for variables in the javascript functions
+
+
+For teacher course creation:
+
+Item/file holding data:
+'courseData'
+
+Title:
+'courseTitle'
+
+Course Number:
+'courseNumber'
+
+Title of textbook:
+'textbookTitle'
+
+Author of textbook:
+'author'
+
+Textbook ISBN:
+'ISBN'
+
+Textbook version:
+'version'
+
+Textbook website link:
+'websiteLink'

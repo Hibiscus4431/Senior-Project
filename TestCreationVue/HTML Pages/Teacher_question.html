@@ -98,9 +98,9 @@
             font-family: Arial, sans-serif;
         }
 
-               /* The popup form - hidden by default 
+        /* The popup form - hidden by default 
     this sets the location of the popup on the screen*/
-    .form-popup {
+        .form-popup {
             display: none;
             position: center;
             max-width: 75%;
@@ -161,16 +161,53 @@
         .open-button:hover {
             opacity: 1;
         }
-
-
     </style>
+
+
+    <!-- script to grab the textbox input from teacher_newclass.html and display it as title to this page -->
+    <!-- TODO: This script is not working 100%, not grabbing courseTitle from createClass page after selectedCourse has happened -->
+    <script>
+        window.onload = function () {
+            const courseData = JSON.parse(localStorage.getItem('courseData'));
+
+            // if courseTitle exists in local storage, grab it and display it
+            courseData.courseTitle = localStorage.getItem('selectedCourseTitle');
+            if (courseTitle) {
+                document.getElementById('courseTitle').textContent = courseTitle;
+            }
+
+            // if the data that holds course data exists, grab the title of the course
+            if (courseData && courseData.courseTitle) {
+                document.getElementById('courseTitle').textContent = courseData.courseTitle;
+            }
+        }
+
+
+
+        // function to allow user to import a file when Import Test is clicked
+        function importTest() {
+            document.getElementById('fileInput').click();
+        }
+
+        // function to handle the file upload process for user
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Handle the file upload process here
+                console.log('File selected:', file.name);
+                // Code that connects file to the databse will go here
+            }
+        }
+
+    </script>
+
 </head>
 
 
 <body>
     <!-- This is the page where the teacher can see all of their questions-->
     <div class="center large-heading sticky">
-        <h1> Question List</h1>
+        <h1 id="courseTitle">Course Title</h1>
     </div>
     <div class="center large-paragraph">
 
@@ -179,12 +216,12 @@
         <a href="Teacher_viewTB.html">
             <button class="button">View Test Banks</button>
         </a>
-        
+
         <a href="Teacher_newTB.html">
             <button class="button">New Test Bank</button>
         </a>
         <a href="#">
-            <button class="button">Import Test</button>
+            <button class="button" onclick="importTest()">Import Test</button>
         </a><br>
 
 
@@ -201,16 +238,19 @@
         </div>
         <button class="button" onclick="edit()">New Question</button>
 
-        <a href="#">
+        <a href="Teacher_pubTB.html">
             <button class="button">Publisher Textbook Page</button>
         </a>
 
-   
+
     </div>
 
+    <!--file input element -->
+    <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
 
-      <!-- contents of popup-->
-      <div class="form-popup" id="q_edit">
+
+    <!-- contents of popup-->
+    <div class="form-popup" id="q_edit">
         <form action="/action_page.php" class="form-container">
             <h1>New Question</h1>
 
@@ -261,4 +301,3 @@
         }
     </script>
 </body>
-
