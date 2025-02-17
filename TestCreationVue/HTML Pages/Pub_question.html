@@ -111,6 +111,67 @@
             opacity: 1;
         }
     </style>
+    <script>
+        // function to handle the form submit event for the new question popup
+        function handleQuestionSave(event) {
+            event.preventDefault(); // Prevent the default form submission, requires all data fields be entered
+
+            // Get the values from the textboxes
+            const chapter = document.getElementById('ch').value;
+            const section = document.getElementById('sec').value;
+            const question = document.getElementById('question').value;
+            const reference = document.getElementById('ref').value;
+            const answer = document.getElementById('ans').value;
+            const answerChoices = document.getElementById('ans_c').value;
+            const points = document.getElementById('points').value;
+            const time = document.getElementById('time').value;
+            const instructions = document.getElementById('ins').value;
+            const image = document.getElementById('image').dataset.base64 || '';
+
+            // Create an object to store the question data
+            const questionData = {
+                chapter,
+                section,
+                question,
+                reference,
+                answer,
+                answerChoices,
+                points,
+                time,
+                instructions,
+                image
+            };
+
+            // Save the question data to local storage
+            localStorage.setItem('questionData', JSON.stringify(questionData));
+
+            // Close the form
+            closeForm();
+        }
+
+
+        // Function to handle the image upload process
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const base64String = e.target.result;
+                    document.getElementById('image').dataset.base64 = base64String;
+                    document.getElementById('imagePreview').src = base64String;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+
+
+
+    </script>
+
+
+
 </head>
 
 
@@ -128,7 +189,7 @@
         <a href="Pub_newTB.html">
             <button class="button">New Test Bank</button>
         </a>
-            <button class="button" onclick="edit()">New Question</button>
+        <button class="button" onclick="edit()">New Question</button>
         <br><br>
 
         Questions will be generated here
@@ -137,44 +198,46 @@
 
     <!-- contents of popup-->
     <div class="form-popup" id="q_edit">
-        <form action="/action_page.php" class="form-container">
+        <form class="form-container" onsubmit="handleQuestionSave(event)">
             <h1>New Question</h1>
 
             <label for="ch"><b>Chapter Number</b></label><br>
-            <input type="text" name="ch" required><br>
+            <input type="text" id="ch" name="ch" required><br>
 
             <label for="sec"><b>Section Number</b></label><br>
-            <input type="text" name="sec" required><br>
+            <input type="text" id="sec" name="sec" required><br>
 
-            <label for="question"><b>Question</b></label>
-            <br>
-            <input type="text" name="question" required><br>
+            <label for="question"><b>Question</b></label><br>
+            <input type="text" id="question" name="question" required><br>
 
             <label for="ref"><b>Text Reference</b></label><br>
-            <input type="text" name="ref" required><br>
+            <input type="text" id="ref" name="ref" required><br>
 
             <label for="ans"><b>Answer</b></label><br>
-            <input type="text" name="ans" required><br>
+            <input type="text" id="ans" name="ans" required><br>
 
             <label for="ans_c"><b>Answer Choices</b></label><br>
-            <input type="text" name="ans_c"><br>
+            <input type="text" id="ans_c" name="ans_c"><br>
 
             <label for="points"><b>Points Worth</b></label><br>
-            <input type="text" name="points" required><br>
+            <input type="text" id="points" name="points" required><br>
 
             <label for="time"><b>Est Time</b></label><br>
-            <input type="text" name="time" required><br>
+            <input type="text" id="time" name="time" required><br>
 
+            <label for="ins"><b>Grading Instructions</b></label><br>
+            <input type="text" id="ins" name="ins" required><br>
 
-            <label for="ins"><b>Grading Instructions</b></label>
-            <input type="text" name="ins" required><br>
-            <!--Need to figure out image upload for embedded graphics-->
-            <!--Need to figure out "In test already"-->
+            <label for="image"><b>Upload Image</b></label><br>
+            <input type="file" id="image" name="image" accept="image/*" onchange="handleImageUpload(event)"><br>
+            <img id="imagePreview" src="#" alt="Image preview"
+                style="display: none; max-width: 100%; max-height: 100%;"><br>
 
             <button type="submit" class="btn">Save</button>
             <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
         </form>
     </div>
+
 
     <!--JavaScript that allows popup to function-->
     <script>

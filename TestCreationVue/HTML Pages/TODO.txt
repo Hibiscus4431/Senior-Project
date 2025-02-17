@@ -1,0 +1,20 @@
+This is for Paige pls ignore
+
+
+Running ToDo list for Teacher Pages:
+- "Back" buttons for most Pages
+
+- View drafts html page
+
+Discussion for Teacher:
+-For teacher_question, should Question Type dropdown be moved to viewTB page?
+-For teacher_viewTB, add New Question button
+-In New Question popup, add option to determine question type
+
+Running ToDo list for Publisher Pages:
+- "Back" button for newTB page
+
+- Page where they view teacher comments and ratings
+
+Discussion for Publisher:
+-Need View Question type button? idk
