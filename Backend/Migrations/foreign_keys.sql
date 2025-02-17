@@ -119,10 +119,6 @@ FOREIGN KEY (test_id)
 REFERENCES Tests(tests_id)
 ON DELETE CASCADE;
 
--- Adding publisher_id to the Textbook table (each textbook has a publisher)
-ALTER TABLE Textbook
-ADD COLUMN publisher_id INT;
-
 -- Linking Textbook to Users (publisher is a user)
 ALTER TABLE Textbook
 ADD CONSTRAINT fk_textbook_publisher
