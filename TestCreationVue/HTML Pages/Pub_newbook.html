@@ -1,81 +1,46 @@
 <!DOCTYPE html>
 <html lang="en-US">
-    <head>
-        <style>
-          .center {
-            color: whitesmoke;
-            text-align: left;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
-            margin-right: 10%;
-          }
-      
-          .large-heading {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
-            text-align: center;
-            font-size: 40px;
-          }
-      
-          .large-paragraph {
-            font-size: 25px;
-          }
-      
-          /* Larger submit button */
-          input[type="submit"] {
-            background-color: rgb(48, 191, 223);
-            color: black;
-            font-size: 20px;
-            padding: 10px 20px;
-          }
-      
-          body {
-            background-color: #17552a;
-            font-family: Arial, sans-serif;
-          }
-        </style>
-      
-      </head>
+
+<head>
+  <link rel="stylesheet" href="publisher_styles.css">
+
+</head>
 
 <body>
 
-<!-- This page is where the teacher creates a new class -->
-<!-- TODO:
+  <!-- This page is where the teacher creates a new class -->
+  <!-- TODO:
 course title, txtbk title, author, ISBN, Version, website link, course # textboxes
 back and save buttons
 connect to course homepage from save button
  -->
-<div class="center large-heading">
+  <div class="center large-heading">
     <h1>Add New Textbook</h1>
-</div>
+  </div>
 
-<div class="center large-paragraph">
+  <div class="center large-paragraph">
     <form action="Pub_hp.html">
-        
 
-        <label for="textbookTitle">Textbook Title:</label>
-        <input type="text" id="textbookTitle" name="textbookTitle"style="height:20px"><br><br>
 
-        <label for="author">Author:</label>
-        <input type="text" id="author" name="author"style="height:20px"><br><br>
+      <label for="textbookTitle">Textbook Title:</label>
+      <input type="text" id="textbookTitle" name="textbookTitle" style="height:20px"><br><br>
 
-        <label for="ISBN">ISBN:</label>
-        <input type="text" id="ISBN" name="ISBN"style="height:20px"><br><br>
+      <label for="author">Author:</label>
+      <input type="text" id="author" name="author" style="height:20px"><br><br>
 
-        <label for="version">Version:</label>
-        <input type="text" id="version" name="version"style="height:20px"><br><br>
+      <label for="ISBN">ISBN:</label>
+      <input type="text" id="ISBN" name="ISBN" style="height:20px"><br><br>
 
-        <label for="websiteLink">Website Link:</label>
-        <input type="text" id="websiteLink" name="websiteLink"style="height:20px"><br><br>
+      <label for="version">Version:</label>
+      <input type="text" id="version" name="version" style="height:20px"><br><br>
 
-        
-</div>
-<div class="center large-heading">
-        <input type="submit" value="Save">
+      <label for="websiteLink">Website Link:</label>
+      <input type="text" id="websiteLink" name="websiteLink" style="height:20px"><br><br>
+
+
+  </div>
+  <div class="center large-heading">
+    <input type="submit" value="Save">
     </form>
 
 </body>

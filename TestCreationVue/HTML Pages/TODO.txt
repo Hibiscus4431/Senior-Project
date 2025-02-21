@@ -3,18 +3,29 @@ This is for Paige pls ignore
 
 Running ToDo list for Teacher Pages:
 - "Back" buttons for most Pages
+- When course is added in "Create new course" need to add to select course drop down
 
 - View drafts html page
 
 Discussion for Teacher:
 -For teacher_question, should Question Type dropdown be moved to viewTB page?
+    -I think it's fine. The question type allows the teacher to see question types
+        for the whole textbook so they can add to testbanks. They see all questions
+        used in tests. -L
 -For teacher_viewTB, add New Question button
+    -I thought we wanted to add questions to testbanks from the question page -L
 -In New Question popup, add option to determine question type
 
 Running ToDo list for Publisher Pages:
 - "Back" button for newTB page
 
 - Page where they view teacher comments and ratings
+    -add to publisher question bank -L
+
+-Should create course be a popup? It might be easier to add to the dropdown if its all
+    on the same page
 
 Discussion for Publisher:
 -Need View Question type button? idk
+    -I dont think its necessary. The view question type is to add to testbanks for tests.
+        Pubs don't need this functionality imo -L

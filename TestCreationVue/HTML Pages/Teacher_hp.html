@@ -2,101 +2,17 @@
 <html lang="en-US">
 
 <head>
-  <style>
-    /* Style for dropdown menu*/
-    .dropbtn {
-
-      background-color: rgb(84, 178, 150);
-      color: black;
-      padding: 10px;
-      font-size: 20px;
-      border: none;
-    }
-
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
-
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      background-color: #f1f1f1;
-      min-width: 160px;
-      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-      z-index: 1;
-    }
-
-    .dropdown-content a {
-      color: black;
-      padding: 10px 15px;
-      text-decoration: none;
-      display: block;
-    }
-
-    .dropdown-content a:hover {
-      background-color: rgb(60, 125, 106);
-    }
-
-    .dropdown:hover .dropdown-content {
-      display: block;
-    }
-
-    .dropdown:hover .dropbtn {
-      background-color: rgb(60, 125, 106);
-    }
-
-    /* changing style of create button */
-    .button {
-      background-color: rgb(84, 178, 150);
-      border: none;
-      color: black;
-      padding: 10px 15px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 20px;
-      margin: 4px 2px;
-      cursor: pointer;
-    }
-
-    /* Centered heading and background styling */
-    .center {
-      color: whitesmoke;
-      text-align: center;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-      width: 50%;
-    }
-
-    .large-heading {
-      font-size: 35px;
-    }
-
-    .large-paragraph {
-      font-size: 25px;
-    }
-
-    body {
-      background-color: #43215a;
-      font-family: Arial, sans-serif;
-    }
-  </style>
+  <link rel="stylesheet" href="teacher_styles.css">
 
   <!-- function to redirect to the course page with its corresponding title
 todo: grab all the courseTitle contents before redirect, or grab it after redirecting 
   but before the page loads -->
   <script>
     function redirectToCourse(course, courseTitle) {
-
-      localStorage.setItem('courseTitle', courseTitle);
-      window.location.href = course + ".html";
+        localStorage.setItem('selectedCourseTitle', courseTitle);
+        window.location.href = course + ".html";
     }
-  </script>
-
-
-
+</script>
 
 </head>
 

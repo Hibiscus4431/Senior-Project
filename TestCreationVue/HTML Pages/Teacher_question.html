@@ -4,183 +4,23 @@
 
 <head>
 
-    <style>
-        /* Style for dropdown menu*/
-        .dropbtn {
-
-
-            background-color: rgb(84, 178, 150);
-            color: black;
-            padding: 10px;
-            font-size: 20px;
-            border: none;
-        }
-
-
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #f1f1f1;
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-            z-index: 1;
-            font-size: 20px;
-        }
-
-
-        .dropdown-content a {
-            color: black;
-            padding: 10px 15px;
-            text-decoration: none;
-            display: block;
-        }
-
-
-        .dropdown-content a:hover {
-            background-color: rgb(60, 125, 106);
-        }
-
-
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-
-
-        .dropdown:hover .dropbtn {
-            background-color: rgb(60, 125, 106);
-        }
-
-
-        /* changing style of create button */
-        .button {
-            background-color: rgb(84, 178, 150);
-            border: none;
-            color: black;
-            padding: 10px 15px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 20px;
-            margin: 4px 2px;
-            cursor: pointer;
-        }
-
-
-        /* Centered heading and background styling */
-        .center {
-            color: whitesmoke;
-            text-align: center;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
-        }
-
-
-        .large-heading {
-            font-size: 35px;
-        }
-
-
-        .large-paragraph {
-            font-size: 25px;
-        }
-
-
-        body {
-            background-color: #43215a;
-            font-family: Arial, sans-serif;
-        }
-
-        /* The popup form - hidden by default 
-    this sets the location of the popup on the screen*/
-        .form-popup {
-            display: none;
-            position: center;
-            max-width: 75%;
-            margin: auto;
-            border: 3px solid #f1f1f1;
-            z-index: 9;
-        }
-
-        /* Add styles to the form container */
-        /* this is the actual popup window*/
-        .form-container {
-            max-width: 300x;
-            padding: 10px;
-            background-color: white;
-        }
-
-        /* Full-width input fields */
-        /* styling of textboxes in the popup*/
-        .form-container input[type=text],
-        .form-container input[type=password] {
-            width: 90%;
-            padding: 15px;
-            margin: 5px 0 22px 0;
-            border: none;
-            background: lightgrey;
-        }
-
-        /* When the inputs get focus, do something */
-        /* styling of when user is typing in the textbox*/
-        .form-container input[type=text]:focus,
-        .form-container input[type=password]:focus {
-            background-color: #ddd;
-            outline: none;
-        }
-
-        /* Set a style for the submit/login button */
-        /* formatting for login and cancel buttons*/
-        .form-container .btn {
-            background-color: #04AA6D;
-            color: white;
-            padding: 16px 20px;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 10px;
-            opacity: 0.8;
-        }
-
-        /* Add a red background color to the cancel button */
-        /* overrides color for cancel button
-    uses all other formatting*/
-        .form-container .cancel {
-            background-color: red;
-        }
-
-        /* Add some hover effects to login and cancel buttons */
-        .form-container .btn:hover,
-        .open-button:hover {
-            opacity: 1;
-        }
-    </style>
+    <link rel="stylesheet" href="teacher_styles.css">
 
 
     <!-- script to grab the textbox input from teacher_newclass.html and display it as title to this page -->
     <!-- TODO: This script is not working 100%, not grabbing courseTitle from createClass page after selectedCourse has happened -->
     <script>
-        window.onload = function () {
-            const courseData = JSON.parse(localStorage.getItem('courseData'));
+      window.onload = function () {
+        const selectedCourseTitle = localStorage.getItem('selectedCourseTitle');
+        const defaultTitle = "Default Course Title";
 
-            // if courseTitle exists in local storage, grab it and display it
-            courseData.courseTitle = localStorage.getItem('selectedCourseTitle');
-            if (courseTitle) {
-                document.getElementById('courseTitle').textContent = courseTitle;
-            }
-
-            // if the data that holds course data exists, grab the title of the course
-            if (courseData && courseData.courseTitle) {
-                document.getElementById('courseTitle').textContent = courseData.courseTitle;
-            }
+        // if courseTitle exists in local storage, grab it and display it
+        if (selectedCourseTitle) {
+            document.getElementById('courseTitle').textContent = selectedCourseTitle;
+        } else {
+            document.getElementById('courseTitle').textContent = defaultTitle;
         }
+    }
 
 
 
