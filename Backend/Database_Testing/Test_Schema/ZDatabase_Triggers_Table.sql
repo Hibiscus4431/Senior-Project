@@ -6,7 +6,7 @@
 CREATE OR REPLACE FUNCTION ensure_test_exists()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM tests WHERE test_id = NEW.test_id) THEN
+    IF NOT EXISTS (SELECT 1 FROM tests WHERE tests.tests_id = NEW.test_id) THEN
         RAISE EXCEPTION 'Test ID % does not exist', NEW.test_id;
     END IF;
     RETURN NEW;
@@ -17,6 +17,7 @@ CREATE TRIGGER check_test_exists
 BEFORE INSERT ON answer_key
 FOR EACH ROW
 EXECUTE FUNCTION ensure_test_exists();
+
 
     -- Prevent multiple answer keys for the same test 
 CREATE OR REPLACE FUNCTION prevent_duplicate_answer_keys()
@@ -34,11 +35,12 @@ BEFORE INSERT ON answer_key
 FOR EACH ROW
 EXECUTE FUNCTION prevent_duplicate_answer_keys();
 
+
     -- Delete answer key when a test is deleted 
 CREATE OR REPLACE FUNCTION delete_answer_key_on_test_deletion()
 RETURNS TRIGGER AS $$
 BEGIN
-    DELETE FROM answer_key WHERE test_id = OLD.test_id;
+    DELETE FROM answer_key WHERE test_id = OLD.tests_id;
     RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
@@ -47,6 +49,7 @@ CREATE TRIGGER cascade_delete_answer_key
 AFTER DELETE ON tests
 FOR EACH ROW
 EXECUTE FUNCTION delete_answer_key_on_test_deletion();
+
 
     -- Update answer key path if needed -- CHeck this one!
 CREATE OR REPLACE FUNCTION log_answer_key_update()
@@ -62,6 +65,7 @@ BEFORE UPDATE ON answer_key
 FOR EACH ROW
 WHEN (OLD.file_path IS DISTINCT FROM NEW.file_path)
 EXECUTE FUNCTION log_answer_key_update();
+
 
 
 
@@ -98,13 +102,13 @@ ON DELETE RESTRICT;
 CREATE OR REPLACE FUNCTION validate_reference_id()
 RETURNS TRIGGER AS $$
 BEGIN
-         -- Check if the reference_id exists in the correct table based on reference_type
+    -- Check if the reference_id exists in the correct table based on reference_type
     IF NEW.reference_type = 'question' AND 
        NOT EXISTS (SELECT 1 FROM questions WHERE id = NEW.reference_id) THEN
         RAISE EXCEPTION 'Invalid reference_id: Question does not exist';
     
     ELSIF NEW.reference_type = 'test' AND 
-          NOT EXISTS (SELECT 1 FROM tests WHERE id = NEW.reference_id) THEN
+          NOT EXISTS (SELECT 1 FROM tests WHERE tests_id = NEW.reference_id) THEN
         RAISE EXCEPTION 'Invalid reference_id: Test does not exist';
     END IF;
 
@@ -114,7 +118,9 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER enforce_reference_existence
 BEFORE INSERT OR UPDATE ON attachments_metadata
-FOR EACH ROW EXECUTE FUNCTION validate_reference_id();
+FOR EACH ROW
+EXECUTE FUNCTION validate_reference_id();
+
 
             -- Prevent duplicate attachments for the saem question/test 
 CREATE OR REPLACE FUNCTION prevent_duplicate_attachment()
@@ -143,11 +149,9 @@ RETURNS TRIGGER AS $$
 BEGIN
     -- Remove only the metadata linking the attachment to the deleted question/test
     DELETE FROM attachments_metadata 
-    WHERE reference_id = OLD.id 
-    AND reference_type = TG_TABLE_NAME;  -- Dynamically applies to either Questions or tests
+    WHERE reference_id = OLD.id;
 
     -- Do NOT delete the actual attachment file from the Attachments table
-
     RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
@@ -155,13 +159,14 @@ $$ LANGUAGE plpgsql;
 -- Attach the trigger to the Questions table
 CREATE TRIGGER handle_question_deletion
 AFTER DELETE ON questions
-FOR EACH ROW EXECUTE FUNCTION preserve_attachments_on_reference_delete();
+FOR EACH ROW 
+EXECUTE FUNCTION preserve_attachments_on_reference_delete();
 
 -- Attach the trigger to the tests table
 CREATE TRIGGER handle_test_deletion
 AFTER DELETE ON tests
-FOR EACH ROW EXECUTE FUNCTION preserve_attachments_on_reference_delete();
-
+FOR EACH ROW 
+EXECUTE FUNCTION preserve_attachments_on_reference_delete();
 
 
 -- Courses Tables Triggers -- 
@@ -170,7 +175,7 @@ FOR EACH ROW EXECUTE FUNCTION preserve_attachments_on_reference_delete();
 CREATE OR REPLACE FUNCTION ensure_textbook_exists()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Textbooks WHERE textbook_id = NEW.textbook_id) THEN
+    IF NOT EXISTS (SELECT 1 FROM textbook WHERE textbook_id = NEW.textbook_id) THEN
         RAISE EXCEPTION 'Textbook ID % does not exist', NEW.textbook_id;
     END IF;
     RETURN NEW;
@@ -255,21 +260,22 @@ EXECUTE FUNCTION ensure_teacher_exists();
 
 -- Feedback Table Triggers -- 
 
-    -- Ensure a test id or questio id exists 
+    -- Ensure a test id or question id exists 
 CREATE OR REPLACE FUNCTION ensure_test_or_question_exists()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM tests WHERE test_id = NEW.test_id) THEN
+    IF NOT EXISTS (SELECT 1 FROM tests WHERE tests.tests_id = NEW.test_id) THEN
         RAISE EXCEPTION 'Test ID % does not exist', NEW.test_id;
     END IF;
 
-    IF NOT EXISTS (SELECT 1 FROM questions WHERE question_id = NEW.question_id) THEN
+    IF NOT EXISTS (SELECT 1 FROM questions WHERE questions.id = NEW.question_id) THEN
         RAISE EXCEPTION 'Question ID % does not exist', NEW.question_id;
     END IF;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE TRIGGER check_test_or_question_exists
 BEFORE INSERT ON feedback
@@ -306,15 +312,17 @@ BEGIN
     IF EXISTS (
         SELECT 1 FROM feedback 
         WHERE test_id = NEW.test_id 
-          AND question_id = NEW.question_id 
+          AND question_id = NEW.question_id
           AND user_id = NEW.user_id
     ) THEN
-        RAISE EXCEPTION 'User % has already provided feedback for Test ID % or Question ID %', NEW.user_id, NEW.test_id, NEW.question_id;
+        RAISE EXCEPTION 'User % has already provided feedback for Test ID % or Question ID %', 
+        NEW.user_id, NEW.test_id, NEW.question_id;
     END IF;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE TRIGGER enforce_unique_feedback
 BEFORE INSERT ON feedback
@@ -325,10 +333,11 @@ EXECUTE FUNCTION prevent_duplicate_feedback();
 CREATE OR REPLACE FUNCTION cascade_delete_feedback()
 RETURNS TRIGGER AS $$
 BEGIN
-    DELETE FROM feedback WHERE test_id = OLD.test_id OR question_id = OLD.question_id;
+    DELETE FROM feedback WHERE test_id = OLD.tests_id OR question_id = OLD.id;
     RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE TRIGGER delete_feedback_on_test_question_removal
 AFTER DELETE ON tests
@@ -348,13 +357,14 @@ CREATE FUNCTION prevent_fill_blank_for_non_fill_blank() RETURNS TRIGGER AS $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM questions
-        WHERE question_id = NEW.question_id AND type = 'Fill-in-the-Blank'
+        WHERE id = NEW.question_id AND type = 'Fill-in-the-Blank'
     ) THEN
         RAISE EXCEPTION 'Only Fill-in-the-Blank questions can have blank answers';
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE TRIGGER trg_prevent_fill_blank_for_non_fill_blank
 BEFORE INSERT ON questionfillblanks
@@ -371,7 +381,7 @@ BEGIN
     SELECT type INTO question_type FROM questions WHERE id = NEW.question_id;
 
     -- Check if it's a Fill-in-the-Blank question
-    IF question_type = 'Fill in the Blank' THEN
+    IF question_type = 'Fill-in-the-Blank' THEN
         -- Count the number of blanks for the question
         SELECT COUNT(*) INTO blank_count FROM questionfillblanks WHERE question_id = NEW.question_id;
 
@@ -384,6 +394,7 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE TRIGGER trg_enforce_minimum_fill_blank_answers
 AFTER INSERT ON questionfillblanks
@@ -398,13 +409,14 @@ CREATE FUNCTION prevent_matches_for_non_matching() RETURNS TRIGGER AS $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM questions
-        WHERE question_id = NEW.question_id AND type = 'Matching'
+        WHERE id = NEW.question_id AND type = 'Matching'
     ) THEN
         RAISE EXCEPTION 'Only Matching questions can have match pairs';
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE TRIGGER trg_prevent_matches_for_non_matching
 BEFORE INSERT ON questionmatches
@@ -534,14 +546,51 @@ AFTER INSERT OR UPDATE ON QuestionOptions
 FOR EACH ROW
 EXECUTE FUNCTION enforce_mcq_correct_answer();
 
+-- Prevents publishing a multiple choice question without a correct answer
+CREATE FUNCTION prevent_publishing_mcq_without_correct_answer() RETURNS TRIGGER AS $$
+DECLARE
+    correct_count INT;
+    question_type VARCHAR(50);
+BEGIN
+    -- Get the type of the question
+    SELECT type INTO question_type FROM questions WHERE id = NEW.id;
+
+    -- Only enforce this rule for Multiple Choice questions
+    IF question_type = 'Multiple Choice' THEN
+        -- Count the number of correct answers
+        SELECT COUNT(*) INTO correct_count FROM questionoptions WHERE question_id = NEW.id AND is_correct = TRUE;
+
+        -- Prevent publishing if no correct answer exists
+        IF correct_count < 1 THEN
+            RAISE EXCEPTION 'Multiple Choice questions must have at least one correct answer before being published';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_prevent_publishing_mcq_without_correct
+BEFORE UPDATE ON questions
+FOR EACH ROW
+WHEN (NEW.is_published = TRUE AND OLD.is_published = FALSE)  -- Only check when transitioning to published
+EXECUTE FUNCTION prevent_publishing_mcq_without_correct_answer();
+
 
 -- QTI Import Triggers -- 
 CREATE OR REPLACE FUNCTION enforce_test_link_on_import()
 RETURNS TRIGGER AS $$
+DECLARE
+    test_exists BOOLEAN;
 BEGIN
     -- Ensure the question source is 'canvas_qti'
-    IF NEW.source = 'canvas_qti' AND NEW.test_id IS NULL THEN
-        RAISE EXCEPTION 'Imported questions must be linked to a test.';
+    IF NEW.source = 'canvas_qti' THEN
+        -- Verify the test exists before linking
+        SELECT EXISTS (SELECT 1 FROM tests WHERE tests.tests_id = NEW.test_id) INTO test_exists;
+        
+        IF NOT test_exists THEN
+            RAISE EXCEPTION 'Imported questions must be linked to a valid test.';
+        END IF;
     END IF;
     RETURN NEW;
 END;
@@ -600,27 +649,26 @@ BEFORE UPDATE ON questions
 FOR EACH ROW
 EXECUTE FUNCTION prevent_modifying_published_question();
 
-    -- Auto-Publish a question when added to a published test
-CREATE FUNCTION auto_publish_question() RETURNS TRIGGER AS $$
+-- auto publishes question when a test is updated to published 
+CREATE FUNCTION auto_publish_questions_on_test_publish() RETURNS TRIGGER AS $$
 BEGIN
-    IF EXISTS (
-        SELECT 1 FROM tests
-        WHERE tests_id = NEW.test_id AND status = 'Published' -- ✅ Using tests_id
-    ) THEN
+    -- Ensure the test is being updated to 'Published'
+    IF NEW.status = 'Published' AND OLD.status <> 'Published' THEN
+        -- Update all questions linked to this test
         UPDATE questions
         SET is_published = TRUE
-        WHERE id = NEW.question_id; -- ✅ Using id instead of question_id
+        WHERE id IN (
+            SELECT question_id FROM test_metadata WHERE test_id = NEW.tests_id
+        );
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-
-CREATE TRIGGER trg_auto_publish_question
-AFTER INSERT ON Test_MetaData
+CREATE TRIGGER trg_auto_publish_questions_on_test_publish
+AFTER UPDATE ON tests
 FOR EACH ROW
-EXECUTE FUNCTION auto_publish_question();
-
+EXECUTE FUNCTION auto_publish_questions_on_test_publish();
 
     -- Links a question to a textbook and links to a course 
 CREATE FUNCTION enforce_valid_question_links() RETURNS TRIGGER AS $$
@@ -628,7 +676,7 @@ BEGIN
     -- If the question was originally created under a textbook, allow linking to a course
     IF NEW.course_id IS NOT NULL AND NEW.textbook_id IS NOT NULL THEN
         IF NOT EXISTS (
-            SELECT 1 FROM questions WHERE id = NEW.question_id AND textbook_id IS NOT NULL -- ✅ Using id instead of question_id
+            SELECT 1 FROM questions WHERE id = NEW.id AND textbook_id IS NOT NULL
         ) THEN
             RAISE EXCEPTION 'A teacher-created question cannot be linked to both a course and a textbook';
         END IF;
@@ -637,7 +685,6 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
 
 CREATE TRIGGER trg_enforce_valid_question_links
 BEFORE INSERT OR UPDATE ON questions

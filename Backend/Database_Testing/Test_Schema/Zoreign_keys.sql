@@ -77,6 +77,12 @@ FOREIGN KEY (question_id)
 REFERENCES Questions(id)
 ON DELETE CASCADE;
 
+-- Add foreign key for feedback.user_id referencing users.user_id
+ALTER TABLE feedback 
+ADD CONSTRAINT fk_feedback_user 
+FOREIGN KEY (user_id) REFERENCES users(user_id) 
+ON DELETE CASCADE;
+
 -- Linking QuestionFillBlanks to Questions (fill-in-the-blank questions belong to a question)
 ALTER TABLE QuestionFillBlanks
 ADD CONSTRAINT fk_fill_blanks_question

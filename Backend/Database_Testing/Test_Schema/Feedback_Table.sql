@@ -4,3 +4,6 @@ CREATE TABLE IF NOT EXISTS Feedback (
     question_id INT NOT NULL,
     comment_field TEXT
 );
+
+ALTER TABLE feedback 
+ADD COLUMN IF NOT EXISTS user_id INT NOT NULL;
