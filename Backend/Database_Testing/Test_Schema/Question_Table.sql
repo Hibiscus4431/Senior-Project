@@ -27,6 +27,7 @@ CHECK (type IN ('Multiple Choice', 'True/False', 'Short Answer', 'Essay', 'Match
 */
 
 
+
 -- Add columns only if they don’t already exist
 ALTER TABLE questions 
 ADD COLUMN IF NOT EXISTS chapter_number INT DEFAULT NULL, 

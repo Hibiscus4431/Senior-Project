@@ -5,3 +5,4 @@ CREATE TABLE IF NOT EXISTS Test_MetaData (
     order_num INT NOT NULL,
     PRIMARY KEY (test_id, question_id)
 );
+ALTER TABLE Test_MetaData ALTER COLUMN order_num DROP NOT NULL;
