@@ -4,13 +4,11 @@
 <head>
   <link rel="stylesheet" href="publisher_styles.css">
 
-  <script>
-    // function to redirect to the course page with its corresponding title
-    // todo: grab all the courseTitle contents before redirect, or grab it after redirecting 
-    //   but before the page loads 
-    function redirectToCourse(textbook, textbookTitle) {
 
-      localStorage.setItem('textbookTitle', textbookTitle);
+    <script>
+    // function to redirect to the book page with its corresponding title
+    function redirectToCourse(textbook, textbookTitle) {
+      localStorage.setItem('selectedTextbookTitle', textbookTitle);
       window.location.href = textbook + ".html";
     }
   </script>

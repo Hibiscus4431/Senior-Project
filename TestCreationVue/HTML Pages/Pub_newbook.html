@@ -4,26 +4,47 @@
 <head>
   <link rel="stylesheet" href="publisher_styles.css">
 
+  <!-- script to save the contents of the textboxes to local storage -->
+    <!-- TODO: change this to sending textbox data to database and rerouting to publisher_question.html to grab saved data from there -->
+    <script>
+      function saveBook(event) {
+        event.preventDefault();
+        const textbookTitle = document.getElementById('textbookTitle').value;
+        const author = document.getElementById('author').value;
+        const ISBN = document.getElementById('ISBN').value;
+        const version = document.getElementById('version').value;
+        const websiteLink = document.getElementById('websiteLink').value;
+  
+        const courseData = {
+          textbookTitle,
+          author,
+          ISBN,
+          version,
+          websiteLink
+        };
+  
+        localStorage.setItem('textbookData', JSON.stringify(courseData));
+        localStorage.setItem('selectedTextbookTitle', textbookTitle); // Store the book title separately
+  
+        window.location.href = 'Pub_question.html';
+      }
+    </script>
+
 </head>
 
 <body>
 
-  <!-- This page is where the teacher creates a new class -->
-  <!-- TODO:
-course title, txtbk title, author, ISBN, Version, website link, course # textboxes
-back and save buttons
-connect to course homepage from save button
- -->
+  <!-- This page is where the publisher creates a new textbook -->
+
   <div class="center large-heading">
     <h1>Add New Textbook</h1>
   </div>
 
   <div class="center large-paragraph">
-    <form action="Pub_hp.html">
-
+    <form id="newBlassForm" onsubmit="saveBook(event)">
 
       <label for="textbookTitle">Textbook Title:</label>
-      <input type="text" id="textbookTitle" name="textbookTitle" style="height:20px"><br><br>
+      <input type="text" id="textbookTitle" name="textbooktitle" style="height:20px"><br><br>
 
       <label for="author">Author:</label>
       <input type="text" id="author" name="author" style="height:20px"><br><br>

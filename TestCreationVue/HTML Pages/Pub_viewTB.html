@@ -23,19 +23,18 @@
 
             // check if the selected test bank exists in the questions data
             if (questions[testBank]) {
+                // Update the title with the selected test bank
+                document.getElementById('pageTitle').textContent = `View Test Banks - ${testBank}`;
 
                 // go through each question in the selected test bank
                 questions[testBank].forEach(question => {
                     // create a paragraph element for each question and append it to the questions container
-                    //TODO: will need to add formatting or something here or in styles to display each question 
-                    //  with a white/contrasting background etc
                     const thisQuestion = document.createElement('p');
                     thisQuestion.textContent = question;
                     questionsContainer.appendChild(thisQuestion);
                 });
             }
         }
-
         function edit() {
             document.getElementById("test_view").style.display = "block";
         }
@@ -46,15 +45,12 @@
     </script>
 
 
-
-
-
 </head>
 
 <body>
-    <!-- This is the page where the teacher can see all of their test banks-->
+    <!-- This is the page where the publisher can see all of their test banks-->
     <div class="center large-heading sticky">
-        <h1> View Test Banks</h1>
+        <h1 id="pageTitle">View Test Banks</h1>
     </div>
     <div class="center large-paragraph">
 

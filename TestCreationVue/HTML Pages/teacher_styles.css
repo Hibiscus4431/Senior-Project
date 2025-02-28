@@ -158,7 +158,8 @@ uses all other formatting*/
 /*checkbox styling start*/
 /* Customize the label (the container) */
 .container {
-  display: block;
+  display: flex;
+  align-items: center;
   position: relative;
   padding-left: 35px;
   margin-bottom: 12px;
@@ -180,6 +181,7 @@ uses all other formatting*/
   cursor: pointer;
   height: 0;
   width: 0;
+  margin-right: 5px;
 }
 
 /* Create a custom checkbox */
@@ -304,6 +306,9 @@ uses all other formatting*/
   font-size: 20px;
   margin: 4px 2px;
   color: black;
+  max-width: fit-content;
+  width: auto;
+  padding-right: 5px;
 }
 
 /* Larger submit button */
