@@ -1,2 +1,4 @@
 # ignore inviroment variables
 .env
+/Backend/Database_Testing/
+.DS_Store
