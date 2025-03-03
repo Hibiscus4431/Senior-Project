@@ -17,6 +17,35 @@
                 document.getElementById('uploadedImage').textContent = testOptions.uploadedImage ? testOptions.uploadedImage : 'No image uploaded';
             }
         }
+
+        //function to export draft as a word docu (WYSIWYG)
+        function exportToWord() {
+            //grab the contents of the webpage
+            const content = document.getElementById('contentToExport').innerHTML;
+            //create a new window to export the content
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+                "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+                "xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML to Word Document</title></head><body>";
+            //create a footer to close the document
+            const footer = "</body></html>";
+            //combine the header, content, and footer to create the full document
+            const sourceHTML = header + content + footer;
+            //create a new window to export the document
+            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            //create a link to download the document
+            const fileDownload = document.createElement("a");
+            //set the link to download the document
+            document.body.appendChild(fileDownload);
+            //set the link to the source of the document
+            fileDownload.href = source;
+            //set the link to download the document
+            fileDownload.download = 'test_draft.doc';
+            //click the link to download the document
+            fileDownload.click();
+            //remove the link from the document
+            document.body.removeChild(fileDownload);
+        }
+
     </script>
 
 </head>
@@ -34,6 +63,12 @@
         <p>Selected Template: <span id="selectedTemplate"></span></p>
         <p>Uploaded Image: <span id="uploadedImage"></span></p>
     </div>
+
+
+    <div class="center large-paragraph">
+        <button onclick="exportToWord()">Export to Word</button>
+    </div>
+
 </body>
 
 </html>
