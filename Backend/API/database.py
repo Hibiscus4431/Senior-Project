@@ -15,3 +15,9 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # Check if the connection is working
 if not supabase:
     raise Exception("Failed to connect to Supabase")
+
+# testing connections (checkking all users )
+response = supabase.table("users").select("*").execute()
+print(response.data)
+
+

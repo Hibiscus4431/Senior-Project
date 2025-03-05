@@ -312,7 +312,7 @@ CREATE FUNCTION ensure_teacher_exists()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM users WHERE user_id = NEW.teacher_id AND role = 'teacher'
+        SELECT 1 FROM users WHERE user_id = NEW.teacher_id AND role = 'Teacher'
     ) THEN
         RAISE EXCEPTION 'Teacher ID % does not exist or is not a teacher', NEW.teacher_id;
     END IF;
@@ -1321,7 +1321,7 @@ CREATE FUNCTION ensure_publisher_exists()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM users WHERE user_id = NEW.publisher_id AND role = 'publisher'
+        SELECT 1 FROM users WHERE user_id = NEW.publisher_id AND role = 'Publisher'
     ) THEN
         RAISE EXCEPTION 'User ID % is not a publisher and cannot create textbooks', NEW.publisher_id;
     END IF;
