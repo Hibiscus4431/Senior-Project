@@ -6,3 +6,6 @@ pip freeze > requirements.txt # - put this in the terminal to downlad everything
 # for the API section
 
 pip install supabase
+pip install python-dotenv
+pip install flask
+
