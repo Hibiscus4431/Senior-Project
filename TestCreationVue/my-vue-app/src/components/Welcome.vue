@@ -6,8 +6,7 @@
         <br>
         <br>
         <div class="button-container">
-            <!-- TODO: replace w/ teacher vue login-->
-            <router-link to="/Teacher_log">
+            <router-link to="/TeacherLog">
                 <button class="button">Teacher</button>
             </router-link>
         </div>

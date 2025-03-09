@@ -1,3 +1,5 @@
+<!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherLog.vue -->
+
 <template>
     <div>
       <div class="center large-heading">
@@ -19,6 +21,9 @@
           <!-- submit button, when pressed it takes user to url specified-->
           <input type="submit" value="Submit">
         </form>
+        <!--Show error message if user and password are entered incorrectly-->
+        <div v-if="errorMessage" class="error-message">{{ errorMessage }}
+        </div>
       </div>
     </div>
   </template>
