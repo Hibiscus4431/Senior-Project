@@ -8,13 +8,13 @@
         View website as:
         <br><br>
         <!-- TODO:replace w/ teacher vue homepage-->
-         <router-link to="/Teacher_hp">
+         <router-link to="/TeacherHome">
             <button class="button">Teacher</button>
         </router-link>
         <br>
         <br>
         <!-- TODO: replace w/ publisher vue homepage-->
-        <router-link to="/Pub_hp">
+        <router-link to="/PubHome">
             <button class="button">Publisher</button>
         </router-link>
     </div>
