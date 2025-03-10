@@ -1,20 +1,20 @@
-<!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherHome.vue -->
+<!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/PubHome.vue -->
 <template>
   <div>
     <div class="center large-heading">
-      <h1>Course Selection</h1>
+      <h1>Textbook Selection</h1>
     </div>
     <div class="center large-paragraph">
-      Please select or create a course:
+      Please select or add a textbook:
       <br>
       <br>
       <!--selecting a course will be a drop down menu with all previous courses-->
       <!--If else that ensures there are courses to select from-->
-      <div class="dropdown" v-if="courses.length">
+        <div class="dropdown" v-if="textbooks.length">
         <button class="dropbtn">Select Course</button>
         <div class="dropdown-content">
-          <router-link v-for="course in courses" :key="course.id" :to="{ path: 'TeacherQuestions', query: { title: course.title } }">
-            {{ course.title }}
+          <router-link v-for="textbook in textbooks" :key="textbook.id" :to="{ path: 'PubQuestions', query: { title: textbook.title } }">
+            {{ textbook.title }}
           </router-link>
         </div>
       </div>
@@ -22,32 +22,32 @@
         No courses available.
       </div>
       <!--creating a new course will take user to new page-->
-      <router-link to="TeacherNewClass">
-        <button class="button">Create New Course</button>
+      <router-link to="PubNewBook">
+        <button class="button">Add New Textbook</button>
       </router-link>
+      <br>
     </div>
-    <br>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'TeacherHome',
+  name: 'PublisherHome',
   data() {
     return {
-      courses: []
+      textbooks: []
     };
   },
   created() {
-    this.fetchCourses();
+    this.fetchTextbooks();
   },
   methods: {
-    fetchCourses() {
+    fetchTextbooks() {
       // Simulate an API call to fetch courses
-      this.courses = [
-        { id: 1, title: 'Course 1' },
-        { id: 2, title: 'Course 2' },
-        { id: 3, title: 'Course 3' }
+      this.textbooks = [
+        { id: 1, title: 'Textbook 1' },
+        { id: 2, title: 'Textbook 2' },
+        { id: 3, title: 'Textbook 3' }
       ];
     }
   }
@@ -55,5 +55,5 @@ export default {
 </script>
 
 <style scoped>
-@import '../assets/teacher_styles.css';
+@import '../assets/publisher_styles.css';
 </style>
