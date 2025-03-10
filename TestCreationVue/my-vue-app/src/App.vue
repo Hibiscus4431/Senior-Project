@@ -13,6 +13,12 @@
     <TeacherPubQ />
     <TeacherPubTB />
     <TeacherTemplate />
+    <PubLog />
+    <PubHome />
+    <PubNewBook />
+    <PubNewTB />
+    <PubQuestions />
+    <PubViewTB />
   </div>
 </template>
 
@@ -30,6 +36,12 @@ import TeacherNewTest from './components/TeacherNewTest.vue';
 import TeacherPubQ from './components/TeacherPubQ.vue';
 import TeacherPubTB from './components/TeacherPubTB.vue';
 import TeacherTemplate from './components/TeacherTemplate.vue';
+import PubLog from './components/PubLog.vue';
+import PubHome from './components/PubHome.vue';
+import PubNewBook from './components/PubNewBook.vue';
+import PubNewTB from './components/PubNewTB.vue';
+import PubQuestions from './components/PubQuestions.vue';
+import PubViewTB from './components/PubViewTB.vue';
 
 export default {
   name: 'App',
@@ -46,7 +58,13 @@ export default {
     TeacherNewTest,
     TeacherPubQ,
     TeacherPubTB,
-    TeacherTemplate
+    TeacherTemplate,
+    PubLog,
+    PubHome,
+    PubNewBook,
+    PubNewTB,
+    PubQuestions,
+    PubViewTB
   }
 }
 </script>
