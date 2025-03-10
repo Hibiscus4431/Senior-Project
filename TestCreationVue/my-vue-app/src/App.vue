@@ -1,4 +1,5 @@
 <template>
+  <!-- add classes for teacher and publisher for styling? -->
   <div id="app">
     <Welcome />
     <WebmasterLog />

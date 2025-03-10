@@ -42,5 +42,5 @@
   </script>
   
   <style scoped>
-  @import './teacher_styles.css';
+  @import '../assets/teacher_styles.css';
   </style>
