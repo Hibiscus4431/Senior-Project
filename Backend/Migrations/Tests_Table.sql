@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS TESTS(
     tests_id SERIAL PRIMARY KEY,
     course_id INT NOT NULL,
     template_id INT,
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
     status VARCHAR(50) DEFAULT 'Draft' CHECK (status IN ('Draft', 'Final', 'Published')),
     points_total INT DEFAULT 0 CHECK (points_total >= 0),

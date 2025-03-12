@@ -8,10 +8,9 @@ END $$;
 
 
 CREATE TABLE IF NOT EXISTS Users (
-    user_id SERIAL PRIMARY KEY,
+    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     role user_role NOT NULL,
     username VARCHAR(255) UNIQUE NOT NULL,
-    password BYTEA NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW()
 );
+

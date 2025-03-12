@@ -3,5 +3,5 @@ CREATE TABLE IF NOT EXISTS Feedback (
     test_id INT NOT NULL,
     question_id INT NOT NULL,
     comment_field TEXT,
-    user_id INT NOT NULL
+    user_id UUID NOT NULL
 );

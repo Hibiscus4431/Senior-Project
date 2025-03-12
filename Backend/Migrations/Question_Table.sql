@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS Questions (
     default_points INT DEFAULT 0,
     est_time INT,
     grading_instructions TEXT,
-    owner_id INT NOT NULL,
+    owner_id UUID NOT NULL,
     is_published BOOLEAN DEFAULT FALSE,
     attachment_id INT DEFAULT NULL,  
     source VARCHAR(50) CHECK (source IN ('manual', 'canvas_qti')) DEFAULT 'manual',

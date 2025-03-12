@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS Textbook (
     textbook_author VARCHAR(255) NOT NULL,
     textbook_version VARCHAR(255) NOT NULL,
     textbook_isbn VARCHAR(255) NOT NULL,
-    publisher_id INT
+    publisher_id UUID NOT NULL
 );
 
 /*
