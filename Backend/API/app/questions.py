@@ -1,12 +1,12 @@
 from flask import Blueprint, request, jsonify, current_app
-from auth import authorize_request
+from .auth import authorize_request
 from psycopg2 import sql
 
 # Create Blueprint
 question_bp = Blueprint('questions', __name__)
 
 # CREATE Question
-@question_bp.route('/questions', methods=['POST'])
+@question_bp.route('', methods=['POST'])
 def create_question():
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -30,7 +30,7 @@ def create_question():
     section_number = data.get('section_number')
     true_false_answer = data.get('true_false_answer') if data['type'] == 'True/False' else None
     
-    conn = current_app.config['get_db_connection']()
+    conn = current_app.db_connection
     cur = conn.cursor()
     
     # Insert into Questions table
@@ -51,11 +51,24 @@ def create_question():
     
     # Handle different question types
     if data['type'] == 'Multiple Choice':
-        if 'options' not in data or not isinstance(data['options'], list):
-            return jsonify({"error": "Multiple choice questions require options."}), 400
+        if 'options' not in data or not isinstance(data['options'], list) or len(data['options']) < 2:
+            return jsonify({"error": "Multiple Choice questions must have at least two answer options."}), 400
+
+        # Insert options into QuestionOptions table
         for option in data['options']:
-            cur.execute("INSERT INTO QuestionOptions (question_id, option_text, is_correct) VALUES (%s, %s, %s);", 
-                        (question_id, option['option_text'], option.get('is_correct', False)))
+            cur.execute("""
+                INSERT INTO QuestionOptions (question_id, option_text, is_correct) 
+                VALUES (%s, %s, %s);
+            """, (question_id, option['option_text'], option.get('is_correct', False)))
+
+        # 🔹 Ensure options were inserted before committing
+        cur.execute("SELECT COUNT(*) FROM QuestionOptions WHERE question_id = %s;", (question_id,))
+        option_count = cur.fetchone()[0]
+
+        if option_count < 2:
+            conn.rollback()  # Rollback if options are missing
+            return jsonify({"error": "Database validation failed: Not enough options inserted."}), 500
+
     
     elif data['type'] == 'Fill in the Blank':
         if 'blanks' not in data or not isinstance(data['blanks'], list):
@@ -184,6 +197,7 @@ def update_question(question_id):
 
 # ADD Attachment to Question
 #this needs to be tested for the supabase buckets NOT FINISHED
+
 @question_bp.route('/questions/<int:question_id>/attachment', methods=['POST'])
 def upload_attachment(question_id):
     auth_data = authorize_request()

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
-from auth import authorize_request
+from .auth import authorize_request
 from psycopg2 import sql
 
 # Create Blueprint for courses
@@ -7,7 +7,7 @@ course_bp = Blueprint('courses', __name__)
 
 # CREATE Course
 #only teachers can create courses
-@course_bp.route('/courses', methods=['POST'])
+@course_bp.route('', methods=['POST'])
 def create_course():
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -29,7 +29,7 @@ def create_course():
         return jsonify({"error": "Missing course_name or textbook_id"}), 400
 
     # Connect to PostgreSQL
-    conn = current_app.config['get_db_connection']()
+    conn = current_app.db_connection
     cursor = conn.cursor()
 
     insert_query = sql.SQL("""
@@ -46,7 +46,7 @@ def create_course():
     return jsonify({"message": "Course created successfully", "course_id": course_id}), 201
 
 # GET Courses by teacher_id
-@course_bp.route('/courses', methods=['GET'])
+@course_bp.route('', methods=['GET'])
 def get_courses():
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -58,7 +58,7 @@ def get_courses():
     if role != "teacher":
         return jsonify({"error": "Permission denied"}), 403
 
-    conn = current_app.config['get_db_connection']()
+    conn = current_app.db_connection
     cursor = conn.cursor()
 
     query = sql.SQL("""
@@ -86,7 +86,7 @@ def get_courses():
 
 
 # GET Course by course_id
-@course_bp.route('/courses/<int:course_id>', methods=['GET'])
+@course_bp.route('/<int:course_id>', methods=['GET'])
 def get_course(course_id):
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -98,7 +98,7 @@ def get_course(course_id):
     if role != "teacher":
         return jsonify({"error": "Permission denied"}), 403
 
-    conn = current_app.config['get_db_connection']()
+    conn = current_app.db_connection
     cursor = conn.cursor()
 
     query = sql.SQL("""
@@ -126,7 +126,7 @@ def get_course(course_id):
 
 
 # UPDATE Course by course_id
-@course_bp.route('/courses/<int:course_id>', methods=['PUT'])
+@course_bp.route('<int:course_id>', methods=['PUT'])
 def update_course(course_id):
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -145,7 +145,7 @@ def update_course(course_id):
     if not course_name and not textbook_id:
         return jsonify({"error": "Missing course_name or textbook_id"}), 400
 
-    conn = current_app.config['get_db_connection']()
+    conn = current_app.db_connection
     cursor = conn.cursor()
 
     # Ensure course exists and is owned by user
