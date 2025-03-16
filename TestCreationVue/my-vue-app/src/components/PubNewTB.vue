@@ -1,6 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/PubNewTB.vue -->
 <template>
-    <div>
+    <div class = "pub-newTB-container">
       <div class="center large-heading sticky">
         <h1>Create New Test Bank</h1>
       </div>
@@ -63,4 +63,14 @@
   
   <style scoped>
   @import '../assets/publisher_styles.css';
+  .pub-newTB-container {
+    background-color: #17552a;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  }
   </style>

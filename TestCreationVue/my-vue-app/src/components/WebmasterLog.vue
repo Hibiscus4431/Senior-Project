@@ -1,6 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/WebmasterLog.vue -->
 <template>
-    <div>
+    <div class = "webmaster-log-container">
       <div class="center large-heading">
         <h1>Webmaster Login</h1>
       </div>
@@ -46,4 +46,14 @@
   
   <style scoped>
   @import '../assets/webmaster_styles.css';
+  .webmaster-log-container {
+    background-color: #082e75;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
   </style>

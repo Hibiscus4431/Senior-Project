@@ -1,6 +1,6 @@
 <!-- filepath: c:\Users\laure\Senior-Project\TestCreationVue\my-vue-app\src\components\TeacherPubQ.vue -->
 <template>
-  <div>
+  <div class = "teacher-PubQ-container">
     <div class="center large-heading">
       <h1>Testbank Selection</h1>
     </div>
@@ -42,4 +42,14 @@ export default {
 
 <style scoped>
 @import '../assets/teacher_styles.css';
+.teacher-PubQ-container {
+  background-color: #43215a;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 </style>

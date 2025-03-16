@@ -1,6 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherHome.vue -->
 <template>
-  <div>
+  <div class="teacher-home-container">
     <div class="center large-heading">
       <h1>Course Selection</h1>
     </div>
@@ -13,7 +13,7 @@
       <div class="dropdown" v-if="courses.length">
         <button class="dropbtn">Select Course</button>
         <div class="dropdown-content">
-          <router-link v-for="course in courses" :key="course.id" :to="{ path: 'TeacherQuestions', query: { title: course.title } }">
+          <router-link v-for="course in courses" :key="course.id" :to="{ name: 'TeacherQuestions', params: { courseTitle: course.title } }">
             {{ course.title }}
           </router-link>
         </div>
@@ -23,7 +23,7 @@
       </div>
       <!--creating a new course will take user to new page-->
       <router-link to="TeacherNewClass">
-        <button class="button">Create New Course</button>
+        <button class="t_button">Create New Course</button>
       </router-link>
     </div>
     <br>
@@ -56,4 +56,13 @@ export default {
 
 <style scoped>
 @import '../assets/teacher_styles.css';
+.teacher-home-container {
+  background-color: #43215a;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 </style>

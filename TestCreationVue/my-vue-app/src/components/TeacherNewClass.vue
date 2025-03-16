@@ -1,6 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherNewClass.vue -->
 <template>
-  <div>
+  <div class = "teacher-newClass-container">
     <div class="center large-heading">
       <h1>Create New Class</h1>
     </div>
@@ -80,4 +80,14 @@ export default {
 
 <style scoped>
 @import '../assets/teacher_styles.css';
+.teacher-newClass-container {
+  background-color: #43215a;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 </style>

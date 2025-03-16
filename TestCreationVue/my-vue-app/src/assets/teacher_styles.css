@@ -27,6 +27,7 @@
   padding: 10px 15px;
   text-decoration: none;
   display: block;
+  font-size: 20px;
 }
 
 .dropdown-content a:hover {
@@ -44,7 +45,7 @@
 /* Dropdown styling end */
 
 /* changing style of create button */
-.button {
+.t_button {
   background-color: rgb(84, 178, 150);
   border: none;
   color: black;
@@ -76,10 +77,6 @@
   font-size: 25px;
 }
 
-body {
-  background-color: #43215a;
-  font-family: Arial, sans-serif;
-}
 
 /*page styling end*/
 

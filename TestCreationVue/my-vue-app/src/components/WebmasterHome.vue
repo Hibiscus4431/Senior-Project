@@ -1,5 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/WebmasterHome.vue -->
  <template>
+    <div class = "webmaster-home-container"> 
       <div class="center large-heading">
         <h1> Welcome Webmaster</h1>
     </div>
@@ -18,6 +19,7 @@
             <button class="button">Publisher</button>
         </router-link>
     </div>
+    </div>
  </template>
 
  <script>
@@ -28,4 +30,14 @@
 
 <style scoped>
     @import '../assets/webmaster_styles.css';
+    .webmaster-home-container {
+    background-color: #082e75;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 </style>

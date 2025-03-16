@@ -1,6 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/PubQuestions.vue -->
 <template>
-    <div>
+    <div class ="pub-questions-container">
       <div class="center large-heading sticky">
         <h1 id="textbook-title">{{ textbookTitle }}</h1>
       </div>
@@ -116,4 +116,14 @@
   
   <style scoped>
   @import '../assets/publisher_styles.css';
+  .pub-questions-container {
+    background-color: #17552a;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  }
   </style>

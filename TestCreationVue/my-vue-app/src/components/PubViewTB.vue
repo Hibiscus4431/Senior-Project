@@ -1,6 +1,6 @@
 <!-- filepath: c:\Users\laure\Senior-Project\TestCreationVue\my-vue-app\src\components\PubViewTB.vue -->
 <template>
-  <div>
+  <div  class="pub-viewTB-container">
     <div class="center large-heading sticky">
       <h1 id="pageTitle">View Test Banks</h1>
     </div>
@@ -64,4 +64,16 @@ export default {
 
 <style scoped>
 @import '../assets/publisher_styles.css';
+
+
+.pub-viewTB-container {
+    background-color: #17552a;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  }
 </style>
