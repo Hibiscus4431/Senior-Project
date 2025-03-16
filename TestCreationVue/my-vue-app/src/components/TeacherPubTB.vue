@@ -1,6 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherPubTB.vue -->
 <template>
-    <div>
+    <div class = "teacher-pubTB-container">
       <div class="center large-heading">
         <h1>Testbank Name</h1>
       </div>
@@ -59,4 +59,14 @@
   
   <style scoped>
   @import '../assets/teacher_styles.css';
+  .teacher-pubTB-container {
+  background-color: #43215a;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
   </style>

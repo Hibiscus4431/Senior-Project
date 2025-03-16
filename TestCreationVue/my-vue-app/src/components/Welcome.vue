@@ -1,27 +1,29 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/Welcome.vue -->
 <template>
-    <div>
-        <h1 class="center large-heading"> Welcome to Test Creation Manager</h1>
-        <div class="center large-paragraph"> Select the role you are logging in as:</div>
-        <br>
-        <br>
-        <div class="button-container">
-            <router-link to="/TeacherLog">
-                <button class="button">Teacher</button>
-            </router-link>
-        </div>
-        <br>
-        <div class="button-container">
-             <!-- TODO: replace w/ publisher vue login-->
-            <router-link to="/Pub_log">
-                <button class="button">Publisher</button>
-            </router-link>
-        </div>
-        <br>
-        <div class="button-container">
-            <router-link to="/WebmasterLog">
-                <button class="button">Webmaster</button>
-            </router-link>
+    <div class="Welcome-container">
+        <div>
+            <h1 class="center large-heading"> Welcome to Test Creation Manager</h1>
+            <div class="center large-paragraph"> Select the role you are logging in as:</div>
+            <br>
+            <br>
+            <div class="button-container">
+                <router-link to="/TeacherLog">
+                    <button class="button">Teacher</button>
+                </router-link>
+            </div>
+            <br>
+            <div class="button-container">
+                <!-- TODO: replace w/ publisher vue login-->
+                <router-link to="/PubLog">
+                    <button class="button">Publisher</button>
+                </router-link>
+            </div>
+            <br>
+            <div class="button-container">
+                <router-link to="/WebmasterLog">
+                    <button class="button">Webmaster</button>
+                </router-link>
+            </div>
         </div>
     </div>
 </template>
@@ -70,8 +72,14 @@ export default {
     font-size: 30px;
 }
 
-body {
-    background-color: #2a2b2b;
+.Welcome-container {
+    background-color: #2a2b2b !important;
     font-family: Arial, sans-serif;
+    height: 100vh;
+    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 </style>

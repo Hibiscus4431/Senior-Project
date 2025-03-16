@@ -1,18 +1,18 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherQuestions.vue -->
 <template>
-  <div>
+  <div class="teacher-questions-container">
     <div class="center large-heading sticky">
       <h1>{{ courseTitle }}</h1>
     </div>
     <div class="center large-paragraph">
       <!--Button to go to view test bank page-->
       <router-link to="TeacherViewTB">
-        <button class="button">View Test Banks</button>
+        <button class="t_button">View Test Banks</button>
       </router-link>
       <router-link to="TeacherNewTB">
-        <button class="button">New Test Bank</button>
+        <button class="t_button">New Test Bank</button>
       </router-link>
-      <button class="button" @click="importTest">Import Test</button>
+      <button class="t_button" @click="importTest">Import Test</button>
       <br>
       <div class="dropdown">
         <button class="dropbtn">Question Type</button>
@@ -25,9 +25,9 @@
           <a href="#" @click="displayQuestionType('Essay')">Essay</a>
         </div>
       </div>
-      <button class="button" @click="edit">New Question</button>
+      <button class="t_button" @click="edit">New Question</button>
       <router-link to="TeacherPubTB">
-        <button class="button">Publisher Textbook Page</button>
+        <button class="t_button">Publisher Textbook Page</button>
       </router-link>
       <div id="selectedQuestionType" class="center large-paragraph">{{ selectedQuestionType }}</div>
     </div>
@@ -70,7 +70,7 @@
           style="max-width: 100%; max-height: 100%;"><br>
           
         <button type="submit" class="btn">Save</button>
-        <button type="button" class="btn cancel" @click="closeForm">Close</button>
+        <button type="t_button" class="btn cancel" @click="closeForm">Close</button>
       </form>
     </div>
   </div>
@@ -81,7 +81,7 @@ export default {
   name: 'TeacherQuestions',
   data() {
     return {
-      courseTitle: '',
+      courseTitle: this.$route.params.courseTitle || '',
       chapter: '',
       section: '',
       question: '',
@@ -148,14 +148,17 @@ export default {
     closeForm() {
       document.getElementById('q_edit').style.display = 'none';
     }
-  },
-  mounted() {
-    const selectedCourseTitle = localStorage.getItem('selectedCourseTitle');
-    this.courseTitle = selectedCourseTitle || "Default Course Title";
   }
 };
 </script>
 
 <style scoped>
 @import '../assets/teacher_styles.css';
+.teacher-questions-container {
+  background-color: #43215a;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 </style>

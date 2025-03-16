@@ -1,6 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/PubLog.vue -->
 <template>
-  <div>
+  <div class = "pub-log-container">
     <div class="center large-heading">
       <h1>Publisher Login</h1>
     </div>
@@ -71,4 +71,14 @@ export default {
 
 <style scoped>
 @import '../assets/publisher_styles.css';
+.pub-log-container {
+    background-color: #17552a;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  }
 </style>

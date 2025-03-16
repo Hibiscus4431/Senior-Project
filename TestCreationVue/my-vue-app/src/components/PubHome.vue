@@ -1,6 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/PubHome.vue -->
 <template>
-  <div>
+  <div class = "pub-home-container">
     <div class="center large-heading">
       <h1>Textbook Selection</h1>
     </div>
@@ -56,4 +56,14 @@ export default {
 
 <style scoped>
 @import '../assets/publisher_styles.css';
+.pub-home-container {
+    background-color: #17552a;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  }
 </style>

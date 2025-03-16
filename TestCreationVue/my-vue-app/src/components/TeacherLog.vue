@@ -1,7 +1,7 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherLog.vue -->
 
 <template>
-    <div>
+    <div class = "teacher-log-container">
       <div class="center large-heading">
         <h1>Teacher Login</h1>
       </div>
@@ -71,6 +71,16 @@ export default {
 
 <style scoped>
 @import '../assets/teacher_styles.css';
+
+.teacher-log-container {
+  background-color: #43215a;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 
 .error-message {
   color: red;

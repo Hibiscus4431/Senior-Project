@@ -1,5 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherViewTB.vue -->
 <template>
+  <div class="teacher-viewTB-container"> 
   <!-- This is the page where the teacher can see all of their test banks-->
   <div class="center large-heading sticky">
     <h1 id="pageTitle">View Test Banks - {{ selectedTestBank }}</h1>
@@ -16,14 +17,14 @@
     </div>
 
     <router-link to="TeacherQuestions">
-      <button class="button">Return to Question Page</button>
+      <button class="t_button">Return to Question Page</button>
     </router-link><br>
 
     <router-link to="TeacherNewTest">
       <button class="button">Create New Test</button>
     </router-link>
 
-    <button class="button" @click="edit">View Drafts</button>
+    <button class="t_button" @click="edit">View Drafts</button>
     <br>
     <hr>
 
@@ -39,8 +40,9 @@
       <!--Figure out how to list the old test versions-->
       <!--When version is clicked it will send them to test view page-->
       <button type="submit" class="btn">Save</button>
-      <button type="button" class="btn cancel" @click="closeForm">Close</button>
+      <button type="t_button" class="btn cancel" @click="closeForm">Close</button>
     </form>
+  </div>
   </div>
 </template>
 
@@ -79,4 +81,15 @@ export default {
 
 <style scoped>
 @import '../assets/teacher_styles.css';
+
+.teacher-viewTB-container {
+  background-color: #43215a;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 </style>
