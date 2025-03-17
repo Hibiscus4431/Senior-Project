@@ -91,7 +91,7 @@ def create_question():
     return jsonify({"message": "Question created successfully", "question_id": question_id}), 201
 
 # READ Questions
-@question_bp.route('/questions', methods=['GET'])
+@question_bp.route('', methods=['GET'])
 def get_questions():
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -99,46 +99,52 @@ def get_questions():
     
     user_id = auth_data['user_id']
     view_type = request.args.get('view', 'user')  # Default to user's questions
-    
-    conn = current_app.config['get_db_connection']()
+    question_type = request.args.get('type', None)  # Optional: question type filter
+    conn = current_app.db_connection
     cur = conn.cursor()
     
     if view_type == 'published':
         query = """
-        SELECT q.*, c.name AS course_name, t.title AS textbook_title
+        SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
         FROM Questions q
-        LEFT JOIN Courses c ON q.course_id = c.id
-        LEFT JOIN Textbooks t ON q.textbook_id = t.id
+        LEFT JOIN Courses c ON q.course_id = c.course_id
+        LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
         WHERE q.is_published = TRUE;
         """
-        cur.execute(query)
+        params = []
+        
     elif view_type == 'canvas':
         query = """
-        SELECT q.*, c.name AS course_name, t.title AS textbook_title
+        SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
         FROM Questions q
-        LEFT JOIN Courses c ON q.course_id = c.id
-        LEFT JOIN Textbooks t ON q.textbook_id = t.id
+        LEFT JOIN Courses c ON q.course_id = c.course_id
+        LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
         WHERE q.source = 'canvas_qti';
         """
-        cur.execute(query)
+        params = []
     else:
         query = """
-        SELECT q.*, c.name AS course_name, t.title AS textbook_title
+        SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
         FROM Questions q
-        LEFT JOIN Courses c ON q.course_id = c.id
-        LEFT JOIN Textbooks t ON q.textbook_id = t.id
+        LEFT JOIN Courses c ON q.course_id = c.course_id
+        LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
         WHERE q.owner_id = %s;
         """
-        cur.execute(query, (user_id,))
+        params = [user_id]
+    if question_type:
+        query += " AND q.type = %s"
+        params.append(question_type)
+    
+    cur.execute(query, tuple(params))
     column_names = [desc[0] for desc in cur.description]  # Get column names
     questions = [dict(zip(column_names, row)) for row in cur.fetchall()]  # Convert to dicts
-    
+
     cur.close()
     conn.close()
     return jsonify({"questions": questions}), 200
 
 # UPDATE Question
-@question_bp.route('/questions/<int:question_id>', methods=['PUT'])
+@question_bp.route('<int:question_id>', methods=['PUT'])
 def update_question(question_id):
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -147,7 +153,7 @@ def update_question(question_id):
     user_id = auth_data['user_id']
     data = request.get_json()
     
-    conn = current_app.config['get_db_connection']()
+    conn = current_app.db_connection
     cur = conn.cursor()
     
     # Ensure question exists and is not published
@@ -155,39 +161,95 @@ def update_question(question_id):
     question = cur.fetchone()
     if not question:
         return jsonify({"error": "Question not found."}), 404
-    if question[1]:
+    if question[1]:  # is_published == True
         return jsonify({"error": "Published questions cannot be edited."}), 403
     if question[0] != user_id:
         return jsonify({"error": "Unauthorized."}), 403
     
     # Update question text if provided
-    if 'question_text' in data:
-        cur.execute("UPDATE Questions SET question_text = %s WHERE id = %s;", (data['question_text'], question_id))
-    
-    # Update multiple-choice options
-    if question[2] == 'Multiple Choice' and 'options' in data and isinstance(data['options'], list):
-        cur.execute("DELETE FROM QuestionOptions WHERE question_id = %s;", (question_id,))
-        for option in data['options']:
-            cur.execute("INSERT INTO QuestionOptions (question_id, option_text, is_correct) VALUES (%s, %s, %s);", 
-                        (question_id, option['option_text'], option['is_correct']))
-    
-    # Update fill-in-the-blank answers
-    if question[2] == 'Fill in the Blank' and 'blanks' in data and isinstance(data['blanks'], list):
-        cur.execute("DELETE FROM QuestionFillBlanks WHERE question_id = %s;", (question_id,))
-        for blank in data['blanks']:
-            cur.execute("INSERT INTO QuestionFillBlanks (question_id, correct_text) VALUES (%s, %s);", 
-                        (question_id, blank))
-    
-    # Update matching question pairs
-    if question[2] == 'Matching' and 'matches' in data and isinstance(data['matches'], list):
-        cur.execute("DELETE FROM QuestionMatches WHERE question_id = %s;", (question_id,))
-        for match in data['matches']:
-            cur.execute("INSERT INTO QuestionMatches (question_id, prompt_text, match_text) VALUES (%s, %s, %s);", 
-                        (question_id, match['prompt_text'], match['match_text']))
-    
+    if "question_text" in data:
+        cur.execute("UPDATE Questions SET question_text = %s WHERE id = %s;", 
+                    (data["question_text"], question_id))
+
+    # Handle Multiple-Choice Updates
+    if question[2] == "Multiple Choice" and "options" in data and isinstance(data["options"], list):
+        # Fetch existing options
+        cur.execute("SELECT option_id FROM QuestionOptions WHERE question_id = %s;", (question_id,))
+        existing_option_ids = {row[0] for row in cur.fetchall()}
+
+        for option in data["options"]:
+            option_id = option.get("option_id")
+            if option_id in existing_option_ids:
+                # Update existing option
+                cur.execute(
+                    "UPDATE QuestionOptions SET option_text = %s, is_correct = %s WHERE option_id = %s;",
+                    (option["option_text"], option["is_correct"], option_id)
+                )
+                existing_option_ids.remove(option_id)
+            else:
+                # Insert new option
+                cur.execute(
+                    "INSERT INTO QuestionOptions (question_id, option_text, is_correct) VALUES (%s, %s, %s);",
+                    (question_id, option["option_text"], option["is_correct"])
+                )
+
+        # Handle explicit deletions
+        if "to_delete" in data and isinstance(data["to_delete"], list):
+            for delete_id in data["to_delete"]:
+                if delete_id in existing_option_ids:
+                    cur.execute("DELETE FROM QuestionOptions WHERE id = %s;", (delete_id,))
+
+    # Handle Fill-in-the-Blank Updates
+    if question[2] == "Fill in the Blank" and "blanks" in data and isinstance(data["blanks"], list):
+        cur.execute("SELECT id FROM QuestionFillBlanks WHERE question_id = %s;", (question_id,))
+        existing_blank_ids = {row[0] for row in cur.fetchall()}
+
+        for blank in data["blanks"]:
+            blank_id = blank.get("id")
+            if blank_id in existing_blank_ids:
+                cur.execute(
+                    "UPDATE QuestionFillBlanks SET correct_text = %s WHERE id = %s;",
+                    (blank["correct_text"], blank_id)
+                )
+                existing_blank_ids.remove(blank_id)
+            else:
+                cur.execute(
+                    "INSERT INTO QuestionFillBlanks (question_id, correct_text) VALUES (%s, %s);",
+                    (question_id, blank["correct_text"])
+                )
+
+        if "to_delete" in data and isinstance(data["to_delete"], list):
+            for delete_id in data["to_delete"]:
+                if delete_id in existing_blank_ids:
+                    cur.execute("DELETE FROM QuestionFillBlanks WHERE id = %s;", (delete_id,))
+
+    # Handle Matching Question Updates
+    if question[2] == "Matching" and "matches" in data and isinstance(data["matches"], list):
+        cur.execute("SELECT id FROM QuestionMatches WHERE question_id = %s;", (question_id,))
+        existing_match_ids = {row[0] for row in cur.fetchall()}
+
+        for match in data["matches"]:
+            match_id = match.get("id")
+            if match_id in existing_match_ids:
+                cur.execute(
+                    "UPDATE QuestionMatches SET prompt_text = %s, match_text = %s WHERE id = %s;",
+                    (match["prompt_text"], match["match_text"], match_id)
+                )
+                existing_match_ids.remove(match_id)
+            else:
+                cur.execute(
+                    "INSERT INTO QuestionMatches (question_id, prompt_text, match_text) VALUES (%s, %s, %s);",
+                    (question_id, match["prompt_text"], match["match_text"])
+                )
+
+        if "to_delete" in data and isinstance(data["to_delete"], list):
+            for delete_id in data["to_delete"]:
+                if delete_id in existing_match_ids:
+                    cur.execute("DELETE FROM QuestionMatches WHERE id = %s;", (delete_id,))
+
+    # Commit all changes and close the connection
     conn.commit()
     cur.close()
-    conn.close()
     
     return jsonify({"message": "Question updated successfully."}), 200
 
