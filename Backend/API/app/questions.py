@@ -173,42 +173,57 @@ def update_question(question_id):
 
     # Handle Multiple-Choice Updates
     if question[2] == "Multiple Choice" and "options" in data and isinstance(data["options"], list):
-        # Fetch existing options
         cur.execute("SELECT option_id FROM QuestionOptions WHERE question_id = %s;", (question_id,))
         existing_option_ids = {row[0] for row in cur.fetchall()}
 
+        correct_answer_count = 0  # Track correct answers
+
         for option in data["options"]:
             option_id = option.get("option_id")
+            if option["is_correct"]:  
+                correct_answer_count += 1  # Count correct answers
+
             if option_id in existing_option_ids:
-                # Update existing option
                 cur.execute(
                     "UPDATE QuestionOptions SET option_text = %s, is_correct = %s WHERE option_id = %s;",
                     (option["option_text"], option["is_correct"], option_id)
                 )
                 existing_option_ids.remove(option_id)
             else:
-                # Insert new option
                 cur.execute(
                     "INSERT INTO QuestionOptions (question_id, option_text, is_correct) VALUES (%s, %s, %s);",
                     (question_id, option["option_text"], option["is_correct"])
                 )
+                if option["is_correct"]:  
+                    correct_answer_count += 1  # Count newly added correct answer
 
         # Handle explicit deletions
         if "to_delete" in data and isinstance(data["to_delete"], list):
             for delete_id in data["to_delete"]:
                 if delete_id in existing_option_ids:
-                    cur.execute("DELETE FROM QuestionOptions WHERE id = %s;", (delete_id,))
+                    cur.execute("SELECT is_correct FROM QuestionOptions WHERE option_id = %s;", (delete_id,))
+                    is_correct = cur.fetchone()
+                    if is_correct and is_correct[0]:  
+                        correct_answer_count -= 1  # Remove a correct answer from the count
+
+                    cur.execute("DELETE FROM QuestionOptions WHERE option_id = %s;", (delete_id,))
+
+        # Final Check: Ensure at least ONE correct answer exists
+        if correct_answer_count < 1:
+            conn.rollback()  # Cancel all updates if the condition is not met
+            return jsonify({"error": "Multiple Choice questions must have at least one correct answer."}), 400
+
 
     # Handle Fill-in-the-Blank Updates
     if question[2] == "Fill in the Blank" and "blanks" in data and isinstance(data["blanks"], list):
-        cur.execute("SELECT id FROM QuestionFillBlanks WHERE question_id = %s;", (question_id,))
+        cur.execute("SELECT blank_id FROM QuestionFillBlanks WHERE question_id = %s;", (question_id,))
         existing_blank_ids = {row[0] for row in cur.fetchall()}
 
         for blank in data["blanks"]:
-            blank_id = blank.get("id")
+            blank_id = blank.get("blank_id")
             if blank_id in existing_blank_ids:
                 cur.execute(
-                    "UPDATE QuestionFillBlanks SET correct_text = %s WHERE id = %s;",
+                    "UPDATE QuestionFillBlanks SET correct_text = %s WHERE blank_id = %s;",
                     (blank["correct_text"], blank_id)
                 )
                 existing_blank_ids.remove(blank_id)
@@ -221,18 +236,18 @@ def update_question(question_id):
         if "to_delete" in data and isinstance(data["to_delete"], list):
             for delete_id in data["to_delete"]:
                 if delete_id in existing_blank_ids:
-                    cur.execute("DELETE FROM QuestionFillBlanks WHERE id = %s;", (delete_id,))
+                    cur.execute("DELETE FROM QuestionFillBlanks WHERE blank_id = %s;", (delete_id,))
 
     # Handle Matching Question Updates
     if question[2] == "Matching" and "matches" in data and isinstance(data["matches"], list):
-        cur.execute("SELECT id FROM QuestionMatches WHERE question_id = %s;", (question_id,))
+        cur.execute("SELECT match_id FROM QuestionMatches WHERE question_id = %s;", (question_id,))
         existing_match_ids = {row[0] for row in cur.fetchall()}
 
         for match in data["matches"]:
-            match_id = match.get("id")
+            match_id = match.get("match_id")
             if match_id in existing_match_ids:
                 cur.execute(
-                    "UPDATE QuestionMatches SET prompt_text = %s, match_text = %s WHERE id = %s;",
+                    "UPDATE QuestionMatches SET prompt_text = %s, match_text = %s WHERE match_id = %s;",
                     (match["prompt_text"], match["match_text"], match_id)
                 )
                 existing_match_ids.remove(match_id)
@@ -245,7 +260,7 @@ def update_question(question_id):
         if "to_delete" in data and isinstance(data["to_delete"], list):
             for delete_id in data["to_delete"]:
                 if delete_id in existing_match_ids:
-                    cur.execute("DELETE FROM QuestionMatches WHERE id = %s;", (delete_id,))
+                    cur.execute("DELETE FROM QuestionMatches WHERE match_id = %s;", (delete_id,))
 
     # Commit all changes and close the connection
     conn.commit()
