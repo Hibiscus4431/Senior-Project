@@ -13,7 +13,6 @@
             </div>
             <br>
             <div class="button-container">
-                <!-- TODO: replace w/ publisher vue login-->
                 <router-link to="/PubLog">
                     <button class="button">Publisher</button>
                 </router-link>
