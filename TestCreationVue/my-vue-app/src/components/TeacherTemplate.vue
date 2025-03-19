@@ -9,10 +9,11 @@
     <div class="center large-paragraph" id = "contentToExport">
         Questions will be generated here
         <br>
-        testing pt 2
+        1. Question Information
+        <br>
     </div>
       <div class="center large-paragraph">
-  
+        <br>
         <p>Cover Page: <span>{{ testOptions.coverPage ? 'Yes' : 'No' }}</span></p>
         <p>Time Allowed: <span>{{ testOptions.timeAllowed }}</span></p>
         <p>Selected Template: <span>{{ testOptions.selectedTemplate }}</span></p>
@@ -20,7 +21,7 @@
       </div>
       
     <div class="center large-paragraph">
-        <button class="button" @click="exportToWord">Export to Word</button>
+        <button class="t_button" @click="exportToWord">Export to Word</button>
     </div>
 
     </div>

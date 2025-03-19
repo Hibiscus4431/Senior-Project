@@ -3,7 +3,7 @@
   <div class="teacher-viewTB-container"> 
   <!-- This is the page where the teacher can see all of their test banks-->
   <div class="center large-heading sticky">
-    <h1 id="pageTitle">View Test Banks - {{ selectedTestBank }}</h1>
+    <h1 id="pageTitle">View Test Banks{{ selectedTestBank }}</h1>
   </div>
   <div class="center large-paragraph">
     <!--It might be easier to make this a drop down option in question page-->
@@ -21,7 +21,7 @@
     </router-link><br>
 
     <router-link to="TeacherNewTest">
-      <button class="button">Create New Test</button>
+      <button class="t_button">Create New Test</button>
     </router-link>
 
     <button class="t_button" @click="edit">View Drafts</button>
