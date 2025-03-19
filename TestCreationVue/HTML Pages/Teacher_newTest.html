@@ -3,255 +3,58 @@
 
 
 <head>
-
-    <style>
-        /* Style for dropdown menu*/
-        .dropbtn {
-
-
-            background-color: rgb(84, 178, 150);
-            color: black;
-            padding: 10px;
-            font-size: 20px;
-            border: none;
+    <link rel="stylesheet" href="teacher_styles.css">
+    <script>
+        // Function to import a graphic after clicking embedded graphic button
+        function importGraphic() {
+            document.getElementById('fileInput').click();
         }
 
+        // Function to handle the file upload process for user selected file
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Handle the file upload process here
+                console.log('File selected:', file.name);
+                // Store the file name in localStorage --> change to saving to database later
+                localStorage.setItem('uploadedImage', file.name);
 
-        .dropdown {
-            position: relative;
-            display: inline-block;
+                // Code that connects file to the database/export test file will go here
+                // will probably have to appead the test/testkey export file and just add it to the end of the draft??
+            }
         }
 
+        // Function to gather selected options and store in localStorage
+        function generateTest() {
+            const coverPage = document.querySelector('input[type="checkbox"]').checked;
+            const selectedTemplate = document.querySelector('input[name="template"]:checked') ? document.querySelector('input[name="template"]:checked').value : '';
+            const timeAllowed = document.getElementById('est').value;
 
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #f1f1f1;
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-            z-index: 1;
-            font-size: 20px;
+            const testOptions = {
+                coverPage,
+                selectedTemplate,
+                uploadedImage: localStorage.getItem('uploadedImage'),
+                timeAllowed
+            };
+
+            localStorage.setItem('testOptions', JSON.stringify(testOptions));
+            window.location.href = 'Teacher_Template.html';
         }
 
-
-        .dropdown-content a {
-            color: black;
-            padding: 10px 15px;
-            text-decoration: none;
-            display: block;
-        }
+    </script>
 
 
-        .dropdown-content a:hover {
-            background-color: rgb(60, 125, 106);
-        }
-
-
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-
-
-        .dropdown:hover .dropbtn {
-            background-color: rgb(60, 125, 106);
-        }
-
-
-        /* changing style of create button */
-        .button {
-            background-color: rgb(84, 178, 150);
-            border: none;
-            color: black;
-            padding: 10px 15px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 20px;
-            margin: 4px 2px;
-            cursor: pointer;
-        }
-
-
-        /* Centered heading and background styling */
-        .center {
-            color: whitesmoke;
-            text-align: center;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
-        }
-
-
-        .large-heading {
-            font-size: 35px;
-        }
-
-
-        .large-paragraph {
-            font-size: 25px;
-        }
-
-
-        body {
-            background-color: #43215a;
-            font-family: Arial, sans-serif;
-        }
-
-        /* The popup form - hidden by default 
-    this sets the location of the popup on the screen*/
-        .form-popup {
-            display: none;
-            position: fixed;
-            bottom: 300px;
-            right: 600px;
-            border: 3px solid #f1f1f1;
-            z-index: 9;
-        }
-
-        /* Add styles to the form container */
-        /* this is the actual popup window*/
-        .form-container {
-            max-width: 300x;
-            padding: 10px;
-            background-color: white;
-        }
-
-        /* Full-width input fields */
-        /* styling of textboxes in the popup*/
-        .form-container input[type=text],
-        .form-container input[type=password] {
-            width: 90%;
-            padding: 15px;
-            margin: 5px 0 22px 0;
-            border: none;
-            background: lightgrey;
-        }
-
-        /* When the inputs get focus, do something */
-        /* styling of when user is typing in the textbox*/
-        .form-container input[type=text]:focus,
-        .form-container input[type=password]:focus {
-            background-color: #ddd;
-            outline: none;
-        }
-
-        /* Set a style for the submit/login button */
-        /* formatting for login and cancel buttons*/
-        .form-container .btn {
-            background-color: #04AA6D;
-            color: white;
-            padding: 16px 20px;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 10px;
-            opacity: 0.8;
-        }
-
-        /* Add a red background color to the cancel button */
-        /* overrides color for cancel button
-    uses all other formatting*/
-        .form-container .cancel {
-            background-color: red;
-        }
-
-        /* Add some hover effects to login and cancel buttons */
-        .form-container .btn:hover,
-        .open-button:hover {
-            opacity: 1;
-        }
-
-        /* Customize the label (the container) */
-        .container {
-            display: block;
-            position: relative;
-            padding-left: 35px;
-            margin-bottom: 12px;
-            margin-left: auto;
-            margin-right: auto;
-            width: 100%;
-            cursor: pointer;
-            font-size: 20px;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        /* Hide the browser's default checkbox */
-        .container input {
-            position: fixed;
-            opacity: 0;
-            cursor: pointer;
-            height: 0;
-            width: 0;
-        }
-
-        /* Create a custom checkbox */
-        .checkmark {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 25px;
-            width: 25px;
-            background-color: rgb(84, 178, 150);
-        }
-
-        /* On mouse-over, add a grey background color */
-        .container:hover input~.checkmark {
-            background-color: rgb(60, 125, 106);
-        }
-
-        /* When the checkbox is checked, add a blue background */
-        .container input:checked~.checkmark {
-            background-color: rgb(84, 178, 150);
-        }
-
-        /* Create the checkmark/indicator (hidden when not checked) */
-        .checkmark:after {
-            content: "";
-            position: absolute;
-            display: none;
-        }
-
-        /* Show the checkmark when checked */
-        .container input:checked~.checkmark:after {
-            display: block;
-        }
-
-        /* Style the checkmark/indicator */
-        .container .checkmark:after {
-            left: 9px;
-            top: 5px;
-            width: 5px;
-            height: 10px;
-            border: solid white;
-            border-width: 0 3px 3px 0;
-            -webkit-transform: rotate(45deg);
-            -ms-transform: rotate(45deg);
-            transform: rotate(45deg);
-        }
-
-        .box {
-            background-color: rgb(84, 178, 150);
-            text-decoration: none;
-            display: inline-block;
-            font-size: 20px;
-            margin: 4px 2px;
-            color: black;
-        }
-    </style>
 </head>
 
 
 <body>
+
     <!-- This is the page where the teacher can create a new test from their test bank-->
     <div class="center large-heading sticky">
         <h1> Create Test</h1>
     </div>
     <div class="center large-paragraph">
-        <div class="box" style="width: 250px";>
+        <div class="box" style="width: 250px" ;>
             <!--Can't figure out why text is off center-->
             <label class="container">Add Cover Page
                 <input type="checkbox" checked="checked">
@@ -263,7 +66,7 @@
         <br>
         <a href="#">
             <!--Figure out how to add images-->
-            <button class="button">Add Embedded Graphic</button>
+            <button class="button" onclick="importGraphic()">Add Embedded Graphic</button>
         </a><br>
         <div class="box">
             <label for="est">Time Allowed:</label>
@@ -271,32 +74,34 @@
         </div><br>
 
         <a href="#">
-            <button class="button">Generate Test</button>
+            <button class="button" onclick="generateTest()">Generate Test</button>
         </a><br>
 
     </div>
 
 
 
+    <!-- file input element -->
+    <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
+
 
     <!-- contents of popup-->
     <div class="form-popup" id="test_view">
         <form action="#" class="form-container">
             Please select which template to use<br>
-                <!--Can't figure out why text is off center-->
-                <label class="container">Default
-                    <input type="checkbox">
-                    <span class="checkmark"></span>
-                </label>
-                <label class="container">Mixed
-                    <input type="checkbox">
-                    <span class="checkmark"></span>
-                </label>
-                <!--figure out different option types-->
-                <label class="container">ETC
-                    <input type="checkbox">
-                    <span class="checkmark"></span>
-                </label>
+            <label class="r_container">Default
+                <input type="radio" checked="checked" name="radio">
+                <span class="checkmark"></span>
+            </label>
+            <label class="r_container">Mixed
+                <input type="radio" name="radio">
+                <span class="checkmark"></span>
+            </label>
+            <!--figure out different option types-->
+            <label class="r_container">ETC
+                <input type="radio" name="radio">
+                <span class="checkmark"></span>
+            </label>
 
             <button type="submit" class="btn">Save</button>
             <button type="button" class="btn cancel" onclick="closeForm()">Close</button>

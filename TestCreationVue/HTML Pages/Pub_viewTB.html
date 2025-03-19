@@ -4,95 +4,53 @@
 
 <head>
 
-    <style>
-        .button {
-            background-color: rgb(48, 191, 223);
-            border: none;
-            color: black;
-            padding: 10px 15px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 20px;
-            margin: 4px 2px;
-            cursor: pointer;
+    <link rel="stylesheet" href="publisher_styles.css">
+
+    <script>
+        //STILL NEED: function that will add questions to the current test bank
+
+        // function that will populate the questions container with questions from the selected test bank
+        function populateQuestions(testBank) {
+            const questionsContainer = document.getElementById('questionsContainer');
+            questionsContainer.innerHTML = '';
+
+            // example questions data, replace with actual data from database
+            const questions = {
+                'Bank 1': ['Question 1 from Bank 1', 'Question 2 from Bank 1', 'Question 3 from Bank 1'],
+                'Bank 2': ['Question 1 from Bank 2', 'Question 2 from Bank 2', 'Question 3 from Bank 2'],
+                'Bank 3': ['Question 1 from Bank 3', 'Question 2 from Bank 3', 'Question 3 from Bank 3']
+            };
+
+            // check if the selected test bank exists in the questions data
+            if (questions[testBank]) {
+                // Update the title with the selected test bank
+                document.getElementById('pageTitle').textContent = `View Test Banks - ${testBank}`;
+
+                // go through each question in the selected test bank
+                questions[testBank].forEach(question => {
+                    // create a paragraph element for each question and append it to the questions container
+                    const thisQuestion = document.createElement('p');
+                    thisQuestion.textContent = question;
+                    questionsContainer.appendChild(thisQuestion);
+                });
+            }
+        }
+        function edit() {
+            document.getElementById("test_view").style.display = "block";
         }
 
-        .center {
-            color: whitesmoke;
-            text-align: center;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
+        function closeForm() {
+            document.getElementById("test_view").style.display = "none";
         }
-
-        .large-heading {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
-            text-align: center;
-            font-size: 40px;
-        }
-
-        .large-paragraph {
-            font-size: 25px;
-        }
+    </script>
 
 
-        body {
-            background-color: #17552a;
-            font-family: Arial, sans-serif;
-        }
-
-        .dropbtn {
-            background-color: rgb(48, 191, 223);
-            color: black;
-            padding: 10px;
-            font-size: 20px;
-            border: none;
-        }
-
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #f1f1f1;
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-            z-index: 1;
-        }
-
-        .dropdown-content a {
-            color: black;
-            padding: 10px 15px;
-            text-decoration: none;
-            display: block;
-        }
-
-        .dropdown-content a:hover {
-            background-color: rgb(48, 191, 223);
-        }
-
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-
-        .dropdown:hover .dropbtn {
-            background-color: rgb(40, 151, 176);
-        }
-    </style>
 </head>
 
 <body>
-    <!-- This is the page where the teacher can see all of their test banks-->
+    <!-- This is the page where the publisher can see all of their test banks-->
     <div class="center large-heading sticky">
-        <h1> View Test Banks</h1>
+        <h1 id="pageTitle">View Test Banks</h1>
     </div>
     <div class="center large-paragraph">
 
@@ -100,9 +58,9 @@
         <div class="dropdown">
             <button class="dropbtn">Select Test Bank</button>
             <div class="dropdown-content">
-                <a href="#">Bank 1</a>
-                <a href="#">Bank 2</a>
-                <a href="#">Bank 3</a>
+                <a href="#" onclick="populateQuestions('Bank 1')">Bank 1</a>
+                <a href="#" onclick="populateQuestions('Bank 2')">Bank 2</a>
+                <a href="#" onclick="populateQuestions('Bank 3')">Bank 3</a>
             </div>
         </div>
 
@@ -114,7 +72,9 @@
 
 
         <!--Test bank questions will be generated here-->
-        Questions go here
+        <div id="questionsContainer">
+            Questions will display after test bank selection.
+        </div>
 
     </div>
 

@@ -1,63 +1,50 @@
 <!DOCTYPE html>
 <html lang="en-US">
-    <head>
-    <style>
-       
-    /* changing style of create button */
-    .button {
-      background-color:  rgb(84, 178, 150);
-      border: none;
-      color:black;
-      padding: 10px 15px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 20px;
-      margin: 4px 2px;
-      cursor: pointer;
-    }
 
-    /* Centered heading and background styling */
-    .center {
-            color: whitesmoke;
-            text-align: center;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
+<head>
+    <link rel="stylesheet" href="teacher_styles.css">
+</head>
+
+<body>
+    <!--This is the page where teachers view the selected pub test bank-->
+
+    <div class="center large-heading">
+        <h1>Testbank Name</h1>
+    </div>
+    <div class="center large-paragraph">
+            <button class="button" onclick="edit()">Rate Textbook</button>
+        <br>
+        <hr>
+        Questions are generated here<br>
+        <button class="button" onclick="edit()">Rate Question</button>
+    </div>
+
+
+     <!-- contents of popup-->
+     <div class="form-popup" id="rating">
+        <form action="/action_page.php" class="form-container">
+            <h1>Rating</h1>
+            <label for="star"><b>Enter whole number 1-5</b></label><br>
+            <input type="text" name="star" required><br>
+
+            <label for="comm"><b>Enter Comment</b></label><br>
+            <input type="text" name="comm" required><br>
+
+            <button type="submit" class="btn">Save</button>
+            <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+        </form>
+    </div>
+
+    <!--JavaScript that allows popup to function-->
+    <script>
+        function edit() {
+            document.getElementById("rating").style.display = "block";
         }
 
-        .large-heading {
-            font-size: 35px;
+        function closeForm() {
+            document.getElementById("rating").style.display = "none";
         }
-
-        .large-paragraph {
-            font-size: 25px;
-        }
-
-        body {
-            background-color: #43215a;
-            font-family: Arial, sans-serif;
-        }
-
-
-    </style>
-        </head>
-
-        <body>
- 
-             <div class="center large-heading">
-                <h1>Testbank Name</h1>
-              </div>
-                <div class="center large-paragraph">
-                <a href="#">
-                    <button class = "button">Rate Testbank</button>
-                </a>
-                <br><hr>
-                Questions are generated here<br>
-                <a href="#">
-                    <button class = "button">Rate Question</button>
-                </a>
-            </body>
+    </script>
+</body>
 
 </html>

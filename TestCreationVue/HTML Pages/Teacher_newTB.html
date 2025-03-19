@@ -3,68 +3,53 @@
 
 
 <head>
+    <link rel="stylesheet" href="teacher_styles.css">
 
-    <style>
+
+    <script>
+        // Function to handle the form submit event
+        function handleSubmit(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            // Get the values from the textboxes
+            const bankName = document.getElementById('bankName').value;
+            const bankChapter = document.getElementById('bankCh').value;
+            const bankSection = document.getElementById('bankSec').value;
+
+            // Save the values to local storage
+            localStorage.setItem('bankName', bankName);
+            localStorage.setItem('bankChapter', bankChapter);
+            localStorage.setItem('bankSection', bankSection);
 
 
-        /* Centered heading and background styling */
-        .center {
-            color: whitesmoke;
-            text-align: center;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
+            // Redirect to the next page 
+            window.location.href = 'Teacher_viewTB.html';
         }
-
-
-        .large-heading {
-            font-size: 35px;
-        }
-
-
-        .large-paragraph {
-            font-size: 25px;
-        }
-
-
-        body {
-            background-color: #43215a;
-            font-family: Arial, sans-serif;
-        }
-
-        input[type="submit"] {
-            background-color: rgb(84, 178, 150);
-            color: black;
-            font-size: 20px;
-            padding: 10px 20px;
-        }
-    </style>
-
+    </script>
 
 </head>
 
-
+<!--This is the page where the teacher can create a new testbank-->
 <body>
     <div class="center large-heading sticky">
         <h1>Create New Test Bank</h1>
     </div>
     <div class="center large-paragraph">
         <!-- This is the page where the teacher can create a new test bank-->
-        <form action="Teacher_question.html">
+        <form id="testBankForm" onsubmit="handleSubmit(event)">
             <!-- create TB Name text box-->
-            <label for="Tname">Name of Test Bank:</label>
-            <input type="text" id="Tname" name="Tname" value="" style="height: 20px;"><br>
+            <label for="bankName">Name of Test Bank:</label>
+            <input type="text" id="bankName" name="bankName" value="" style="height: 20px;"><br>
             <br>
 
             <!-- create Chapter text box-->
-            <label for="ch">Textbook Chapter:</label>
-            <input type="text" id="ch" name="ch" value="" style="height: 20px;"><br>
+            <label for="bankCh">Textbook Chapter:</label>
+            <input type="text" id="bankCh" name="bankCh" value="" style="height: 20px;"><br>
             <br>
 
             <!-- create section text box-->
-            <label for="sec">Textbook Section:</label>
-            <input type="text" id="sec" name="sec" value="" style="height: 20px;"><br>
+            <label for="bankSec">Textbook Section:</label>
+            <input type="text" id="bankSec" name="bankSec" value="" style="height: 20px;"><br>
             <br>
 
             <!-- submit button, when pressed it takes user to url specified-->
