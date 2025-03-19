@@ -1,4 +1,4 @@
-# my-vue-app/my-vue-app/README.md
+# my-vue-app/README.md
 
 # My Vue App
 
