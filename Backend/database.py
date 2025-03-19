@@ -1,1 +1,0 @@
-## A utility script for connecting to the MySQL database.
