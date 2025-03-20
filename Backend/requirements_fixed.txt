@@ -1,10 +1,4 @@
-# psycopg2-binary  # PostgreSQL adapter for Python
-# python-dotenv    # Loads .env files
-
-# pip freeze > requirements.txt # - put this in the terminal to downlad everything at once
-
-# # for the API section
-
+# Must have python installed to run this command.
 # To install the requirements, run the following command:
 # pip install -r requirements_fixed.txt
 
