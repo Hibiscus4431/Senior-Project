@@ -25,6 +25,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 export default {
   data() {
     return {
@@ -33,12 +34,25 @@ export default {
     };
   },
   methods: {
-    submitForm() {
-      // Handle form submission
-      console.log('Username:', this.username);
-      console.log('Password:', this.password);
-      // Redirect to Webmaster home page
-      this.$router.push('/WebmasterHome');
+    async submitForm() {
+      try {
+        const response = await axios.post('http://localhost:5000/login', {
+          username: this.username,
+          password: this.password
+        });
+        console.log(response.data);
+        if (response.data.message === "Login successful") {
+          // Store the token in localStorage or Vuex
+          localStorage.setItem('token', response.data.token);
+          // Redirect to Webmaster home page
+          this.$router.push('/WebmasterHome');
+        } else {
+          alert("Invalid username or password");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("An error occurred during login");
+      }
     }
   }
 };

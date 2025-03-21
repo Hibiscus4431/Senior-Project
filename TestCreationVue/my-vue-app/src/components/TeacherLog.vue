@@ -1,34 +1,35 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherLog.vue -->
 
 <template>
-    <div class = "teacher-log-container">
-      <div class="center large-heading">
-        <h1>Teacher Login</h1>
-      </div>
-  
-      <div class="center large-paragraph">
-        Please enter your teacher username and password:
+  <div class="teacher-log-container">
+    <div class="center large-heading">
+      <h1>Teacher Login</h1>
+    </div>
+
+    <div class="center large-paragraph">
+      Please enter your teacher username and password:
+      <br>
+      <br>
+      <form @submit.prevent="submitForm">
+        <!-- create username text box-->
+        <label for="uname">Username:</label><br>
+        <input type="text" id="uname" v-model="username"><br>
         <br>
-        <br>
-        <form @submit.prevent="submitForm">
-          <!-- create username text box-->
-          <label for="uname">Username:</label><br>
-          <input type="text" id="uname" v-model="username"><br>
-          <br>
-          <!-- create password textbox-->
-          <label for="pass">Password:</label><br>
-          <input type="password" id="pass" v-model="password"><br><br>
-          <!-- submit button, when pressed it takes user to url specified-->
-          <input type="submit" value="Submit">
-        </form>
-        <!--Show error message if user and password are entered incorrectly-->
-        <div v-if="errorMessage" class="error-message">{{ errorMessage }}
-        </div>
+        <!-- create password textbox-->
+        <label for="pass">Password:</label><br>
+        <input type="password" id="pass" v-model="password"><br><br>
+        <!-- submit button, when pressed it takes user to url specified-->
+        <input type="submit" value="Submit">
+      </form>
+      <!--Show error message if user and password are entered incorrectly-->
+      <div v-if="errorMessage" class="error-message">{{ errorMessage }}
       </div>
     </div>
-  </template>
-  
-  <script>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
 export default {
   data() {
     return {
@@ -38,32 +39,33 @@ export default {
     };
   },
   methods: {
-    submitForm() {
-      if (this.username === '' || this.password === '') {
-        this.errorMessage = 'Username and password are required.';
-        return;
+    async submitForm() {
+      try {
+    const response = await axios.post(
+      'http://localhost:5000/login', 
+      {
+        username: this.username,
+        password: this.password
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json'  // Explicitly set Content-Type header to application/json
+        }
       }
-
-      // Handle form submission
-      // Simulate an API call for login
-      this.login(this.username, this.password)
-        .then(() => {
+    );
+        console.log(response.data);
+        if (response.data.message === "Login successful") {
+          // Store the token in localStorage or Vuex
+          localStorage.setItem('token', response.data.token);
           // Redirect to Teacher home page
           this.$router.push('/TeacherHome');
-        })
-        .catch((error) => {
-          this.errorMessage = 'Invalid username or password.';
-        });
-    },
-    login(username, password) {
-      // Simulate an API call with a promise
-      return new Promise((resolve, reject) => {
-        if (username === 'teacher' && password === 'password') {
-          resolve();
         } else {
-          reject();
+          this.errorMessage = "Invalid username or password";
         }
-      });
+      } catch (error) {
+        console.error(error);
+        this.errorMessage = "An error occurred during login";
+      }
     }
   }
 };
@@ -81,7 +83,7 @@ export default {
 }
 
 .error-message {
-  color: red;
+  color: rgb(174, 38, 38);
   margin-top: 10px;
 }
 
