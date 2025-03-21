@@ -24,7 +24,7 @@ const routes = [
   { path: '/PubHome', name: 'PubHome', component: PubHome },
   { path: '/PubLog', name: 'PubLog', component: PubLog },
   { path: '/PubNewBook', name: 'PubNewBook', component: PubNewBook },
-  { path: '/PubNew-TB', name: 'PubNewTB', component: PubNewTB },
+  { path: '/PubNewTB', name: 'PubNewTB', component: PubNewTB },
   { path: '/PubQuestions', name: 'PubQuestions', component: PubQuestions },
   { path: '/PubViewTB', name: 'PubViewTB', component: PubViewTB },
   { path: '/TeacherHome', name: 'TeacherHome', component: TeacherHome },

@@ -5,11 +5,11 @@
         <h1>Testbank Name</h1>
       </div>
       <div class="center large-paragraph">
-        <button class="button" @click="edit">Rate Textbook</button>
+        <button class="t_button" @click="edit">Rate Textbook</button>
         <br>
         <hr>
         Questions are generated here<br>
-        <button class="button" @click="edit">Rate Question</button>
+        <button class="t_button" @click="edit">Rate Question</button>
       </div>
   
       <!-- contents of popup-->
@@ -23,7 +23,7 @@
           <input type="text" v-model="rating.comment" required><br>
   
           <button type="submit" class="btn">Save</button>
-          <button type="button" class="btn cancel" @click="closeForm">Close</button>
+          <button type="t_button" class="btn cancel" @click="closeForm">Close</button>
         </form>
       </div>
     </div>
@@ -63,10 +63,7 @@
   background-color: #43215a;
   font-family: Arial, sans-serif;
   height: 100vh;
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
 }
   </style>

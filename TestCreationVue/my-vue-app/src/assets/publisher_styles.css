@@ -44,7 +44,7 @@
   /* Dropdown styling end */
 
   /* changing style of create button */
-  .button {
+  .p_button {
     background-color: rgb(48, 191, 223);
     border: none;
     color: black;
@@ -145,10 +145,4 @@ uses all other formatting*/
     }
     /*popup styling end*/
 
-/* Larger submit button */
-input[type="submit"] {
-  background-color: rgb(48, 191, 223);
-  color: black;
-  font-size: 20px;
-  padding: 10px 20px;
-}
+

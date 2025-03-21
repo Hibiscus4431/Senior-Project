@@ -20,7 +20,7 @@
       </div>
       
     <div class="center large-paragraph">
-        <button class="button" @click="exportToWord">Export to Word</button>
+        <button class="t_button" @click="exportToWord">Export to Word</button>
     </div>
 
     </div>
@@ -88,10 +88,7 @@
   background-color: #43215a;
   font-family: Arial, sans-serif;
   height: 100vh;
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
 }
   </style>

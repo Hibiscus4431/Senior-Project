@@ -13,16 +13,16 @@
         </label>
       </div>
       <br>
-      <button class="button" @click="edit">Template Options</button>
+      <button class="t_button" @click="edit">Template Options</button>
       <br>
-      <button class="button" @click="importGraphic">Add Embedded Graphic</button>
+      <button class="t_button" @click="importGraphic">Add Embedded Graphic</button>
       <br>
       <div class="box">
         <label for="est">Time Allowed:</label>
         <input type="text" id="est" v-model="timeAllowed" style="height:20px;"><br>
       </div>
       <br>
-      <button class="button" @click="generateTest">Generate Test</button>
+      <button class="t_button" @click="generateTest">Generate Test</button>
     </div>
 
     <!-- file input element -->
@@ -90,10 +90,10 @@ export default {
       this.$router.push({ path: 'TeacherTemplate' });
     },
     edit() {
-      this.showPopup = true;
+      document.getElementById('test_view').style.display = 'block';
     },
     closeForm() {
-      this.showPopup = false;
+      document.getElementById('test_view').style.display = 'none';
     },
     saveTemplate() {
       this.closeForm();
@@ -108,10 +108,11 @@ export default {
   background-color: #43215a;
   font-family: Arial, sans-serif;
   height: 100vh;
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
 }
+.form-popup {
+  width: 300px;
+}
+
 </style>

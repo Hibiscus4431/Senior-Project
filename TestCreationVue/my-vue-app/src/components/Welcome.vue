@@ -76,10 +76,16 @@ export default {
     background-color: #2a2b2b !important;
     font-family: Arial, sans-serif;
     height: 100vh;
-    height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+
+}
+
+/* Larger submit button */
+input[type="submit"] {
+    background-color: #f1af15;
+    color: black;
+    font-size: 20px;
+    padding: 10px 20px;
 }
 </style>

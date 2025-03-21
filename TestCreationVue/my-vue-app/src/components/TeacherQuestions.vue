@@ -6,10 +6,10 @@
     </div>
     <div class="center large-paragraph">
       <!--Button to go to view test bank page-->
-      <router-link to="TeacherViewTB">
+      <router-link to="/TeacherViewTB">
         <button class="t_button">View Test Banks</button>
       </router-link>
-      <router-link to="TeacherNewTB">
+      <router-link to="/TeacherNewTB">
         <button class="t_button">New Test Bank</button>
       </router-link>
       <button class="t_button" @click="importTest">Import Test</button>
@@ -26,7 +26,7 @@
         </div>
       </div>
       <button class="t_button" @click="edit">New Question</button>
-      <router-link to="TeacherPubTB">
+      <router-link to="/TeacherPubQ">
         <button class="t_button">Publisher Textbook Page</button>
       </router-link>
       <div id="selectedQuestionType" class="center large-paragraph">{{ selectedQuestionType }}</div>
@@ -42,6 +42,10 @@
 
         <label for="sec"><b>Section Number</b></label><br>
         <input type="text" id="sec" v-model="section" required><br>
+
+        <label for="question_t"><b>Question Type</b></label><br>
+        <input type="text" id="question_t" v-model="question" required><br>
+
 
         <label for="question"><b>Question</b></label><br>
         <input type="text" id="question" v-model="question" required><br>
@@ -161,4 +165,6 @@ export default {
   display: flex;
   flex-direction: column;
 }
+
+
 </style>
