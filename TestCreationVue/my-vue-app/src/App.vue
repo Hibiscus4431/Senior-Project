@@ -9,6 +9,10 @@
 <script>
 export default {
   name: 'App',
+  name: 'App',
+  mounted() {
+    document.title = "Print-A-Test"; // Change this to your desired app name
+  }
 };
 </script>
 <style>

@@ -67,10 +67,13 @@
   background-color: #43215a;
   font-family: Arial, sans-serif;
   height: 100vh;
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  }
+  input[type="submit"] {
+  background-color: rgb(84, 178, 150);
+  color: black;
+  font-size: 20px;
+  padding: 10px 20px;
 }
   </style>

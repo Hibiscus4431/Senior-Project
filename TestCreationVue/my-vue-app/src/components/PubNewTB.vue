@@ -67,10 +67,14 @@
     background-color: #17552a;
     font-family: Arial, sans-serif;
     height: 100vh;
-    height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   }
+    /* Larger submit button */
+input[type="submit"] {
+  background-color: rgb(48, 191, 223);
+  color: black;
+  font-size: 20px;
+  padding: 10px 20px;
+}
   </style>

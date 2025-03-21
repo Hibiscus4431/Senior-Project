@@ -23,7 +23,7 @@
       </div>
       <!--creating a new course will take user to new page-->
       <router-link to="PubNewBook">
-        <button class="button">Add New Textbook</button>
+        <button class="p_button">Add New Textbook</button>
       </router-link>
       <br>
     </div>
@@ -60,10 +60,48 @@ export default {
     background-color: #17552a;
     font-family: Arial, sans-serif;
     height: 100vh;
-    height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  }
+
+  .dropbtn {
+    background-color: rgb(48, 191, 223);
+    color: black;
+    padding: 10px;
+    font-size: 20px;
+    border: none;
+  }
+
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+  }
+
+  .dropdown-content a {
+    color: black;
+    padding: 10px 15px;
+    text-decoration: none;
+    display: block;
+  }
+
+  .dropdown-content a:hover {
+    background-color: rgb(48, 191, 223);
+  }
+
+  .dropdown:hover .dropdown-content {
+    display: block;
+  }
+
+  .dropdown:hover .dropbtn {
+    background-color: rgb(40, 151, 176);
   }
 </style>

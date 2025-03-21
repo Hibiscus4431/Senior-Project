@@ -34,13 +34,13 @@
     </div>
   </div>
   <!-- contents of popup-->
-  <div class="form-popup" id="test_view" v-if="showPopup">
+  <div class="form-popup" id="test_view">
     <form action="#" class="form-container">
       Please select draft version to view:
       <!--Figure out how to list the old test versions-->
       <!--When version is clicked it will send them to test view page-->
       <button type="submit" class="btn">Save</button>
-      <button type="t_button" class="btn cancel" @click="closeForm">Close</button>
+      <button type="button" class="btn cancel" @click="closeForm">Close</button>
     </form>
   </div>
   </div>
@@ -70,10 +70,10 @@ export default {
       this.selectedTestBank = testBank;
     },
     edit() {
-      this.showPopup = true;
+      document.getElementById('test_view').style.display = 'block';
     },
     closeForm() {
-      this.showPopup = false;
+      document.getElementById('test_view').style.display = 'none';
     }
   }
 };
@@ -86,10 +86,11 @@ export default {
   background-color: #43215a;
   font-family: Arial, sans-serif;
   height: 100vh;
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+}
+
+.form-popup {
+  width: 300px;
 }
 </style>

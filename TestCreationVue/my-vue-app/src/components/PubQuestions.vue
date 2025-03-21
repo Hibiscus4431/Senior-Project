@@ -7,13 +7,13 @@
       <div class="center large-paragraph">
         <!--Button to go to view test bank page-->
         <router-link to="PubViewTB">
-          <button class="button">View Test Banks</button>
+          <button class="p_button">View Test Banks</button>
         </router-link>
   
         <router-link to="PubNewTB">
-          <button class="button">New Test Bank</button>
+          <button class="p_button">New Test Bank</button>
         </router-link>
-        <button class="button" @click="edit">New Question</button>
+        <button class="p_button" @click="edit">New Question</button>
         <br><br>
   
         Questions will be generated here
@@ -120,10 +120,9 @@
     background-color: #17552a;
     font-family: Arial, sans-serif;
     height: 100vh;
-    height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   }
+
+
   </style>

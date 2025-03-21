@@ -11,13 +11,36 @@ This project is a Vue.js application that serves as a Test Creation Manager. It 
 ```
 my-vue-app
 ├── src
+│   ├── assets
+│   │   |── publisher_styles.css # Styling formats for the publisher pages
+│   │   |── teacher_styles.css   # Styling formats for the teacher pages
+│   │   |── webmaster_styles.css # Styling formats for the webmaster pages
 │   ├── components
-│   │   └── Welcome.vue      # Vue component for the welcome page
-│   ├── App.vue              # Root component of the Vue application
-│   └── main.js              # Entry point of the Vue application
-├── package.json             # Configuration file for npm
-├── README.md                # Documentation for the project
-└── vue.config.js            # Configuration file for Vue CLI
+│   │   |── PubHome.vue          # Vue component for the Publisher Home page
+│   │   |── PubLog.vue           # Vue component for the Publisher Login page
+│   │   |── PubNewBook.vue       # Vue component for the Publisher Book Creation page
+│   │   |── PubQuestions.vue     # Vue component for the Publisher Question page
+│   │   |── PubViewTB.vue        # Vue component for the Publisher Testbank view page
+│   │   |── TeacherHome.vue      # Vue component for the Teacher Home page
+│   │   |── TeacherLog.vue       # Vue component for the Teacher Login page
+│   │   |── TeacherNewClass.vue  # Vue component for the Teacher Class Creation page
+│   │   |── TeacherNewTB.vue     # Vue component for the Teacher Testbank Creation page
+│   │   |── TeacherNewTest.vue   # Vue component for the Teacher Test Options page
+│   │   |── TeacherPubQ.vue      # Vue component for the Teacher view Pub Questions page
+│   │   |── TeacherPubTB.vue     # Vue component for the Teacher view Pub Testbanks page
+│   │   |── TeacherQuestions.vue # Vue component for the Teacher Question page
+│   │   |── TeacherTemplate.vue  # Vue component for the Teacher viewing the Test page
+│   │   |── TeacherViewTB.vue    # Vue component for the Teacher Testbank View page
+│   │   |── WebmasterHome.vue    # Vue component for the Webmaster Home page
+│   │   |── WebmasterLog.vue     # Vue component for the Webmaster Login page
+│   │   └── Welcome.vue          # Vue component for the welcome page
+│   ├── router
+│   │   |── index.js             # Routing table for the Vue application
+│   ├── App.vue                  # Root component of the Vue application
+│   └── main.js                  # Entry point of the Vue application
+├── package.json                 # Configuration file for npm
+├── README.md                    # Documentation for the project
+└── vue.config.js                # Configuration file for Vue CLI
 ```
 
 ## Setup Instructions

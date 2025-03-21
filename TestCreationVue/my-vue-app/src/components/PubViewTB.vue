@@ -2,7 +2,7 @@
 <template>
   <div  class="pub-viewTB-container">
     <div class="center large-heading sticky">
-      <h1 id="pageTitle">View Test Banks</h1>
+      <h1 id="pageTitle">View Test Banks - {{ selectedTestBank }}</h1>
     </div>
     <div class="center large-paragraph">
       <!--It might be easier to make this a drop down option in question page-->
@@ -16,7 +16,7 @@
       </div>
 
       <router-link to="PubQuestions">
-        <button class="button">Return to Question Page</button>
+        <button class="p_button">Return to Question Page</button>
       </router-link><br>
 
       <hr>
@@ -70,10 +70,47 @@ export default {
     background-color: #17552a;
     font-family: Arial, sans-serif;
     height: 100vh;
-    height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  }
+  .dropbtn {
+    background-color: rgb(48, 191, 223);
+    color: black;
+    padding: 10px;
+    font-size: 20px;
+    border: none;
+  }
+
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+  }
+
+  .dropdown-content a {
+    color: black;
+    padding: 10px 15px;
+    text-decoration: none;
+    display: block;
+  }
+
+  .dropdown-content a:hover {
+    background-color: rgb(48, 191, 223);
+  }
+
+  .dropdown:hover .dropdown-content {
+    display: block;
+  }
+
+  .dropdown:hover .dropbtn {
+    background-color: rgb(40, 151, 176);
   }
 </style>
