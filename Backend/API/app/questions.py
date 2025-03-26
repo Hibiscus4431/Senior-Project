@@ -303,7 +303,6 @@ def delete_question(question_id):
     return jsonify({"message": "Question deleted successfully."}), 200
 
 
-
 # ADD Attachment to Question
 #this needs to be tested for the supabase buckets NOT FINISHED
 @question_bp.route('/questions/<int:question_id>/attachment', methods=['POST'])

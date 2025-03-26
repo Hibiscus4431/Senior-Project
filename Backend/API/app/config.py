@@ -15,6 +15,9 @@ class Config:
     SUPABASE_URL = SUPABASE_URL
     SUPABASE_KEY = SUPABASE_KEY
 
+    #Supabase Storage bucket name 
+    QTI_BUCKET = "qti-uploads"
+
 # PostgreSQL database credentials
     DB_HOST = os.getenv("SUPABASE_DB_HOST")
     DB_NAME = os.getenv("SUPABASE_DB_NAME")

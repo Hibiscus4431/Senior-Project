@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="g0a2281e53518bae34b3129b1447b02ae" xmlns="http://www.imsglobal.org/xsd/imsccv1p1/imscp_v1p1" xmlns:lom="http://ltsc.ieee.org/xsd/imsccv1p1/LOM/resource" xmlns:imsmd="http://www.imsglobal.org/xsd/imsmd_v1p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsccv1p1/imscp_v1p1 http://www.imsglobal.org/xsd/imscp_v1p1.xsd http://ltsc.ieee.org/xsd/imsccv1p1/LOM/resource http://www.imsglobal.org/profile/cc/ccv1p1/LOM/ccv1p1_lomresource_v1p0.xsd http://www.imsglobal.org/xsd/imsmd_v1p2 http://www.imsglobal.org/xsd/imsmd_v1p2p2.xsd">
+  <metadata>
+    <schema>IMS Content</schema>
+    <schemaversion>1.1.3</schemaversion>
+    <imsmd:lom>
+      <imsmd:general>
+        <imsmd:title>
+          <imsmd:string>QTI Quiz Export for course "Group 4 Project"</imsmd:string>
+        </imsmd:title>
+      </imsmd:general>
+      <imsmd:lifeCycle>
+        <imsmd:contribute>
+          <imsmd:date>
+            <imsmd:dateTime>2025-03-25</imsmd:dateTime>
+          </imsmd:date>
+        </imsmd:contribute>
+      </imsmd:lifeCycle>
+      <imsmd:rights>
+        <imsmd:copyrightAndOtherRestrictions>
+          <imsmd:value>yes</imsmd:value>
+        </imsmd:copyrightAndOtherRestrictions>
+        <imsmd:description>
+          <imsmd:string>Private (Copyrighted) - http://en.wikipedia.org/wiki/Copyright</imsmd:string>
+        </imsmd:description>
+      </imsmd:rights>
+    </imsmd:lom>
+  </metadata>
+  <organizations/>
+  <resources>
+    <resource identifier="gc496deacf9171824ed0d89ac02c2e9b4" type="imsqti_xmlv1p2">
+      <file href="gc496deacf9171824ed0d89ac02c2e9b4/gc496deacf9171824ed0d89ac02c2e9b4.xml"/>
+      <dependency identifierref="gfcd27b7baa8bb87836cf653e9adcd47a"/>
+    </resource>
+    <resource identifier="gfcd27b7baa8bb87836cf653e9adcd47a" type="associatedcontent/imscc_xmlv1p1/learning-application-resource" href="gc496deacf9171824ed0d89ac02c2e9b4/assessment_meta.xml">
+      <file href="gc496deacf9171824ed0d89ac02c2e9b4/assessment_meta.xml"/>
+    </resource>
+  </resources>
+</manifest>
