@@ -46,13 +46,13 @@ def parse_qti_file_patched(manifest_path: str):
     qti_ns = {"qti": "http://www.imsglobal.org/xsd/ims_qtiasiv1p2"}
 
     qti_type_map = {
-        "multiple_choice_question": "multiple_choice",
-        "true_false_question": "true_false",
-        "short_answer_question": "short_answer",
-        "essay_question": "essay",
-        "matching_question": "matching",
-        "fill_in_multiple_blanks_question": "fill_in_the_blank",
-        "fill_in_the_blank": "fill_in_the_blank"
+        "multiple_choice_question": "Multiple Choice",
+        "true_false_question": "True/False",
+        "short_answer_question": "Short Answer",
+        "essay_question": "Essay",
+        "matching_question": "Matching",
+        "fill_in_multiple_blanks_question": "Fill in the Blank",
+        "fill_in_the_blank": "Fill in the Blank"
     }
 
     questions = []
@@ -78,20 +78,20 @@ def parse_qti_file_patched(manifest_path: str):
             "source": "canvas_qti"
         }
 
-        if question_type == "multiple_choice":
+        if question_type == "Multiple Choice":
             labels = item.findall(".//qti:response_label", qti_ns)
             correct = item.find(".//qti:respcondition/qti:conditionvar/qti:varequal", qti_ns)
             correct_id = correct.text if correct is not None else ""
-            choices = [
+            options = [
                 {
-                    "text": lbl.find(".//qti:mattext", qti_ns).text,
+                    "option_text": lbl.find(".//qti:mattext", qti_ns).text,
                     "is_correct": (lbl.attrib["ident"] == correct_id)
                 }
                 for lbl in labels
             ]
-            question_data["choices"] = choices
+            question_data["choices"] = options
 
-        elif question_type == "true_false":
+        elif question_type == "True/False":
             correct = item.find(".//qti:respcondition/qti:conditionvar/qti:varequal", qti_ns)
             correct_id = correct.text if correct is not None else ""
             labels = {
@@ -101,7 +101,7 @@ def parse_qti_file_patched(manifest_path: str):
             correct_answer = labels.get(correct_id)
             question_data["true_false_answer"] = (correct_answer == "true")
 
-        elif question_type == "matching":
+        elif question_type == "Matching":
             matches = []
             for resp in item.findall(".//qti:response_lid", qti_ns):
                 prompt = resp.find("./qti:material/qti:mattext", qti_ns)
@@ -114,14 +114,15 @@ def parse_qti_file_patched(manifest_path: str):
                 for label in resp.findall(".//qti:response_label", qti_ns):
                     match_text = label.find(".//qti:mattext", qti_ns).text
                     is_correct = label.attrib["ident"] == correct_id
-                    matches.append({
-                        "prompt": prompt.text if prompt is not None else "",
-                        "match": match_text,
-                        "is_correct": is_correct
-                    })
+                    if is_correct:
+                        matches.append({
+                        "prompt_text": prompt.text if prompt is not None else "",
+                        "match_text": match_text
+                        })
+
             question_data["matches"] = matches
 
-        elif question_type == "fill_in_the_blank":
+        elif question_type == "Fill in the Blank":
             question_data["question_text"] = replace_blanks(question_text_clean)
             blanks = []
             for resp in item.findall(".//qti:response_lid", qti_ns):
@@ -137,7 +138,7 @@ def parse_qti_file_patched(manifest_path: str):
                     is_correct = label.attrib["ident"] == correct_id
                     blanks.append({
                         "prompt": prompt.text if prompt is not None else "",
-                        "answer": label_text,
+                        "correct_text": label_text,
                         "is_correct": is_correct
                     })
             question_data["blanks"] = blanks
@@ -150,6 +151,7 @@ def parse_qti_file_patched(manifest_path: str):
         "questions": questions
     }
 
+""""
 # Run the patched parser
 # Gets the full path to your current working directory (your project root)
 # Step 1: Build the path to imsmanifest.xml
@@ -186,3 +188,4 @@ for i, q in enumerate(parsed["questions"], start=1):
         for b in q["blanks"]:
             print(f"    - Prompt: {b['prompt']}, Answer: {b['answer']} (Correct: {b['is_correct']})")
     print("-" * 40)
+"""

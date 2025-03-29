@@ -1,11 +1,14 @@
 # This is where the QTI import functionality is implemented.
 from flask import Blueprint, request, jsonify, current_app
 from .auth import authorize_request
-from config import Config
+from app.config import Config
 from werkzeug.utils import secure_filename
 from datetime import datetime
-from ..utilities.qti_parser import parse_qti_file_patched
-from ..utilities.file_handler import extract_qti_zip_from_supabase
+from utilities.qti_parser import parse_qti_file_patched
+from utilities.file_handler import extract_qti_zip_from_supabase
+from io import BytesIO
+import os
+import shutil
 
 qti_bp = Blueprint('qti', __name__)
 
@@ -23,7 +26,7 @@ def upload_qti_file():
 
     file = request.files['file']
     filename = secure_filename(file.filename)
-
+    file_bytes = BytesIO(file.read())
     # Create a unique file path using user ID and timestamp
     timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
     file_path = f"{user_id}/import_{timestamp}_{filename}"
@@ -34,7 +37,7 @@ def upload_qti_file():
         # Upload to Supabase Storage
         supabase.storage.from_(Config.QTI_BUCKET).upload(
             path=file_path,
-            file=file,
+            file=file_bytes.read(),
             file_options={"content-type": "application/zip"}
         )
 
@@ -124,17 +127,112 @@ def parse_qti_import(import_id):
             return jsonify({"error": "Import not found or unauthorized."}), 404
 
         file_path = result[0]
-        local_file_path = f"./{file_path}/imsmanifest.xml"  # Adjust pathing if needed
+        #local_file_path = f"./{file_path}/imsmanifest.xml"  # Adjust pathing if needed
+        inner_dir = next(os.scandir(file_path)).path
+        local_file_path = os.path.join(inner_dir, "imsmanifest.xml")
 
         # Run the parser
         parsed_data = parse_qti_file_patched(local_file_path)
 
+        shutil.rmtree(file_path, ignore_errors=True)
         return jsonify({
             "import_id": import_id,
             "quiz_title": parsed_data["quiz_title"],
             "time_limit": parsed_data["time_limit"],
             "questions": parsed_data["questions"]
         }), 200
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+@qti_bp.route('/save/<int:import_id>', methods=['POST'])
+def save_qti_questions(import_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    user_id = auth_data.get("user_id")
+    data = request.get_json()
+    course_id = data.get("course_id")  # Optional from frontend
+
+    try:
+        # DB connection
+        conn = Config.get_db_connection()
+        cursor = conn.cursor()
+
+        # Get file path for the import
+        cursor.execute("""
+            SELECT file_path FROM QTI_Imports
+            WHERE import_id = %s AND owner_id = %s
+        """, (import_id, user_id))
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({"error": "Import not found or unauthorized"}), 404
+
+        file_path = result[0]
+        manifest_path = os.path.join(file_path, "imsmanifest.xml")
+
+
+        # Parse file
+        parsed = parse_qti_file_patched(manifest_path)
+        questions = parsed["questions"]
+        inserted = []
+
+        for q in questions:
+            # Insert into Questions table
+            cursor.execute("""
+                INSERT INTO Questions (question_text, type, default_points, source, true_false_answer, owner_id, course_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id;
+            """, (
+                q["question_text"],
+                q["type"],
+                q.get("default_points", 1),
+                q.get("source", "canvas_qti"),
+                q.get("true_false_answer"),
+                user_id,
+                course_id
+            ))
+
+            question_id = cursor.fetchone()[0]
+
+            # Save multiple choice options
+            if q["type"] == "Multiple Choice":
+                for opt in q.get("choices", []):
+                    cursor.execute("""
+                        INSERT INTO QuestionOptions (question_id, option_text, is_correct)
+                        VALUES (%s, %s, %s)
+                    """, (question_id, opt["text"], opt["is_correct"]))
+
+            # Save fill-in-the-blank answers
+            elif q["type"] == "Fill in the Blank":
+                for blank in q.get("blanks", []):
+                    cursor.execute("""
+                        INSERT INTO QuestionFillBlanks (question_id, correct_text)
+                        VALUES (%s, %s)
+                    """, (question_id, blank["correct_text"]))
+
+            # Save matching options
+            elif q["type"] == "Matching":
+                for match in q.get("matches", []):
+                    cursor.execute("""
+                        INSERT INTO QuestionMatches (question_id, prompt_text, match_text)
+                        VALUES (%s, %s, %s)
+                    """, (question_id, match["prompt_text"], match["match_text"]))
+
+            inserted.append(question_id)
+
+        conn.commit()
+
+        return jsonify({
+            "message": f"{len(inserted)} questions saved successfully.",
+            "question_ids": inserted
+        }), 201
 
     except Exception as e:
         conn.rollback()
