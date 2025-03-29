@@ -79,13 +79,7 @@ def create_qti_import():
         conn.commit()
 
         # Extract ZIP file from Supabase and update file_path to extracted folder
-        unzipped_path = extract_qti_zip_from_supabase(file_path, import_id)
-
-        cursor.execute("""
-            UPDATE QTI_Imports SET file_path = %s WHERE import_id = %s
-        """, (unzipped_path, import_id))
-        conn.commit()
-
+        extract_qti_zip_from_supabase(file_path, import_id)
 
         return jsonify({
             'message': 'QTI import recorded successfully',
@@ -101,7 +95,7 @@ def create_qti_import():
         cursor.close()
         conn.close()
 
-# PHASE 2 - Process QTI import
+# PHASE 2 - Process QTI import (this is for testing this route is not meant to be implemented in the frontend)
 @qti_bp.route('/parse/<int:import_id>', methods=['GET'])
 def parse_qti_import(import_id):
     # Authenticate user
@@ -150,6 +144,7 @@ def parse_qti_import(import_id):
         cursor.close()
         conn.close()
 
+# PHASE 3 - Save QTI questions to DB
 @qti_bp.route('/save/<int:import_id>', methods=['POST'])
 def save_qti_questions(import_id):
     auth_data = authorize_request()
@@ -174,13 +169,41 @@ def save_qti_questions(import_id):
         if not result:
             return jsonify({"error": "Import not found or unauthorized"}), 404
 
-        file_path = result[0]
-        manifest_path = os.path.join(file_path, "imsmanifest.xml")
+        # Supabase file path (zip)
+        original_supabase_path = result[0].strip()
+
+        # Local extraction path (will contain the folder after unzipping)
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        unzipped_folder_path = os.path.join(BASE_DIR, f"qti-uploads/import_{import_id}")
+        
+        # Re-extract if missing
+        if not os.path.exists(unzipped_folder_path):
+            print("🛠️ Folder not found locally. Re-extracting from Supabase...")
+            unzipped_folder_path = extract_qti_zip_from_supabase(original_supabase_path, import_id)
+
+        
+        # Get the inner folder (e.g., group-4-project-quiz-export-3)
+        try:
+            inner_dir = next(os.scandir(unzipped_folder_path)).path
+        except StopIteration:
+            return jsonify({"error": "Extracted folder is empty!"}), 500
+        
+        manifest_path = os.path.join(inner_dir, "imsmanifest.xml")
 
 
         # Parse file
         parsed = parse_qti_file_patched(manifest_path)
+        quiz_title = parsed["quiz_title"]
         questions = parsed["questions"]
+
+        # ✅ Create test bank
+        cursor.execute("""
+            INSERT INTO test_bank (owner_id, name, course_id)
+            VALUES (%s, %s, %s)
+            RETURNING id;
+        """, (user_id, quiz_title, course_id))
+        test_bank_id = cursor.fetchone()[0]
+
         inserted = []
 
         for q in questions:
@@ -201,13 +224,20 @@ def save_qti_questions(import_id):
 
             question_id = cursor.fetchone()[0]
 
+            # ✅ Link to test bank
+            cursor.execute("""
+                INSERT INTO test_bank_questions (test_bank_id, question_id)
+                VALUES (%s, %s)
+            """, (test_bank_id, question_id))
+
+
             # Save multiple choice options
             if q["type"] == "Multiple Choice":
                 for opt in q.get("choices", []):
                     cursor.execute("""
                         INSERT INTO QuestionOptions (question_id, option_text, is_correct)
                         VALUES (%s, %s, %s)
-                    """, (question_id, opt["text"], opt["is_correct"]))
+                    """, (question_id, opt.get("option_text", ""), opt.get("is_correct", False)))
 
             # Save fill-in-the-blank answers
             elif q["type"] == "Fill in the Blank":
@@ -215,7 +245,8 @@ def save_qti_questions(import_id):
                     cursor.execute("""
                         INSERT INTO QuestionFillBlanks (question_id, correct_text)
                         VALUES (%s, %s)
-                    """, (question_id, blank["correct_text"]))
+                    """, (question_id, blank.get("correct_text", "")))
+    
 
             # Save matching options
             elif q["type"] == "Matching":
@@ -223,14 +254,26 @@ def save_qti_questions(import_id):
                     cursor.execute("""
                         INSERT INTO QuestionMatches (question_id, prompt_text, match_text)
                         VALUES (%s, %s, %s)
-                    """, (question_id, match["prompt_text"], match["match_text"]))
+                    """, (
+                        question_id,
+                        match.get("prompt_text", ""),
+                        match.get("match_text", "")
+                    ))
 
             inserted.append(question_id)
+
+        # ✅ Mark import as processed
+        cursor.execute("""
+            UPDATE QTI_Imports
+            SET status = 'processed'
+            WHERE import_id = %s
+        """, (import_id,))
 
         conn.commit()
 
         return jsonify({
-            "message": f"{len(inserted)} questions saved successfully.",
+            "message": f"{len(inserted)} questions saved and linkes to test bank '{quiz_title}' successfully.",
+            "test_bank_id": test_bank_id,
             "question_ids": inserted
         }), 201
 
@@ -241,3 +284,4 @@ def save_qti_questions(import_id):
     finally:
         cursor.close()
         conn.close()
+
