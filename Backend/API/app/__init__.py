@@ -4,6 +4,7 @@ from app.auth import auth_bp
 from app.textbook import textbook_bp
 from app.courses import course_bp
 from app.questions import question_bp
+from app.tests import test_bp
 
 def create_app():
     app = Flask(__name__)
@@ -20,5 +21,6 @@ def create_app():
     app.register_blueprint(textbook_bp, url_prefix="/textbooks")
     app.register_blueprint(course_bp, url_prefix="/courses")
     app.register_blueprint(question_bp, url_prefix="/questions")
+    app.register_blueprint(test_bp, url_prefix='/tests')
     
     return app
