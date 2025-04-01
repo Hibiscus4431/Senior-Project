@@ -1,8 +1,10 @@
 from flask import Blueprint, jsonify, request, current_app
 from app.auth import authorize_request
+from app.config import Config
 
 test_bp = Blueprint("test", __name__)
 
+# Still under review/ Not Completed yet
 @test_bp.route("/get_tests", methods=["GET"])
 def get_tests():
     """Fetches all tests from the database."""
@@ -11,7 +13,7 @@ def get_tests():
         return jsonify(auth_data[0]), auth_data[1]  # Return error if authorization fails
     
     try:
-        db_conn = current_app.db_connection
+        db_conn = Config.get_db_connection()
         cursor = db_conn.cursor()
         cursor.execute("SELECT * FROM tests")  # Adjust columns as needed
         tests = cursor.fetchall()
@@ -42,7 +44,7 @@ def add_test():
         return jsonify({"error": "Missing required fields"}), 400
     
     try:
-        db_conn = current_app.db_connection
+        db_conn = Config.get_db_connection()
         cursor = db_conn.cursor()
         
         cursor.execute(

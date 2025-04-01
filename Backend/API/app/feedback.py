@@ -6,6 +6,7 @@ import psycopg2.extras
 # Create Blueprint for feedback
 feedback_bp = Blueprint('feedback', __name__)
 
+
 @feedback_bp.route('/create', methods=['POST'])
 def create_feedback():
     auth_data = authorize_request()
