@@ -7,22 +7,25 @@
     <!-- This is the page where publishers log in-->
     <div class="center large-paragraph">
       Please enter your publisher username and password:
-      <br>
-      <br>
+      <br />
+      <br />
       <form @submit.prevent="submitForm">
         <!-- create username text box-->
-        <label for="uname">Username:</label><br>
-        <input type="text" id="uname" v-model="username" style="height: 20px;"><br>
+        <label for="uname">Username:</label><br />
+        <input type="text" id="uname" v-model="username" /><br />
+        <br />
         <!-- create password textbox-->
-        <br>
-        <label for="pass">Password:</label><br>
-        <input type="password" id="pass" v-model="password" style="height: 20px;"><br><br>
+        <label for="pass">Password:</label><br />
+        <input type="password" id="pass" v-model="password" /><br /><br />
         <!-- submit button, when pressed it takes user to url specified-->
-        <input type="submit" value="Submit">
+        <input type="submit" value="Submit" :disabled="loading" />
       </form>
-      <!--Show error message if user and password are entered incorrectly-->
-      <div v-if="errorMessage" class="error-message">{{ errorMessage }}
-      </div>
+
+      <!-- Show error message if user and password are entered incorrectly -->
+      <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+      
+      <!-- Show loading spinner if the form is submitting -->
+      <div v-if="loading" class="loading-message">Logging in...</div>
     </div>
   </div>
 </template>
