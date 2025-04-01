@@ -65,7 +65,7 @@ def create_qti_import():
     if not file_path:
         return jsonify({'error': 'Missing file_path'}), 400
 
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cursor = conn.cursor()
 
     try:
@@ -106,7 +106,7 @@ def parse_qti_import(import_id):
     user_id = auth_data.get("user_id")
 
     # Connect to DB
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cursor = conn.cursor()
 
     try:

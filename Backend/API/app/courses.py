@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from .auth import authorize_request
 from psycopg2 import sql
+from app.config import Config
 
 # Create Blueprint for courses
 course_bp = Blueprint('courses', __name__)
@@ -29,7 +30,7 @@ def create_course():
         return jsonify({"error": "Missing course_name or textbook_id"}), 400
 
     # Connect to PostgreSQL
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cursor = conn.cursor()
 
     insert_query = sql.SQL("""
@@ -58,7 +59,7 @@ def get_courses():
     if role != "teacher":
         return jsonify({"error": "Permission denied"}), 403
 
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cursor = conn.cursor()
 
     query = sql.SQL("""
@@ -98,7 +99,7 @@ def get_course(course_id):
     if role != "teacher":
         return jsonify({"error": "Permission denied"}), 403
 
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cursor = conn.cursor()
 
     query = sql.SQL("""
@@ -126,7 +127,7 @@ def get_course(course_id):
 
 
 # UPDATE Course by course_id
-@course_bp.route('<int:course_id>', methods=['PUT'])
+@course_bp.route('<int:course_id>', methods=['PATCH'])
 def update_course(course_id):
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -145,7 +146,7 @@ def update_course(course_id):
     if not course_name and not textbook_id:
         return jsonify({"error": "Missing course_name or textbook_id"}), 400
 
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cursor = conn.cursor()
 
     # Ensure course exists and is owned by user
@@ -168,7 +169,7 @@ def update_course(course_id):
         update_fields.append("textbook_id = %s")
         values.append(textbook_id)
 
-    values.append(course_id)  # Append course_id for WHERE clause
+    values.append(course_id)
 
     update_query = f"""
         UPDATE Courses SET {", ".join(update_fields)}
@@ -182,7 +183,6 @@ def update_course(course_id):
     conn.close()
 
     return jsonify({"message": "Course updated successfully"}), 200
-
 
 # DELETE Course by course_id
 # we wont have a delete course rn we will delete through supabase

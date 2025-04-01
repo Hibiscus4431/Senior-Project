@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from .auth import authorize_request
 from psycopg2 import sql
-
+from app.config import Config
 # Create Blueprint for textbook 
 textbook_bp = Blueprint('textbooks', __name__)
 
@@ -22,7 +22,7 @@ def create_textbook():
     if not all(field in data for field in required_fields):
         return jsonify({"error": "Missing required fields."}), 400
 
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     cur.execute("""
@@ -51,7 +51,7 @@ def get_textbooks():
     
     publisher_id = auth_data['user_id']
     
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     cur.execute("""
@@ -78,7 +78,7 @@ def get_textbook(textbook_id):
     if isinstance(auth_data, tuple):
         return jsonify(auth_data[0]), auth_data[1]
 
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     cur.execute("""
@@ -130,7 +130,7 @@ def update_textbook(textbook_id):
     values.append(textbook_id)
     values.append(publisher_id)
 
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
 
     query = f"""

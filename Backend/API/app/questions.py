@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from .auth import authorize_request
 from psycopg2 import sql
+from app.config import Config
 
 # Create Blueprint
 question_bp = Blueprint('questions', __name__)
@@ -30,7 +31,7 @@ def create_question():
     section_number = data.get('section_number')
     true_false_answer = data.get('true_false_answer') if data['type'] == 'True/False' else None
     
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     # Insert into Questions table
@@ -100,7 +101,7 @@ def get_questions():
     user_id = auth_data['user_id']
     view_type = request.args.get('view', 'user')  # Default to user's questions
     question_type = request.args.get('type', None)  # Optional: question type filter
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     if view_type == 'published':
@@ -153,7 +154,7 @@ def update_question(question_id):
     user_id = auth_data['user_id']
     data = request.get_json()
     
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     # Ensure question exists and is not published
@@ -276,7 +277,7 @@ def delete_question(question_id):
         return jsonify(auth_data[0]), auth_data[1]
     user_id = auth_data['user_id']
 
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
 
     # Ensure question exists and is owned by the user
@@ -302,7 +303,7 @@ def delete_question(question_id):
 
     return jsonify({"message": "Question deleted successfully."}), 200
 
-
+"""
 # ADD Attachment to Question
 #this needs to be tested for the supabase buckets NOT FINISHED
 @question_bp.route('/questions/<int:question_id>/attachment', methods=['POST'])
@@ -313,7 +314,7 @@ def upload_attachment(question_id):
     
     user_id = auth_data['user_id']
     
-    conn = current_app.config['get_db_connection']()
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     # Ensure question exists and is owned by the user
@@ -359,3 +360,5 @@ def upload_attachment(question_id):
     conn.close()
     
     return jsonify({"message": "Attachment uploaded successfully.", "attachment_id": attachment_id}), 201
+
+"""
