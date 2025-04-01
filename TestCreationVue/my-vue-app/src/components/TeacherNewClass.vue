@@ -54,7 +54,7 @@ export default {
         try {
           localStorage.setItem('courseData', JSON.stringify(courseData));
           localStorage.setItem('selectedCourseTitle', this.courseTitle); // Store the course title separately
-          this.$router.push({ path: 'TeacherQuestions' });
+          this.$router.push({ path: '/TeacherQuestions' });
         } catch (error) {
           console.error('Error saving course data:', error);
         }

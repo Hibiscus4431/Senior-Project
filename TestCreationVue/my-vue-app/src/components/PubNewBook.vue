@@ -66,7 +66,7 @@ export default {
           });
           console.log('Book saved successfully:', response.data);
           alert('Book saved successfully!');
-          this.$router.push({ path: 'PubQuestions.html' });
+          this.$router.push({ path: '/PubQuestions' });
         }
         catch (error) {
           console.error('Error saving book:', error);
