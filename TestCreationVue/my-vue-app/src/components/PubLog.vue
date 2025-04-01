@@ -1,6 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/PubLog.vue -->
 <template>
-  <div class = "pub-log-container">
+  <div class="pub-log-container">
     <div class="center large-heading">
       <h1>Publisher Login</h1>
     </div>
@@ -71,16 +71,17 @@ export default {
 
 <style scoped>
 @import '../assets/publisher_styles.css';
+
 .pub-log-container {
-    background-color: #17552a;
-    font-family: Arial, sans-serif;
-    height: 100vh;
+  background-color: #17552a;
+  font-family: Arial, sans-serif;
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-  /* Larger submit button */
-  input[type="submit"] {
+/* Larger submit button */
+input[type="submit"] {
   background-color: rgb(48, 191, 223);
   color: black;
   font-size: 20px;
