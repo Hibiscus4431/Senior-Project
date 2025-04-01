@@ -41,7 +41,6 @@ def create_textbook():
     
     return jsonify({"message": "Textbook created successfully", "textbook_id": textbook_id}), 201
 
-
 # GET Textbook by publisher_id (so all the textbooks that a publisher has created)
 @textbook_bp.route('', methods=['GET'])
 def get_textbooks():
@@ -69,7 +68,6 @@ def get_textbooks():
     conn.close()
     
     return jsonify({"textbooks": textbooks}), 200
-
 
 # GET Textbook by textbook_id 
 @textbook_bp.route('/<int:textbook_id>', methods=['GET'])
@@ -160,6 +158,38 @@ def update_textbook(textbook_id):
         }), 200
     else:
         return jsonify({"error": "Textbook not found or you do not have permission to update it."}), 404
+
+# GET all Textbooks (from all the publishers in the system)
+@textbook_bp.route('/all', methods=['GET'])
+def get_all_textbooks():
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    conn = current_app.db_connection
+    cur = conn.cursor()
+    
+    cur.execute("""
+        SELECT id, textbook_title, textbook_author, textbook_version, textbook_isbn
+        FROM Textbooks;
+    """)
+    
+    rows = cur.fetchall()
+    cur.close()
+
+    textbooks = [
+        {
+            "id": row[0],
+            "title": row[1],
+            "author": row[2],
+            "version": row[3],
+            "isbn": row[4]
+        }
+        for row in rows
+    ]
+
+    return jsonify({"textbooks": textbooks}), 200
+
 
 # DELETE Textbook by textbook_id
 # no delete for textbook becaseu a textbook is linked to course and course is linked to question

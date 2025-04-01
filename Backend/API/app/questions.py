@@ -6,7 +6,7 @@ from app.config import Config
 # Create Blueprint
 question_bp = Blueprint('questions', __name__)
 
-# CREATE Question
+# CREATE Question (If the user is a publisher, the question is automatically published)
 @question_bp.route('', methods=['POST'])
 def create_question():
     auth_data = authorize_request()
@@ -14,6 +14,7 @@ def create_question():
         return jsonify(auth_data[0]), auth_data[1]
     
     user_id = auth_data['user_id']
+    role = auth_data['role']
     data = request.get_json()
     required_fields = ['question_text', 'type']
     if not all(field in data for field in required_fields):
@@ -31,6 +32,8 @@ def create_question():
     section_number = data.get('section_number')
     true_false_answer = data.get('true_false_answer') if data['type'] == 'True/False' else None
     
+    is_published = True if role == 'published' else False
+
     conn = Config.get_db_connection()
     cur = conn.cursor()
     
@@ -45,7 +48,7 @@ def create_question():
         RETURNING id;
     """)
     
-    cur.execute(query, (data['question_text'], data['type'], user_id, true_false_answer, 
+    cur.execute(query, (data['question_text'], data['type'], user_id, true_false_answer,is_published, 
                         course_id, textbook_id, default_points, est_time, grading_instructions, 
                         attachment_id, source, chapter_number, section_number))
     question_id = cur.fetchone()[0]
@@ -91,7 +94,7 @@ def create_question():
 
     return jsonify({"message": "Question created successfully", "question_id": question_id}), 201
 
-# READ Questions
+# Get Questions (by user_id, published, or canvas) - automatically returns user's questions and published questions
 @question_bp.route('', methods=['GET'])
 def get_questions():
     auth_data = authorize_request()
@@ -144,8 +147,9 @@ def get_questions():
     conn.close()
     return jsonify({"questions": questions}), 200
 
-# UPDATE Question
-@question_bp.route('<int:question_id>', methods=['PUT'])
+# UPDATE Question (only unpublished questions can be updated) - this is a PATCH request
+# the only things that can be updated are the question_text, options, blanks, and matches!
+@question_bp.route('<int:question_id>', methods=['PATCH'])
 def update_question(question_id):
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -303,6 +307,7 @@ def delete_question(question_id):
 
     return jsonify({"message": "Question deleted successfully."}), 200
 
+#questions with attachments are coming later on
 """
 # ADD Attachment to Question
 #this needs to be tested for the supabase buckets NOT FINISHED

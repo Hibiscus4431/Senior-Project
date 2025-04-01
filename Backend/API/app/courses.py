@@ -23,11 +23,14 @@ def create_course():
         return jsonify({"error": "Permission denied"}), 403
 
     data = request.get_json()
-    course_name = data.get("course_name")
+    raw_name = data.get("course_name")
+    course_number = data.get("course_number")
     textbook_id = data.get("textbook_id")
 
-    if not course_name or not textbook_id:
+    if not raw_name or not textbook_id:
         return jsonify({"error": "Missing course_name or textbook_id"}), 400
+    
+    course_name = f"{raw_name.strip()} {course_number.strip()}" if course_number else raw_name.strip()
 
     # Connect to PostgreSQL
     conn = Config.get_db_connection()
