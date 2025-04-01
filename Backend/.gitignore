@@ -2,3 +2,5 @@
 .env
 /Backend/Database_Testing/
 .DS_Store
+qti_uploads/
+qti-uploads/

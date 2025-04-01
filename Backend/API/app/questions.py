@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from .auth import authorize_request
 from psycopg2 import sql
+from app.config import Config
 
 # Create Blueprint
 question_bp = Blueprint('questions', __name__)
@@ -30,7 +31,7 @@ def create_question():
     section_number = data.get('section_number')
     true_false_answer = data.get('true_false_answer') if data['type'] == 'True/False' else None
     
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     # Insert into Questions table
@@ -100,7 +101,7 @@ def get_questions():
     user_id = auth_data['user_id']
     view_type = request.args.get('view', 'user')  # Default to user's questions
     question_type = request.args.get('type', None)  # Optional: question type filter
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     if view_type == 'published':
@@ -128,7 +129,7 @@ def get_questions():
         FROM Questions q
         LEFT JOIN Courses c ON q.course_id = c.course_id
         LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
-        WHERE q.owner_id = %s;
+        WHERE q.owner_id = %s OR q.is_published = TRUE;
         """
         params = [user_id]
     if question_type:
@@ -153,7 +154,7 @@ def update_question(question_id):
     user_id = auth_data['user_id']
     data = request.get_json()
     
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     # Ensure question exists and is not published
@@ -269,12 +270,42 @@ def update_question(question_id):
     return jsonify({"message": "Question updated successfully."}), 200
 
 # DELETE Question
-#for time being, we are not deleting the questions, we are just marking them as deleted 
-# we will just hard delte through supabase
+@question_bp.route('<int:question_id>', methods=['DELETE'])
+def delete_question(question_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+    user_id = auth_data['user_id']
 
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+
+    # Ensure question exists and is owned by the user
+    cur.execute("SELECT owner_id, is_published FROM Questions WHERE id = %s;", (question_id,))
+    question = cur.fetchone()
+    if not question:
+        return jsonify({"error": "Question not found."}), 404
+    if question[1]: # is_published == True
+        return jsonify({"error": "Published questions cannot be deleted."}), 403
+    if question[0] != user_id:
+        return jsonify({"error": "Unauthorized."}), 403
+    
+    # Delete related options, blanks, and matches
+    cur.execute("DELETE FROM QuestionOptions WHERE question_id = %s;", (question_id,))
+    cur.execute("DELETE FROM QuestionFillBlanks WHERE question_id = %s;", (question_id,))
+    cur.execute("DELETE FROM QuestionMatches WHERE question_id = %s;", (question_id,))  
+
+    # Delete the main question 
+    cur.execute("Delete FROM Questions WHERE id = %s;", (question_id,))
+
+    conn.commit()
+    cur.close()
+
+    return jsonify({"message": "Question deleted successfully."}), 200
+
+"""
 # ADD Attachment to Question
 #this needs to be tested for the supabase buckets NOT FINISHED
-
 @question_bp.route('/questions/<int:question_id>/attachment', methods=['POST'])
 def upload_attachment(question_id):
     auth_data = authorize_request()
@@ -283,7 +314,7 @@ def upload_attachment(question_id):
     
     user_id = auth_data['user_id']
     
-    conn = current_app.config['get_db_connection']()
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     # Ensure question exists and is owned by the user
@@ -329,3 +360,5 @@ def upload_attachment(question_id):
     conn.close()
     
     return jsonify({"message": "Attachment uploaded successfully.", "attachment_id": attachment_id}), 201
+
+"""

@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 import jwt
 import datetime
 import os
-
+from app.config import Config
 auth_bp = Blueprint("auth", __name__)
 
 def authorize_request():
@@ -58,7 +58,7 @@ def create_user():
         user_id = response.user.id  # Supabase assigns a UUID
 
         # ✅ 2️⃣ Insert User into PostgreSQL Users Table
-        db_conn = current_app.db_connection  # ✅ Using current_app to access PostgreSQL
+        db_conn = Config.get_db_connection()  # ✅ Using Config because it creates a new access  to PostgreSQL
         cursor = db_conn.cursor()
         cursor.execute(
             "INSERT INTO Users (user_id, username, role) VALUES (%s, %s, %s)",
@@ -98,7 +98,7 @@ def login():
         access_token = response.session.access_token
 
         # ✅ 2️⃣ Retrieve User Metadata from PostgreSQL
-        db_conn = current_app.db_connection
+        db_conn = Config.get_db_connection()
         cursor = db_conn.cursor()
         cursor.execute("SELECT user_id, role FROM Users WHERE username = %s", (username,))
         user = cursor.fetchone()
@@ -136,3 +136,37 @@ def protected():
         "user_id": auth_data["user_id"],
         "role": auth_data["role"]
     })
+
+# ✅ 3️⃣ Refresh Token (Frontend) 
+@auth_bp.route("/refresh", methods=["POST"])
+def refresh_token():
+    data = request.get_json()
+    token = data.get("token")
+
+    if not token:
+        return jsonify({"error": "Missing token"}), 400
+
+    try:
+        # Decode without checking expiration
+        decoded = jwt.decode(
+            token,
+            os.getenv("JWT_SECRET"),
+            algorithms=["HS256"],
+            options={"verify_exp": False}
+        )
+
+        user_id = decoded.get("user_id")
+        role = decoded.get("role")
+
+        # Issue new token with a fresh expiration
+        new_payload = {
+            "user_id": user_id,
+            "role": role,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=5)  # Change to 60+ for prod
+        }
+
+        new_token = jwt.encode(new_payload, os.getenv("JWT_SECRET"), algorithm="HS256")
+        return jsonify({"token": new_token})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 401
