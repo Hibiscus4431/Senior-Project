@@ -1,5 +1,5 @@
 # This is where the QTI import functionality is implemented.
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 from .auth import authorize_request
 from app.config import Config
 from werkzeug.utils import secure_filename
@@ -9,6 +9,7 @@ from utilities.file_handler import extract_qti_zip_from_supabase
 from io import BytesIO
 import os
 import shutil
+import zipfile
 
 qti_bp = Blueprint('qti', __name__)
 
@@ -27,6 +28,16 @@ def upload_qti_file():
     file = request.files['file']
     filename = secure_filename(file.filename)
     file_bytes = BytesIO(file.read())
+    # Validate that it's a zip and contains imsmanifest.xml
+    try:
+        with zipfile.ZipFile(file_bytes, 'r') as zip_ref:
+            if "imsmanifest.xml" not in zip_ref.namelist():
+                return jsonify({'error': 'Invalid QTI zip: imsmanifest.xml not found.'}), 400
+    except zipfile.BadZipFile:
+        return jsonify({'error': 'Uploaded file is not a valid zip archive.'}), 400
+
+# Reset pointer after reading for validation
+    file_bytes.seek(0)
     # Create a unique file path using user ID and timestamp
     timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
     file_path = f"{user_id}/import_{timestamp}_{filename}"
@@ -223,13 +234,59 @@ def save_qti_questions(import_id):
             ))
 
             question_id = cursor.fetchone()[0]
-
+            
             # ✅ Link to test bank
             cursor.execute("""
                 INSERT INTO test_bank_questions (test_bank_id, question_id)
                 VALUES (%s, %s)
             """, (test_bank_id, question_id))
 
+            # 🔗 Handle attachment if it exists
+            attachment_file = q.get("attachment_file")
+            if attachment_file:
+                attachment_path = os.path.join(inner_dir, attachment_file)
+
+                if os.path.exists(attachment_path):
+                    with open(attachment_path, "rb") as img:
+                        file_bytes = img.read()
+
+                    # Create unique filename for bucket
+                    original_filename = os.path.basename(attachment_file)
+                    timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+                    unique_filename = f"{user_id}_{timestamp}_{original_filename}"
+                    supabase_path = f"{Config.ATTACHMENT_BUCKET}/{unique_filename}"
+
+                    # ✅ Upload to Supabase
+                    supabase = Config.get_supabase_client()
+                    supabase.storage.from_(Config.ATTACHMENT_BUCKET).upload(
+                    path=unique_filename,
+                    file=file_bytes,
+                    file_options={"content-type": "image/png"}  # You can detect this dynamically later
+        )
+
+                    # ✅ Save to DB
+                    cursor.execute("""
+                        INSERT INTO Attachments (name, filepath)
+                        VALUES (%s, %s)
+                        RETURNING attachments_id;
+                    """, (original_filename, unique_filename))
+
+                    attachment_id = cursor.fetchone()[0]
+
+                    # ✅ Link metadata
+                    cursor.execute("""
+                        INSERT INTO Attachments_MetaData (attachment_id, reference_id, reference_type)
+                        VALUES (%s, %s, 'question');
+                    """, (attachment_id, question_id))
+
+                    # ✅ Update question with attachment ID
+                    cursor.execute("""
+                        UPDATE Questions
+                        SET attachment_id = %s
+                        WHERE id = %s;
+                    """, (attachment_id, question_id))
+            else:
+                print(f"❌ Attachment not found locally: {attachment_path}")
 
             # Save multiple choice options
             if q["type"] == "Multiple Choice":
@@ -285,3 +342,16 @@ def save_qti_questions(import_id):
         cursor.close()
         conn.close()
 
+## How the process works for these routes is as follows:
+"""
+1. The user uploads a QTI zip file to the server. route 1.A
+    - returns the file path in the Supabase storage. (use this path to import the file)
+2. The server records the file path in the database.
+    - The server extracts the zip file and updates the file path to the extracted folder. 1.B
+    - The server returns the import_id and status.
+3. The server extracts the zip file and processes the QTI data. route 3
+    - The server saves the QTI data to the  questions, testbanks, and testbank questions database .
+    - The server returns the parsed QTI data.
+4. The server saves the QTI data to the database
+5. The user can then view the imported questions in the frontend.
+"""

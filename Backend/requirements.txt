@@ -1,6 +1,6 @@
 psycopg2-binary  # PostgreSQL adapter for Python
 python-dotenv    # Loads .env files
-
+zipfile          # Work with ZIP archives
 pip freeze > requirements.txt # - put this in the terminal to downlad everything at once
 
 # for the API section

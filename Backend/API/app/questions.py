@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 from .auth import authorize_request
 from psycopg2 import sql
 from app.config import Config
@@ -7,6 +7,7 @@ from app.config import Config
 question_bp = Blueprint('questions', __name__)
 
 # CREATE Question (If the user is a publisher, the question is automatically published)
+"""When creating a question that has an attacment linked to it the attaachment must be called first and saved in the frontend using loical storage and then that attachment id is linked to the question"""
 @question_bp.route('', methods=['POST'])
 def create_question():
     auth_data = authorize_request()
@@ -53,6 +54,13 @@ def create_question():
                         attachment_id, source, chapter_number, section_number))
     question_id = cur.fetchone()[0]
     
+    # Insert attachment metadata if provided
+    if attachment_id:
+        cur.execute("""
+            INSERT INTO Attachments_MetaData (attachment_id, reference_id, reference_type)
+            VALUES (%s, %s, 'question');
+        """, (attachment_id, question_id))
+
     # Handle different question types
     if data['type'] == 'Multiple Choice':
         if 'options' not in data or not isinstance(data['options'], list) or len(data['options']) < 2:

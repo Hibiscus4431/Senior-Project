@@ -159,7 +159,7 @@ def update_textbook(textbook_id):
     else:
         return jsonify({"error": "Textbook not found or you do not have permission to update it."}), 404
 
-# GET all Textbooks (from all the publishers in the system)
+# GET all Textbooks (from all the publishers in the system use for teachers to select textbooks for their courses)
 @textbook_bp.route('/all', methods=['GET'])
 def get_all_textbooks():
     auth_data = authorize_request()

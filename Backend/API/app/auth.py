@@ -170,3 +170,7 @@ def refresh_token():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 401
+    
+@auth_bp.route("/test")
+def test_route():
+    return jsonify({"message": "Flask is alive"})
