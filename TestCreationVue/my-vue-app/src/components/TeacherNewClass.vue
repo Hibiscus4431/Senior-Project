@@ -14,15 +14,12 @@
         <input type="text" id="courseNumber" v-model="courseNumber" style="height:20px"><br><br>
 
         <label for="textbookTitle">Textbook Title:</label>
-        <div class="dropdown" v-if="textbooks.length">
-          <button class="dropbtn">{{ selectedTextbookTitle || 'Select Textbook' }}</button>
-          <div class="dropdown-content">
-            <a v-for="textbook in textbooks" :key="textbook.id" @click="selectTextbook(textbook)">
-              {{ textbook.title }}
-            </a>
-          </div>
-        </div>
-        <div v-else style="color: red; margin-top: 10px;">
+        <select id="textbookTitle" v-model="selectedTextbookId" style="height:30px; width:200px" required>
+          <option v-for="textbook in textbooks" :key="textbook.id" :value="textbook.id">
+            {{ textbook.title }}
+          </option>
+        </select>
+        <div v-if="!textbooks.length" style="color: red; margin-top: 10px;">
           No textbooks available.
         </div><br><br>
 
@@ -44,7 +41,6 @@ export default {
       courseTitle: '',
       courseNumber: '',
       selectedTextbookId: null, // Stores the selected textbook's ID
-      selectedTextbookTitle: '', // Stores the selected textbook's title for display
       textbooks: [], // Array to store textbook data
       error: null
     };
@@ -59,7 +55,7 @@ export default {
       try {
         console.log('Fetching textbooks...'); // Debugging
 
-        const response = await api.get('/all', {
+        const response = await api.get('/textbooks/all', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -68,7 +64,7 @@ export default {
         console.log('Textbooks fetched:', response.data); // Debugging
 
         if (response.data && response.data.textbooks) {
-          this.textbooks = response.data.textbooks;
+          this.textbooks = response.data.textbooks; // Populate the textbooks array
         } else {
           this.error = 'Failed to fetch textbooks data.';
         }
@@ -94,9 +90,9 @@ export default {
     async saveCourse() {
       if (this.courseTitle && this.courseNumber && this.selectedTextbookId) {
         const courseData = {
-          course_title: this.courseTitle,
+          course_name: this.courseTitle,
           course_number: this.courseNumber,
-          textbook_id: this.selectedTextbookId
+          textbook_id: this.selectedTextbookId // Only send the textbook_id
         };
 
         try {
