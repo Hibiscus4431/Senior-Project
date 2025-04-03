@@ -32,8 +32,8 @@
 </template>
 
 <script>
-import axios from 'axios';
-
+import api from '@/api'; // <-- your custom Axios instance with token handling
+import jwtDecode from 'jwt-decode';
 
 export default {
   data() {
@@ -45,16 +45,15 @@ export default {
     };
   },
   mounted() {
-    // Check if token exists and is valid
+    // Optional: Check if token exists and redirect if still valid
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const decodedToken = jwtDecode(token);
+        const decoded = jwtDecode(token);
         const currentTime = Date.now() / 1000;
-        if (decodedToken.exp < currentTime) {
-          // Token expired
-          localStorage.removeItem('token');
-          this.$router.push('/login');
+
+        if (decoded.exp > currentTime && decoded.role === 'teacher') {
+          this.$router.push('/TeacherHome');
         }
       } catch (error) {
         console.error('Invalid token', error);
@@ -63,48 +62,55 @@ export default {
   },
   methods: {
     async submitForm() {
-      if (!this.username || !this.password) {
-        this.errorMessage = "Please enter both username and password.";
-        return;
-      }
+  if (!this.username || !this.password) {
+    this.errorMessage = "Please enter both username and password.";
+    return;
+  }
 
-      this.loading = true; // Show loading spinner
+  if (this.username.trim().length < 3 || this.password.trim().length < 6) {
+    this.errorMessage = "Username must be at least 3 characters and password at least 6 characters.";
+    return;
+  }
 
-      try {
-        const response = await axios.post(
-          'http://localhost:5000/auth/login',
-          {
-            username: this.username,
-            password: this.password
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
-        );
+  this.loading = true;
+  this.errorMessage = "";
 
-        this.loading = false; // Hide loading spinner
+  try {
+    const res = await api.post('/auth/login', {
+      username: this.username.toLowerCase(),
+      password: this.password
+    });
 
-        if (response.data.message === "Login successful") {
-          // Save token to localStorage
-          localStorage.setItem('token', response.data.token);
-          this.$router.push('/TeacherHome'); // Redirect to TeacherHome page
-        } else {
-          this.errorMessage = "Invalid username or password";
-        }
-      } catch (error) {
-        this.loading = false; // Hide loading spinner
-        if (error.response && error.response.status === 401) {
-          this.errorMessage = "Invalid username or password"; // Better error message for 401
-        } else {
-          this.errorMessage = "An error occurred during login";
-        }
-      }
+    const { token, user_id, role } = res.data;
+
+    // Store token and identity in localStorage
+    localStorage.setItem('token', token);
+    localStorage.setItem('user_id', user_id);
+    localStorage.setItem('role', role);
+
+    // Redirect based on role
+    if (role === 'teacher') {
+      this.$router.push('/TeacherHome');
+    } else {
+      this.errorMessage = "Only teachers can log in here.";
+      localStorage.clear(); // Clear stored data for non-teachers
     }
+  } catch (error) {
+    if (!error.response) {
+      this.errorMessage = "Network error. Please check your connection.";
+    } else if (error.response.status === 401) {
+      this.errorMessage = "Invalid username or password.";
+    } else {
+  this.errorMessage = (error.response && error.response.data && error.response.data.message) || "An error occurred during login.";
+}
+  } finally {
+    this.loading = false;
+  }
+}
   }
 };
 </script>
+
 
 <style scoped>
 @import '../assets/teacher_styles.css';

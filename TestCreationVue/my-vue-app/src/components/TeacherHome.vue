@@ -13,7 +13,8 @@
       <div class="dropdown" v-if="courses.length">
         <button class="dropbtn">Select Course</button>
         <div class="dropdown-content">
-          <router-link v-for="course in courses" :key="course.id" :to="{ name: 'TeacherQuestions', params: { courseTitle: course.title } }">
+          <router-link v-for="course in courses" :key="course.id" 
+          :to="{ name: 'TeacherQuestions', query: { courseTitle: course.title } }">
             {{ course.title }}
           </router-link>
         </div>
@@ -31,24 +32,47 @@
 </template>
 
 <script>
+import api from '@/api'; // <-- your custom Axios instance with token handling
+import jwtDecode from 'jwt-decode';
 export default {
   name: 'TeacherHome',
   data() {
     return {
-      courses: []
+      courses: [],
+      error: null,
     };
   },
   created() {
     this.fetchCourses();
   },
   methods: {
-    fetchCourses() {
-      // Simulate an API call to fetch courses
-      this.courses = [
-        { id: 1, title: 'Course 1' },
-        { id: 2, title: 'Course 2' },
-        { id: 3, title: 'Course 3' }
-      ];
+    async fetchCourses() {
+      try {
+        console.log('Fetching courses...'); // Debugging
+
+        const response = await api.get('/courses', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        console.log('Courses fetched:', response.data); // Debugging
+
+        if (response.data && response.data.courses) {
+          this.courses = response.data.courses;
+        } else {
+          this.error = 'Failed to fetch course data.';
+        }
+      } catch (error) {
+        console.error('Error fetching course:', error);
+
+        // Check if error has a response from the backend
+        if (error.response) {
+          this.error = `Error: ${error.response.status} - ${error.response.data.message || error.response.statusText}`;
+        } else {
+          this.error = 'Network error or server is not responding.';
+        }
+      }
     }
   }
 };
