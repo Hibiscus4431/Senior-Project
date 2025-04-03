@@ -17,7 +17,7 @@ class Config:
 
     #Supabase Storage bucket name 
     QTI_BUCKET = "qti-uploads"
-
+    ATTACHMENT_BUCKET = "attachments"
 # PostgreSQL database credentials
     DB_HOST = os.getenv("SUPABASE_DB_HOST")
     DB_NAME = os.getenv("SUPABASE_DB_NAME")
