@@ -2,7 +2,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 import re
 from bs4 import BeautifulSoup
-
+from html import unescape
 def strip_html(raw_html):
     return BeautifulSoup(raw_html, "html.parser").get_text().strip() if raw_html else ""
 
@@ -86,11 +86,13 @@ def parse_qti_file_patched(manifest_path: str):
 
         # 🧼 Also check inside mattext for embedded <img> tags (optional/fallback)
         mattext_elem = item.find(".//qti:mattext", qti_ns)
-        if mattext_elem is not None and "<img" in mattext_elem.text:
-            soup = BeautifulSoup(mattext_elem.text, "html.parser")
-            img_tag = soup.find("img")
-            if img_tag and img_tag.get("src"):
-                question_data["attachment_file"] = img_tag["src"]
+        if mattext_elem is not None:
+            decoded_html = unescape(mattext_elem.text or "")
+            if "<img" in decoded_html:
+                soup = BeautifulSoup(decoded_html, "html.parser")
+                img_tag = soup.find("img")
+                if img_tag and img_tag.get("src"):
+                    question_data["attachment_file"] = img_tag["src"]
 
         if question_type == "Multiple Choice":
             labels = item.findall(".//qti:response_label", qti_ns)

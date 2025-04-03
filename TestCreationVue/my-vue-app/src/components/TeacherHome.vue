@@ -8,21 +8,20 @@
       Please select or create a course:
       <br>
       <br>
-      <!--selecting a course will be a drop down menu with all previous courses-->
-      <!--If else that ensures there are courses to select from-->
+      <!-- Conditionally render the dropdown or the no courses message -->
       <div class="dropdown" v-if="courses.length">
         <button class="dropbtn">Select Course</button>
         <div class="dropdown-content">
-          <router-link v-for="course in courses" :key="course.id" 
-          :to="{ name: 'TeacherQuestions', query: { courseTitle: course.title } }">
+          <!-- Display all course titles in the dropdown -->
+          <a v-for="course in courses" :key="course.id" @click="selectCourse(course)">
             {{ course.title }}
-          </router-link>
+          </a>
         </div>
       </div>
       <div v-else>
         No courses available.
       </div>
-      <!--creating a new course will take user to new page-->
+      <!-- Button to create a new course will always be shown -->
       <router-link to="TeacherNewClass">
         <button class="t_button">Create New Course</button>
       </router-link>
@@ -30,6 +29,7 @@
     <br>
   </div>
 </template>
+
 
 <script>
 import api from '@/api'; // <-- your custom Axios instance with token handling
@@ -46,6 +46,7 @@ export default {
     this.fetchCourses();
   },
   methods: {
+    // fetch courses from the database
     async fetchCourses() {
       try {
         console.log('Fetching courses...'); // Debugging
@@ -57,9 +58,11 @@ export default {
         });
 
         console.log('Courses fetched:', response.data); // Debugging
-
-        if (response.data && response.data.courses) {
-          this.courses = response.data.courses;
+        if (Array.isArray(response.data)) {
+          this.courses = response.data.map(course => ({
+            id: course.course_id,
+            title: course.course_name
+          }));
         } else {
           this.error = 'Failed to fetch course data.';
         }
@@ -68,11 +71,22 @@ export default {
 
         // Check if error has a response from the backend
         if (error.response) {
-          this.error = `Error: ${error.response.status} - ${error.response.data.message || error.response.statusText}`;
+          this.error = error.response.data.error || error.response.statusText;
         } else {
           this.error = 'Network error or server is not responding.';
         }
       }
+    },
+    // Handle course selection
+    selectCourse(course) {
+      // Navigate to the TeacherQuestions page with the selected course's ID and title
+      this.$router.push({
+        name: 'TeacherQuestions',
+        query: {
+          courseId: course.id,
+          courseTitle: course.title
+        }
+      });
     }
   }
 };
@@ -80,6 +94,7 @@ export default {
 
 <style scoped>
 @import '../assets/teacher_styles.css';
+
 .teacher-home-container {
   background-color: #43215a;
   font-family: Arial, sans-serif;

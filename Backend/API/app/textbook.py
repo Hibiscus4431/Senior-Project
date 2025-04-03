@@ -166,12 +166,12 @@ def get_all_textbooks():
     if isinstance(auth_data, tuple):
         return jsonify(auth_data[0]), auth_data[1]
 
-    conn = current_app.db_connection
+    conn = Config.get_db_connection()
     cur = conn.cursor()
     
     cur.execute("""
-        SELECT id, textbook_title, textbook_author, textbook_version, textbook_isbn
-        FROM Textbooks;
+        SELECT textbook_id, textbook_title, textbook_author, textbook_version, textbook_isbn
+        FROM Textbook;
     """)
     
     rows = cur.fetchall()
