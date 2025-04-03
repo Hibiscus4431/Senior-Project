@@ -83,6 +83,7 @@ def login():
 
     if not username or not password:
         return jsonify({"error": "Invalid input"}), 400
+    
 
     try:
         # ✅ 1️⃣ Authenticate User with Supabase
@@ -170,7 +171,3 @@ def refresh_token():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 401
-    
-@auth_bp.route("/test")
-def test_route():
-    return jsonify({"message": "Flask is alive"})

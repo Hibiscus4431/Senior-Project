@@ -31,7 +31,7 @@ def upload_qti_file():
     # Validate that it's a zip and contains imsmanifest.xml
     try:
         with zipfile.ZipFile(file_bytes, 'r') as zip_ref:
-            if "imsmanifest.xml" not in zip_ref.namelist():
+            if not any(os.path.basename(name) == "imsmanifest.xml" for name in zip_ref.namelist()):
                 return jsonify({'error': 'Invalid QTI zip: imsmanifest.xml not found.'}), 400
     except zipfile.BadZipFile:
         return jsonify({'error': 'Uploaded file is not a valid zip archive.'}), 400
