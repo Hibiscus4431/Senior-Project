@@ -8,13 +8,12 @@
       Please select or create a course:
       <br>
       <br>
-      <!--selecting a course will be a drop down menu with all previous courses-->
-      <!--If else that ensures there are courses to select from-->
+      <!-- Conditionally render the dropdown or the no courses message -->
       <div class="dropdown" v-if="courses.length">
         <button class="dropbtn">Select Course</button>
         <div class="dropdown-content">
-          <router-link v-for="course in courses" :key="course.id" 
-          :to="{ name: 'TeacherQuestions', query: { courseTitle: course.title } }">
+          <router-link v-for="course in courses" :key="course.id"
+            :to="{ name: 'TeacherQuestions', query: { courseId: course.id, courseTitle: course.title } }">
             {{ course.title }}
           </router-link>
         </div>
@@ -22,7 +21,7 @@
       <div v-else>
         No courses available.
       </div>
-      <!--creating a new course will take user to new page-->
+      <!-- Button to create a new course will always be shown -->
       <router-link to="TeacherNewClass">
         <button class="t_button">Create New Course</button>
       </router-link>
@@ -30,6 +29,7 @@
     <br>
   </div>
 </template>
+
 
 <script>
 import api from '@/api'; // <-- your custom Axios instance with token handling
@@ -42,7 +42,7 @@ export default {
       error: null,
     };
   },
-  created() {
+  created () {
     this.fetchCourses();
   },
   methods: {
@@ -57,9 +57,11 @@ export default {
         });
 
         console.log('Courses fetched:', response.data); // Debugging
-
         if (response.data && response.data.courses) {
-          this.courses = response.data.courses;
+          this.courses = response.data.map(course => ({
+            id: course.course_id,
+            title: course.course_name
+          }));
         } else {
           this.error = 'Failed to fetch course data.';
         }
@@ -68,7 +70,7 @@ export default {
 
         // Check if error has a response from the backend
         if (error.response) {
-          this.error = `Error: ${error.response.status} - ${error.response.data.message || error.response.statusText}`;
+          this.error = error.response.data.error || error.response.statusText;
         } else {
           this.error = 'Network error or server is not responding.';
         }
@@ -80,6 +82,7 @@ export default {
 
 <style scoped>
 @import '../assets/teacher_styles.css';
+
 .teacher-home-container {
   background-color: #43215a;
   font-family: Arial, sans-serif;
