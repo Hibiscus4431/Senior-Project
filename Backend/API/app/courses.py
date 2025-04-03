@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 from .auth import authorize_request
 from psycopg2 import sql
 from app.config import Config

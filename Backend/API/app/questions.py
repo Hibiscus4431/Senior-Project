@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 from .auth import authorize_request
 from psycopg2 import sql
 from app.config import Config
@@ -7,6 +7,7 @@ from app.config import Config
 question_bp = Blueprint('questions', __name__)
 
 # CREATE Question (If the user is a publisher, the question is automatically published)
+"""When creating a question that has an attacment linked to it the attaachment must be called first and saved in the frontend using loical storage and then that attachment id is linked to the question"""
 @question_bp.route('', methods=['POST'])
 def create_question():
     auth_data = authorize_request()
@@ -32,7 +33,7 @@ def create_question():
     section_number = data.get('section_number')
     true_false_answer = data.get('true_false_answer') if data['type'] == 'True/False' else None
     
-    is_published = True if role == 'published' else False
+    is_published = True if role == 'publisher' else False
 
     conn = Config.get_db_connection()
     cur = conn.cursor()
@@ -53,6 +54,13 @@ def create_question():
                         attachment_id, source, chapter_number, section_number))
     question_id = cur.fetchone()[0]
     
+    # Insert attachment metadata if provided
+    if attachment_id:
+        cur.execute("""
+            INSERT INTO Attachments_MetaData (attachment_id, reference_id, reference_type)
+            VALUES (%s, %s, 'question');
+        """, (attachment_id, question_id))
+
     # Handle different question types
     if data['type'] == 'Multiple Choice':
         if 'options' not in data or not isinstance(data['options'], list) or len(data['options']) < 2:
@@ -307,63 +315,3 @@ def delete_question(question_id):
 
     return jsonify({"message": "Question deleted successfully."}), 200
 
-#questions with attachments are coming later on
-"""
-# ADD Attachment to Question
-#this needs to be tested for the supabase buckets NOT FINISHED
-@question_bp.route('/questions/<int:question_id>/attachment', methods=['POST'])
-def upload_attachment(question_id):
-    auth_data = authorize_request()
-    if isinstance(auth_data, tuple):
-        return jsonify(auth_data[0]), auth_data[1]
-    
-    user_id = auth_data['user_id']
-    
-    conn = Config.get_db_connection()
-    cur = conn.cursor()
-    
-    # Ensure question exists and is owned by the user
-    cur.execute("SELECT owner_id FROM Questions WHERE id = %s;", (question_id,))
-    question = cur.fetchone()
-    if not question:
-        return jsonify({"error": "Question not found."}), 404
-    if question[0] != user_id:
-        return jsonify({"error": "Unauthorized."}), 403
-    
-    # Handle file upload
-    if 'file' not in request.files:
-        return jsonify({"error": "No file provided."}), 400
-    
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file."}), 400
-    
-    filename = secure_filename(file.filename)
-    
-    # Define Supabase storage path (assuming bucket is set up)
-    supabase_client = current_app.config['get_supabase_client']()
-    bucket_name = 'attachments'
-    file_path = f"questions/{question_id}/{filename}"
-    
-    # Upload to Supabase Storage
-    try:
-        res = supabase_client.storage.from_(bucket_name).upload(file_path, file.stream, file.content_type)
-        if 'error' in res:
-            return jsonify({"error": "File upload failed."}), 500
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-    # Store attachment metadata in the database
-    cur.execute("INSERT INTO Attachments (name, filepath) VALUES (%s, %s) RETURNING attachments_id;", (filename, file_path))
-    attachment_id = cur.fetchone()[0]
-    
-    # Link attachment to the question
-    cur.execute("UPDATE Questions SET attachment_id = %s WHERE id = %s;", (attachment_id, question_id))
-    conn.commit()
-    
-    cur.close()
-    conn.close()
-    
-    return jsonify({"message": "Attachment uploaded successfully.", "attachment_id": attachment_id}), 201
-
-"""

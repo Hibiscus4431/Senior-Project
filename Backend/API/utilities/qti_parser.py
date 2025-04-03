@@ -77,6 +77,20 @@ def parse_qti_file_patched(manifest_path: str):
             "default_points": points,
             "source": "canvas_qti"
         }
+        
+        # 🔍 Check for image attachments
+        matimage = item.find(".//qti:matimage", qti_ns)
+        if matimage is not None:
+            image_path = matimage.attrib.get("uri")  # e.g., "quiz_media/image1.png"
+            question_data["attachment_file"] = image_path
+
+        # 🧼 Also check inside mattext for embedded <img> tags (optional/fallback)
+        mattext_elem = item.find(".//qti:mattext", qti_ns)
+        if mattext_elem is not None and "<img" in mattext_elem.text:
+            soup = BeautifulSoup(mattext_elem.text, "html.parser")
+            img_tag = soup.find("img")
+            if img_tag and img_tag.get("src"):
+                question_data["attachment_file"] = img_tag["src"]
 
         if question_type == "Multiple Choice":
             labels = item.findall(".//qti:response_label", qti_ns)
