@@ -1,6 +1,6 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherNewClass.vue -->
 <template>
-  <div class = "teacher-newClass-container">
+  <div class="teacher-newClass-container">
     <div class="center large-heading">
       <h1>Create New Class</h1>
     </div>
@@ -14,7 +14,17 @@
         <input type="text" id="courseNumber" v-model="courseNumber" style="height:20px"><br><br>
 
         <label for="textbookTitle">Textbook Title:</label>
-        <input type="text" id="textbookTitle" v-model="textbookTitle" style="height:20px"><br><br>
+        <div class="dropdown" v-if="textbooks.length">
+          <button class="dropbtn">{{ selectedTextbookTitle || 'Select Textbook' }}</button>
+          <div class="dropdown-content">
+            <a v-for="textbook in textbooks" :key="textbook.id" @click="selectTextbook(textbook)">
+              {{ textbook.title }}
+            </a>
+          </div>
+        </div>
+        <div v-else style="color: red; margin-top: 10px;">
+          No textbooks available.
+        </div><br><br>
 
         <div class="center large-heading">
           <input type="submit" value="Save">
@@ -25,38 +35,82 @@
 </template>
 
 <script>
+import api from '@/api';
+
 export default {
   name: 'TeacherNewClass',
   data() {
     return {
       courseTitle: '',
       courseNumber: '',
-      textbookTitle: '',
-      author: '',
-      ISBN: '',
-      version: '',
-      websiteLink: ''
+      selectedTextbookId: null, // Stores the selected textbook's ID
+      selectedTextbookTitle: '', // Stores the selected textbook's title for display
+      textbooks: [], // Array to store textbook data
+      error: null
     };
   },
+  created() {
+    this.fetchTextbooks(); // Fetch textbooks when the component is created
+  },
+
   methods: {
-    saveCourse() {
-      if (this.courseTitle && this.courseNumber && this.textbookTitle && this.author && this.ISBN && this.version && this.websiteLink) {
+    // Method to fetch textbooks from the database
+    async fetchTextbooks() {
+      try {
+        console.log('Fetching textbooks...'); // Debugging
+
+        const response = await api.get('/all', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        console.log('Textbooks fetched:', response.data); // Debugging
+
+        if (response.data && response.data.textbooks) {
+          this.textbooks = response.data.textbooks;
+        } else {
+          this.error = 'Failed to fetch textbooks data.';
+        }
+      } catch (error) {
+        console.error('Error fetching textbooks:', error);
+
+        // Check if error has a response from the backend
+        if (error.response) {
+          this.error = `Error: ${error.response.status} - ${error.response.data.message || error.response.statusText}`;
+        } else {
+          this.error = 'Network error or server is not responding.';
+        }
+      }
+    },
+
+    // Method to select a textbook from the dropdown
+    selectTextbook(textbook) {
+      this.selectedTextbookId = textbook.id;
+      this.selectedTextbookTitle = textbook.title;
+    },
+
+    // Method to save the course to the database
+    async saveCourse() {
+      if (this.courseTitle && this.courseNumber && this.selectedTextbookId) {
         const courseData = {
-          courseTitle: this.courseTitle,
-          courseNumber: this.courseNumber,
-          textbookTitle: this.textbookTitle,
-          author: this.author,
-          ISBN: this.ISBN,
-          version: this.version,
-          websiteLink: this.websiteLink
+          course_title: this.courseTitle,
+          course_number: this.courseNumber,
+          textbook_id: this.selectedTextbookId
         };
 
         try {
-          localStorage.setItem('courseData', JSON.stringify(courseData));
-          localStorage.setItem('selectedCourseTitle', this.courseTitle); // Store the course title separately
+          const response = await api.post('/courses', courseData, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          console.log('Course saved successfully:', response.data);
+          alert('Course saved successfully!');
           this.$router.push({ path: '/TeacherQuestions' });
         } catch (error) {
-          console.error('Error saving course data:', error);
+          console.error('Error saving course:', error);
+          alert('Failed to save the course. Please try again.');
         }
       } else {
         alert('Please fill out all fields.');
@@ -68,6 +122,7 @@ export default {
 
 <style scoped>
 @import '../assets/teacher_styles.css';
+
 .teacher-newClass-container {
   background-color: #43215a;
   font-family: Arial, sans-serif;
@@ -75,6 +130,7 @@ export default {
   display: flex;
   flex-direction: column;
 }
+
 input[type="submit"] {
   background-color: rgb(84, 178, 150);
   color: black;
