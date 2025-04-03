@@ -14,15 +14,16 @@
       </router-link>
       <button class="t_button" @click="importTest">Import Test</button>
       <br>
+      <!-- Dropdown to select question type -->
       <div class="dropdown">
         <button class="dropbtn">Question Type</button>
         <div class="dropdown-content">
-          <a href="#" @click="displayQuestionType('True/False')">True/False</a>
-          <a href="#" @click="displayQuestionType('Multiple Choice')">Multiple Choice</a>
-          <a href="#" @click="displayQuestionType('Matching')">Matching</a>
-          <a href="#" @click="displayQuestionType('Fill in the Blank')">Fill in the Blank</a>
-          <a href="#" @click="displayQuestionType('Short Answer')">Short Answer</a>
-          <a href="#" @click="displayQuestionType('Essay')">Essay</a>
+          <a href="#" @click="fetchQuestions('True/False')">True/False</a>
+          <a href="#" @click="fetchQuestions('Multiple Choice')">Multiple Choice</a>
+          <a href="#" @click="fetchQuestions('Matching')">Matching</a>
+          <a href="#" @click="fetchQuestions('Fill in the Blank')">Fill in the Blank</a>
+          <a href="#" @click="fetchQuestions('Short Answer')">Short Answer</a>
+          <a href="#" @click="fetchQuestions('Essay')">Essay</a>
         </div>
       </div>
       <button class="t_button" @click="edit">New Question</button>
@@ -31,8 +32,39 @@
       </router-link>
       <div id="selectedQuestionType" class="center large-paragraph">{{ selectedQuestionType }}</div>
     </div>
+
+    <!-- Insert the fetched questions display here -->
+    <div v-if="questions.length" class="questions-container">
+      <h3>Questions:</h3>
+      <ul>
+        <li v-for="(question, index) in questions" :key="index">
+          <strong>Question {{ index + 1 }}:</strong> {{ question.text }}
+          <div v-if="question.type === 'Multiple Choice'">
+            <ul>
+              <li v-for="(choice, i) in question.choices" :key="i">
+                {{ choice }}
+              </li>
+            </ul>
+          </div>
+          <div v-if="question.type === 'Matching'">
+            <ul>
+              <li v-for="(pair, i) in question.pairs" :key="i">
+                {{ pair.term }} - {{ pair.definition }}
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div v-else>
+      <p>No questions available for the selected type.</p>
+    </div>
+
+
     <!--file input element -->
     <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
+
+
     <!-- contents of popup-->
     <div class="form-popup" id="q_edit">
       <form class="form-container" @submit.prevent="handleQuestionSave">
@@ -56,10 +88,6 @@
           <option value="Short Answer">Short Answer</option>
           <option value="Essay">Essay</option>
         </select><br><br>
-
-        <label for="question_t"><b>Question Type</b></label><br>
-        <input type="text" id="question_t" v-model="question" required><br>
-
 
         <label for="question"><b>Question</b></label><br>
         <input type="text" id="question" v-model="question"><br>
@@ -134,27 +162,69 @@ import api from '@/api';
 export default {
   name: 'TeacherQuestions',
   data() {
-    return {
-      courseTitle: this.$route.query.courseTitle || 'Untitled Course',
-      chapter: '',
-      section: '',
-      question: '',
-      reference: '',
-      answer: '',
-      answerChoices: '',
-      points: '',
-      time: '',
-      instructions: '',
-      image: '',
-      imagePreview: '',
-      selectedQuestionType: '',
-      matchingPairs: [] // Array to store matching pairs for matching question type
-    };
+  return {
+    courseTitle: this.$route.query.courseTitle || 'Untitled Course',
+    chapter: '',
+    section: '',
+    question: '',
+    reference: '',
+    answer: '',
+    answerChoices: '',
+    points: '',
+    time: '',
+    instructions: '',
+    image: '',
+    imagePreview: '',
+    selectedQuestionType: '',
+    matchingPairs: [], // Array to store matching pairs for matching question type
+    questions: [] // Initialize questions as an empty array
+  };
   },
   methods: {
+    //function to fetch questions from the database based on selected question type
+    async fetchQuestions(type) {
+      this.selectedQuestionType = type; // Update the selected question type
+      try {
+        console.log(`Fetching questions of type: ${type}`);
+        const response = await api.get(`/questions`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}` // Include the token for authentication
+          },
+          params: {
+            courseId: this.$route.query.courseId, // Pass the course ID from the query parameters
+            questionType: type // Pass the selected question type
+          },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}` // Include the token for authentication
+          }
+        });
+
+        console.log('Questions fetched:', response.data);
+        if (Array.isArray(response.data.questions)) {
+          this.questions = response.data.questions.map((question) => ({
+            text: question.text,
+            type: question.type,
+            choices: question.choices || [], // For multiple-choice questions
+            pairs: question.pairs || [] // For matching questions
+          }));
+        } else {
+          this.questions = [];
+        }
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        this.questions = [];
+      }
+    },
+
+    //function to display questions fetched
+    displayQuestionType(type) {
+      this.selectedQuestionType = `Selected Question Type: ${type}`;
+    },
+
+
     created() {
-  console.log('Query Parameters:', this.$route.query);
-},
+      console.log('Query Parameters:', this.$route.query);
+    },
 
     addPair() {
       this.matchingPairs.push({ term: '', definition: '' });
@@ -195,9 +265,7 @@ export default {
       localStorage.setItem('questionData', JSON.stringify(questionData));
       this.closeForm();
     },
-    displayQuestionType(type) {
-      this.selectedQuestionType = `Selected Question Type: ${type}`;
-    },
+   
     handleImageUpload(event) {
       const file = event.target.files[0];
       if (file) {
@@ -231,6 +299,4 @@ export default {
   display: flex;
   flex-direction: column;
 }
-
-
 </style>
