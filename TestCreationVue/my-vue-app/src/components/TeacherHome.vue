@@ -42,7 +42,7 @@ export default {
       error: null,
     };
   },
-  created () {
+  created() {
     this.fetchCourses();
   },
   methods: {
@@ -59,14 +59,13 @@ export default {
 
         console.log('Courses fetched:', response.data); // Debugging
         if (Array.isArray(response.data)) {
-  this.courses = response.data.map(course => ({
-    id: course.course_id,
-    title: course.course_name
-  }));
-  console.log('Courses:', this.courses); // Debugging
-} else {
-  this.error = 'Failed to fetch course data.';
-}
+          this.courses = response.data.map(course => ({
+            id: course.course_id,
+            title: course.course_name
+          }));
+        } else {
+          this.error = 'Failed to fetch course data.';
+        }
       } catch (error) {
         console.error('Error fetching course:', error);
 
