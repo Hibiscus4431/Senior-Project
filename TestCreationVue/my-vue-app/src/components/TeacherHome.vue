@@ -12,10 +12,10 @@
       <div class="dropdown" v-if="courses.length">
         <button class="dropbtn">Select Course</button>
         <div class="dropdown-content">
-          <router-link v-for="course in courses" :key="course.id"
-            :to="{ name: 'TeacherQuestions', query: { courseId: course.id, courseTitle: course.title } }">
+          <!-- Display all course titles in the dropdown -->
+          <a v-for="course in courses" :key="course.id" @click="selectCourse(course)">
             {{ course.title }}
-          </router-link>
+          </a>
         </div>
       </div>
       <div v-else>
@@ -46,6 +46,7 @@ export default {
     this.fetchCourses();
   },
   methods: {
+    // fetch courses from the database
     async fetchCourses() {
       try {
         console.log('Fetching courses...'); // Debugging
@@ -57,14 +58,15 @@ export default {
         });
 
         console.log('Courses fetched:', response.data); // Debugging
-        if (response.data && response.data.courses) {
-          this.courses = response.data.map(course => ({
-            id: course.course_id,
-            title: course.course_name
-          }));
-        } else {
-          this.error = 'Failed to fetch course data.';
-        }
+        if (Array.isArray(response.data)) {
+  this.courses = response.data.map(course => ({
+    id: course.course_id,
+    title: course.course_name
+  }));
+  console.log('Courses:', this.courses); // Debugging
+} else {
+  this.error = 'Failed to fetch course data.';
+}
       } catch (error) {
         console.error('Error fetching course:', error);
 
@@ -75,6 +77,17 @@ export default {
           this.error = 'Network error or server is not responding.';
         }
       }
+    },
+    // Handle course selection
+    selectCourse(course) {
+      // Navigate to the TeacherQuestions page with the selected course's ID and title
+      this.$router.push({
+        name: 'TeacherQuestions',
+        query: {
+          courseId: course.id,
+          courseTitle: course.title
+        }
+      });
     }
   }
 };
