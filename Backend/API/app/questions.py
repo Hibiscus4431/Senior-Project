@@ -39,13 +39,13 @@ def create_question():
     cur = conn.cursor()
     
     # Insert into Questions table
-    query = sql.SQL("""
+    query = ("""
         INSERT INTO Questions (
             question_text, type, owner_id, true_false_answer, is_published, 
             course_id, textbook_id, default_points, est_time, grading_instructions, 
             attachment_id, source, chapter_number, section_number
         )
-        VALUES (%s, %s, %s, %s, FALSE, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id;
     """)
     
