@@ -10,3 +10,4 @@ pip install python-dotenv
 pip install flask
 pip install requests
 pip install pyjwt
+pip install BeautifulSoup4 
