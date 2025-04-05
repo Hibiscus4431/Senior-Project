@@ -102,7 +102,11 @@ def create_question():
 
     return jsonify({"message": "Question created successfully", "question_id": question_id}), 201
 
-# Get Questions (by user_id, published, or canvas) - automatically returns user's questions and published questions
+# Get Questions (by user_id, published, or canvas) - automatically returns user's questions and published questions gets questions by type and returns what is needed 
+"""
+When you do this route for the front end there needs to be something added to your front end code 
+to send the course_id that is selected then it can show all the questions associated with that course
+if that becomes a hassle then dont provide the course id and it will show the questions that are associated with the user"""
 @question_bp.route('', methods=['GET'])
 def get_questions():
     auth_data = authorize_request()
@@ -114,7 +118,9 @@ def get_questions():
     question_type = request.args.get('type', None)  # Optional: question type filter
     conn = Config.get_db_connection()
     cur = conn.cursor()
-    
+
+    course_id_filter = request.args.get('course_id', None)
+
     if view_type == 'published':
         query = """
         SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
@@ -134,15 +140,27 @@ def get_questions():
         WHERE q.source = 'canvas_qti';
         """
         params = []
+
     else:
-        query = """
-        SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
-        FROM Questions q
-        LEFT JOIN Courses c ON q.course_id = c.course_id
-        LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
-        WHERE q.owner_id = %s OR q.is_published = TRUE;
-        """
+        if course_id_filter:
+            query = """
+                SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
+                FROM Questions q
+                LEFT JOIN Courses c ON q.course_id = c.course_id
+                LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
+                WHERE q.course_id = %s AND (q.owner_id = %s OR q.is_published = TRUE)
+            """
+            params = [course_id_filter, user_id]
+        else:
+            query = """
+            SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
+            FROM Questions q
+            LEFT JOIN Courses c ON q.course_id = c.course_id
+            LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
+            WHERE q.owner_id = %s OR q.is_published = TRUE;
+            """
         params = [user_id]
+
     if question_type:
         query += " AND q.type = %s"
         params.append(question_type)
@@ -150,6 +168,34 @@ def get_questions():
     cur.execute(query, tuple(params))
     column_names = [desc[0] for desc in cur.description]  # Get column names
     questions = [dict(zip(column_names, row)) for row in cur.fetchall()]  # Convert to dicts
+
+    for q in questions:
+        qid = q['id']
+        qtype = q['type']
+
+        if qtype == 'Multiple Choice':
+            cur.execute("""
+                SELECT option_id, option_text 
+                FROM QuestionOptions 
+                WHERE question_id = %s;
+            """, (qid,))
+            q['options'] = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
+        
+        elif qtype == 'Matching':
+            cur.execute("""
+                SELECT match_id, prompt_text, match_text 
+                FROM QuestionMatches 
+                WHERE question_id = %s;
+            """, (qid,))
+            q['matches'] = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
+
+        elif qtype == 'Fill in the Blank':
+            cur.execute("""
+                SELECT blank_id, correct_text 
+                FROM QuestionFillBlanks 
+                WHERE question_id = %s;
+            """, (qid,))
+            q['blanks'] = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
 
     cur.close()
     conn.close()

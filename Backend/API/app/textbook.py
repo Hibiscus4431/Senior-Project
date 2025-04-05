@@ -170,8 +170,8 @@ def get_all_textbooks():
     cur = conn.cursor()
     
     cur.execute("""
-        SELECT id, textbook_title, textbook_author, textbook_version, textbook_isbn
-        FROM Textbooks;
+        SELECT textbook_id, textbook_title, textbook_author, textbook_version, textbook_isbn
+        FROM Textbook;
     """)
     
     rows = cur.fetchall()
