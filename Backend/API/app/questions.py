@@ -121,49 +121,41 @@ def get_questions():
 
     course_id_filter = request.args.get('course_id', None)
 
+    params = []
     if view_type == 'published':
         query = """
         SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
         FROM Questions q
         LEFT JOIN Courses c ON q.course_id = c.course_id
         LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
-        WHERE q.is_published = TRUE;
+        WHERE q.is_published = TRUE
         """
-        params = []
-        
     elif view_type == 'canvas':
         query = """
         SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
         FROM Questions q
         LEFT JOIN Courses c ON q.course_id = c.course_id
         LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
-        WHERE q.source = 'canvas_qti';
+        WHERE q.source = 'canvas_qti'
         """
-        params = []
-
     else:
+        query = """
+        SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
+        FROM Questions q
+        LEFT JOIN Courses c ON q.course_id = c.course_id
+        LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
+        WHERE (q.owner_id = %s OR q.is_published = TRUE)
+        """
+        params.append(user_id)
+
         if course_id_filter:
-            query = """
-                SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
-                FROM Questions q
-                LEFT JOIN Courses c ON q.course_id = c.course_id
-                LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
-                WHERE q.course_id = %s AND (q.owner_id = %s OR q.is_published = TRUE)
-            """
-            params = [course_id_filter, user_id]
-        else:
-            query = """
-            SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
-            FROM Questions q
-            LEFT JOIN Courses c ON q.course_id = c.course_id
-            LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
-            WHERE q.owner_id = %s OR q.is_published = TRUE;
-            """
-        params = [user_id]
+            query += " AND q.course_id = %s"
+            params.append(course_id_filter)
 
     if question_type:
         query += " AND q.type = %s"
         params.append(question_type)
+
     
     cur.execute(query, tuple(params))
     column_names = [desc[0] for desc in cur.description]  # Get column names
@@ -174,13 +166,27 @@ def get_questions():
         qtype = q['type']
 
         if qtype == 'Multiple Choice':
+            # Fetch options and categorize them
             cur.execute("""
-                SELECT option_id, option_text 
-                FROM QuestionOptions 
+                SELECT option_id, option_text, is_correct
+                FROM QuestionOptions
                 WHERE question_id = %s;
             """, (qid,))
-            q['options'] = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
-        
+            options = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
+
+            # Separate the correct answer from the other options
+            correct_option = None
+            incorrect_options = []
+
+            for option in options:
+                if option['is_correct']:
+                    correct_option = option  # Store the correct answer
+                else:
+                    incorrect_options.append(option)  # Store the incorrect options
+
+            q['correct_option'] = correct_option  # Add the correct option separately
+            q['incorrect_options'] = incorrect_options  # Add the incorrect options separately
+
         elif qtype == 'Matching':
             cur.execute("""
                 SELECT match_id, prompt_text, match_text 
@@ -196,6 +202,7 @@ def get_questions():
                 WHERE question_id = %s;
             """, (qid,))
             q['blanks'] = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
+
 
     cur.close()
     conn.close()

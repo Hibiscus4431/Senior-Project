@@ -309,3 +309,62 @@ uses all other formatting*/
 }
 
 /* Larger submit button */
+
+.question-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 900px;
+}
+
+.question-card {
+  background-color: #f8f8f8;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  margin: 15px auto;
+  padding: 20px;
+  font-size: 18px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.question-header {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.question-meta {
+  margin-bottom: 15px;
+  color: #444;
+}
+
+.question-body {
+  margin-bottom: 15px;
+}
+
+.question-footer {
+  font-style: italic;
+  color: #555;
+}
+
+.incorrect-answer {
+  color: #b30000;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #43215a; /* Ensure background extends */
+}
+
+.teacher-questions-container {
+  min-height: 100vh;
+  padding-bottom: 50px; /* Prevent content from cutting off at the bottom */
+  background-color: #43215a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
