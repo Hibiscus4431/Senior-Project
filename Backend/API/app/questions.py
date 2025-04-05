@@ -2,7 +2,9 @@ from flask import Blueprint, request, jsonify
 from .auth import authorize_request
 from psycopg2 import sql
 from app.config import Config
-
+from werkzeug.utils import secure_filename
+from datetime import datetime
+from io import BytesIO 
 # Create Blueprint
 question_bp = Blueprint('questions', __name__)
 
@@ -16,7 +18,44 @@ def create_question():
     
     user_id = auth_data['user_id']
     role = auth_data['role']
-    data = request.get_json()
+    # This part needs to be checked in your logic when adding to front end
+    if request.content_type.startswith('application/json'):
+        data = request.get_json()
+    else:
+        data = request.form.to_dict()
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+    # Handle file upload
+    attachment_id = None
+    if 'file' in request.files:
+        file = request.files['file']
+        original_filename = secure_filename(file.filename)
+        file_bytes = file.read()
+        timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        unique_filename = f"{user_id}_{timestamp}_{original_filename}"
+        supabase_path = f"attachments/{unique_filename}"
+
+        try:
+        # Upload to Supabase
+            supabase = Config.get_supabase_client()
+            supabase.storage.from_(Config.ATTACHMENT_BUCKET).upload(
+                path=supabase_path,
+                file=file_bytes,
+                file_options={"content-type": file.content_type}
+            )
+
+            # Save to DB and get attachment_id
+            cur.execute("""
+                INSERT INTO Attachments (name, filepath)
+                VALUES (%s, %s)
+                RETURNING attachments_id;
+            """, (original_filename, supabase_path))
+            attachment_id = cur.fetchone()[0]
+
+        except Exception as e:
+            return jsonify({"error": f"Failed to upload or save attachment: {str(e)}"}), 500
+  
     required_fields = ['question_text', 'type']
     if not all(field in data for field in required_fields):
         return jsonify({"error": "Missing required fields."}), 400
@@ -27,7 +66,6 @@ def create_question():
     default_points = data.get('default_points', 0)
     est_time = data.get('est_time')
     grading_instructions = data.get('grading_instructions')
-    attachment_id = data.get('attachment_id')
     source = data.get('source', 'manual')
     chapter_number = data.get('chapter_number')
     section_number = data.get('section_number')
@@ -35,8 +73,6 @@ def create_question():
     
     is_published = True if role == 'publisher' else False
 
-    conn = Config.get_db_connection()
-    cur = conn.cursor()
     
     # Insert into Questions table
     query = ("""
