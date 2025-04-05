@@ -309,8 +309,7 @@ def update_question(question_id):
             if blank_id in existing_blank_ids:
                 cur.execute(
                     "UPDATE QuestionFillBlanks SET correct_text = %s WHERE blank_id = %s;",
-                    (blank["correct_text"], blank_id)
-                )
+                    (blank["correct_text"], blank_id))
                 existing_blank_ids.remove(blank_id)
             else:
                 cur.execute(
