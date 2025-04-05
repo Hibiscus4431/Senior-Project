@@ -185,7 +185,8 @@ def save_qti_questions(import_id):
 
         # Local extraction path (will contain the folder after unzipping)
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        unzipped_folder_path = os.path.join(BASE_DIR, f"qti-uploads/import_{import_id}")
+        unzipped_folder_path = extract_qti_zip_from_supabase(original_supabase_path, import_id)
+
         
         # Re-extract if missing
         if not os.path.exists(unzipped_folder_path):
@@ -244,49 +245,71 @@ def save_qti_questions(import_id):
             # 🔗 Handle attachment if it exists
             attachment_file = q.get("attachment_file")
             if attachment_file:
-                attachment_path = os.path.join(inner_dir, attachment_file)
+                attachment_filename = os.path.basename(attachment_file)
+                attachment_path = None
+                # 🔍 Walk through all subdirectories in search of the attachment
+                for root, _, files in os.walk(inner_dir):
+                    for name in files:
+                        if name == attachment_filename:
+                            attachment_path = os.path.join(root, name)
+                            print(f"🖼️ Found attachment at: {attachment_path}")
+                            break
+                    if attachment_path:
+                        break
 
-                if os.path.exists(attachment_path):
-                    with open(attachment_path, "rb") as img:
-                        file_bytes = img.read()
+                if attachment_path and os.path.exists(attachment_path):
+                    try:
+                        with open(attachment_path, "rb") as img:
+                            file_bytes = img.read()
 
-                    # Create unique filename for bucket
-                    original_filename = os.path.basename(attachment_file)
-                    timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-                    unique_filename = f"{user_id}_{timestamp}_{original_filename}"
-                    supabase_path = f"{Config.ATTACHMENT_BUCKET}/{unique_filename}"
-
-                    # ✅ Upload to Supabase
-                    supabase = Config.get_supabase_client()
-                    supabase.storage.from_(Config.ATTACHMENT_BUCKET).upload(
-                    path=unique_filename,
-                    file=file_bytes,
-                    file_options={"content-type": "image/png"}  # You can detect this dynamically later
-        )
+                        # Create unique filename for bucket
+                        original_filename = os.path.basename(attachment_file)
+                        timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+                        unique_filename = f"{user_id}_{timestamp}_{original_filename}"
+                        supabase_path = f"attachments/{unique_filename}"  # ✅ add this line
+                        # ✅ Upload to Supabase
+                        try:
+                            supabase = Config.get_supabase_client()
+                            supabase.storage.from_(Config.ATTACHMENT_BUCKET).upload(
+                                path=supabase_path,
+                                file=file_bytes,
+                                file_options={"content-type": "image/png"}
+                            )
+                            print(f"✅ Uploaded to Supabase: {unique_filename}")
+                        except Exception as upload_err:
+                            print(f"❌ Upload to Supabase failed: {upload_err}")
 
                     # ✅ Save to DB
-                    cursor.execute("""
-                        INSERT INTO Attachments (name, filepath)
-                        VALUES (%s, %s)
-                        RETURNING attachments_id;
-                    """, (original_filename, unique_filename))
-
-                    attachment_id = cursor.fetchone()[0]
+                        try:
+                            cursor.execute("""
+                                INSERT INTO Attachments (name, filepath)
+                                VALUES (%s, %s)
+                                RETURNING attachments_id;
+                            """, (original_filename, supabase_path))
+                            attachment_id = cursor.fetchone()[0]
+                            print(f"📌 Inserted into Attachments DB: {attachment_id}")
+                        except Exception as db_err:
+                            print(f"❌ Failed to insert into Attachments table: {db_err}")
 
                     # ✅ Link metadata
-                    cursor.execute("""
-                        INSERT INTO Attachments_MetaData (attachment_id, reference_id, reference_type)
-                        VALUES (%s, %s, 'question');
-                    """, (attachment_id, question_id))
+                        cursor.execute("""
+                            INSERT INTO Attachments_MetaData (attachment_id, reference_id, reference_type)
+                            VALUES (%s, %s, 'question');
+                        """, (attachment_id, question_id))
 
                     # ✅ Update question with attachment ID
-                    cursor.execute("""
-                        UPDATE Questions
-                        SET attachment_id = %s
-                        WHERE id = %s;
-                    """, (attachment_id, question_id))
-            else:
-                print(f"❌ Attachment not found locally: {attachment_path}")
+                        cursor.execute("""
+                            UPDATE Questions
+                            SET attachment_id = %s
+                            WHERE id = %s;
+                        """, (attachment_id, question_id))
+
+                    except Exception as e:
+                        print(f"❌ General error handling attachment: {e}")
+
+                else:
+                    print(f"❌ Attachment not found locally: {attachment_path}")
+
 
             # Save multiple choice options
             if q["type"] == "Multiple Choice":
