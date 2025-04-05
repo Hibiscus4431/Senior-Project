@@ -129,11 +129,13 @@
 </template>
 
 <script>
+import api from '@/api';
+
 export default {
   name: 'TeacherQuestions',
   data() {
     return {
-      courseTitle: this.$route.params.courseTitle || '',
+      courseTitle: this.$route.query.courseTitle || 'Untitled Course',
       chapter: '',
       section: '',
       question: '',
@@ -150,6 +152,10 @@ export default {
     };
   },
   methods: {
+    created() {
+  console.log('Query Parameters:', this.$route.query);
+},
+
     addPair() {
       this.matchingPairs.push({ term: '', definition: '' });
     },

@@ -18,8 +18,8 @@
         <label for="version">Version:</label>
         <input type="text" id="version" v-model="version" style="height:20px"><br><br>
 
-        <!-- <label for="websiteLink">Website Link:</label>
-        <input type="text" id="websiteLink" v-model="websiteLink" style="height:20px"><br><br> -->
+        <label for="websiteLink">Website Link:</label>
+        <input type="text" id="websiteLink" v-model="websiteLink" style="height:20px"><br><br>
 
         <div class="center large-heading">
           <input type="submit" value="Save">
@@ -38,8 +38,8 @@ export default {
       textbookTitle: '',
       author: '',
       ISBN: '',
-      version: ''
-      //websiteLink: ''
+      version: '',
+      websiteLink: ''
     };
   },
   methods: {
@@ -51,13 +51,11 @@ export default {
           textbook_title: this.textbookTitle,
           textbook_author: this.author,
           textbook_isbn: this.ISBN,
-          textbook_version: this.version
-          //website link column not in table yet
-          //websiteLink: this.websiteLink
+          textbook_version: this.version,
+          websiteLink: this.websiteLink
         };
 
         try {
-          //token?
 
           const response = await api.post('/textbooks', bookData, {
             headers: {

@@ -33,7 +33,7 @@ const routes = [
   { path: '/TeacherNewTB', name: 'TeacherNewTB', component: TeacherNewTB },
   { path: '/TeacherNewTest', name: 'TeacherNewTest', component: TeacherNewTest },
   { path: '/TeacherPubQ', name: 'TeacherPubQ', component: TeacherPubQ },
-  { path: '/TeacherQuestions/:courseTitle', name: 'TeacherQuestions', component: TeacherQuestions },
+  { path: '/TeacherQuestions', name: 'TeacherQuestions', component: TeacherQuestions },
   { path: '/TeacherTemplate', name: 'TeacherTemplate', component: TeacherTemplate },
   { path: '/TeacherViewTB', name: 'TeacherViewTB', component: TeacherViewTB },
   { path: '/WebmasterHome', name: 'WebmasterHome', component: WebmasterHome },

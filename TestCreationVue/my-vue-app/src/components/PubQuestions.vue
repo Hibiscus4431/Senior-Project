@@ -16,7 +16,19 @@
         <button class="p_button" @click="edit">New Question</button>
         <br><br>
   
-        Questions will be generated here
+        
+        <!-- Displaying the list of questions -->
+        <div v-if="questions.length">
+          <ul>
+            <li v-for="question in questions" :key="question.id">
+              <strong>Type: {{ question.type }};</strong> {{ question.question_text }}
+            </li>
+          </ul>
+        </div>
+        <div v-else>
+          No questions available.
+        </div>
+          
       </div>
   
       <!-- contents of popup-->
@@ -63,11 +75,16 @@
   </template>
   
   <script>
+  import api from '@/api'; // Importing Axios instance
+
   export default {
     name: 'PubQuestions',
     data() {
       return {
         textbookTitle: '',
+        //
+        questions: [],  // ← Added this line
+        //
         showForm: false,
         questionData: {
           chapter: '',
@@ -85,6 +102,31 @@
       };
     },
     methods: {
+
+      //----------
+      async fetchQuestions() {
+        try {
+          console.log('Fetching questions...'); // Debugging
+
+          const response = await api.get('/questions', {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+
+          console.log('Questions fetched:', response.data); // Debugging
+
+          if (response.data && response.data.questions) {
+            this.questions = response.data.questions;
+          } else {
+            this.questions = [];
+          }
+        } catch (error) {
+          console.error('Error fetching questions:', error);
+        }
+      },
+      //----------
+
       edit() {
         this.showForm = true;
       },
@@ -108,7 +150,10 @@
       }
     },
     mounted() {
-      this.textbookTitle = localStorage.getItem('selectedTextbookTitle') || 'Book Title';
+      //this.textbookTitle = localStorage.getItem('selectedTextbookTitle') || 'Book Title';
+      this.textbookTitle = this.$route.query.title || 'Book Title';
+
+      this.fetchQuestions(); // ← Call the function here
       
     }
   };
