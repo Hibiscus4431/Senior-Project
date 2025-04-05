@@ -34,64 +34,59 @@
     </div>
 
     <!-- Insert the fetched questions display here -->
-    <ul class="question-list">
-      <li v-for="(question, index) in questions" :key="index" class="question-card">
-        <div class="question-header">
-          <strong>Question {{ index + 1 }}:</strong> {{ question.text }}
-        </div>
-        <div class="question-meta">
-          <span><strong>Type:</strong> {{ question.type }}</span><br>
-          <span><strong>Chapter:</strong> {{ question.chapter || 'N/A' }}</span><br>
-          <span><strong>Section:</strong> {{ question.section || 'N/A' }}</span><br>
-          <span><strong>Points:</strong> {{ question.points }}</span><br>
-          <span><strong>Estimated Time:</strong> {{ question.time }} minutes</span><br>
-        </div>
+    <ul>
+      <li v-for="(question, index) in questions" :key="index" class="question-box"
+        @click="toggleQuestionSelection(question.id)">
+        <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
+        <span><strong>Type:</strong> {{ question.type }}</span><br>
+        <span><strong>Chapter:</strong> {{ question.chapter || 'N/A' }}</span><br>
+        <span><strong>Section:</strong> {{ question.section || 'N/A' }}</span><br>
+        <span><strong>Points:</strong> {{ question.points }}</span><br>
+        <span><strong>Estimated Time:</strong> {{ question.time }} minutes</span><br>
 
-        <div class="question-body">
-          <div v-if="question.type === 'True/False'">
-            <strong>Correct Answer:</strong> {{ question.answer ? 'True' : 'False' }}
-          </div>
-
-          <div v-if="question.type === 'Multiple Choice'">
-            <strong>Correct Answer:</strong>
-            {{ question.correctOption ? question.correctOption.option_text : 'Not specified' }}<br>
-            <strong>Other Options:</strong>
-            <ul>
-              <li v-for="(option, i) in question.incorrectOptions" :key="i" class="incorrect-answer">
-                {{ option.option_text }}
-              </li>
-            </ul>
-          </div>
-
-          <div v-if="question.type === 'Short Answer'">
-            <strong>Correct Answer:</strong> {{ question.answer || 'Not provided' }}
-          </div>
-
-          <div v-if="question.type === 'Fill in the Blank'">
-            <strong>Correct Answer(s):</strong>
-            <ul>
-              <li v-for="(blank, i) in question.blanks" :key="i">
-                {{ blank.correct_text }}
-              </li>
-            </ul>
-          </div>
-
-          <div v-if="question.type === 'Matching'">
-            <strong>Pairs:</strong>
-            <ul>
-              <li v-for="(pair, i) in question.pairs" :key="i">
-                {{ pair.term }} - {{ pair.definition }}
-              </li>
-            </ul>
-          </div>
-
-          <div v-if="question.type === 'Essay'">
-            <strong>Essay Instructions:</strong> {{ question.instructions || 'None' }}
-          </div>
+        <!-- Answer types -->
+        <div v-if="question.type === 'True/False'">
+          <strong>Answer:</strong> {{ question.answer ? 'True' : 'False' }}
         </div>
 
-        <div class="question-footer">
-          <strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}
+        <div v-if="question.type === 'Multiple Choice'">
+          <strong>Correct Answer:</strong> {{ question.correctOption && question.correctOption.option_text || 'Not specified' }}<br>
+          <p><strong>Other Options:</strong></p>
+          <ul>
+            <li v-for="(option, i) in question.incorrectOptions" :key="i" class="incorrect-answer">
+              {{ option.option_text }}
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Short Answer'">
+          <strong>Answer:</strong> {{ question.answer || 'Not provided' }}
+        </div>
+
+        <div v-if="question.type === 'Fill in the Blank'">
+          <strong>Correct Answer(s):</strong>
+          <ul>
+            <li v-for="(blank, i) in question.blanks" :key="i">{{ blank.correct_text }}</li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Matching'">
+          <strong>Pairs:</strong>
+          <ul>
+            <li v-for="(pair, i) in question.pairs" :key="i">{{ pair.term }} - {{ pair.definition }}</li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Essay'">
+          <strong>Essay Instructions:</strong> {{ question.instructions || 'None' }}
+        </div>
+
+        <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
+
+        <!-- Buttons shown only if selected -->
+        <div v-if="selectedQuestionId === question.id" class="button-group">
+          <button @click.stop="editQuestion(question)">Edit</button>
+          <button @click.stop="deleteQuestion(question.id)">Delete</button>
         </div>
       </li>
     </ul>
@@ -216,7 +211,8 @@ export default {
       imagePreview: '',
       selectedQuestionType: '',
       matchingPairs: [], // Array to store matching pairs for matching question type
-      questions: [] // Initialize questions as an empty array
+      questions: [], // Initialize questions as an empty array
+      selectedQuestionId: null // To store the ID of the selected question for editing
     };
   },
   methods: {
@@ -440,7 +436,43 @@ export default {
       this.imagePreview = '';
       this.matchingPairs = [];
       this.selectedQuestionType = '';
+    },
+
+    //functions to edit and delete questions when selected box
+    toggleQuestionSelection(id) {
+      this.selectedQuestionId = this.selectedQuestionId === id ? null : id;
+    },
+
+    editQuestion(question) {
+      // Open and populate form
+      this.question = question.text;
+      this.chapter = question.chapter;
+      this.section = question.section;
+      this.points = question.points;
+      this.time = question.time;
+      this.instructions = question.instructions;
+      this.selectedQuestionType = question.type;
+      this.edit();
+    },
+
+    async deleteQuestion(id) {
+      if (confirm('Are you sure you want to delete this question?')) {
+        try {
+          await api.delete(`/questions/${id}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          this.questions = this.questions.filter(q => q.id !== id);
+          alert('Question deleted.');
+        } catch (err) {
+          console.error(err);
+          alert('Failed to delete question.');
+        }
+      }
     }
+
+
   }
 };
 </script>

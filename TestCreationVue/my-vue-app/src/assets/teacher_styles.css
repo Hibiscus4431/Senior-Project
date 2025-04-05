@@ -367,4 +367,38 @@ html, body {
   flex-direction: column;
   align-items: center;
 }
+.question-box {
+  background: #f8f8f8;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.2s;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.question-box:hover {
+  transform: scale(1.01);
+}
+
+.button-group {
+  margin-top: 10px;
+}
+
+.button-group button {
+  margin-right: 10px;
+  padding: 6px 14px;
+  border: none;
+  background-color: #04AA6D;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.button-group button:hover {
+  background-color: #038c5a;
+}
 
