@@ -164,6 +164,7 @@ export default {
   data() {
   return {
     courseTitle: this.$route.query.courseTitle || 'Untitled Course',
+    courseId: this.$route.query.courseId || null,
     chapter: '',
     section: '',
     question: '',
@@ -191,11 +192,8 @@ export default {
             Authorization: `Bearer ${localStorage.getItem('token')}` // Include the token for authentication
           },
           params: {
-            courseId: this.$route.query.courseId, // Pass the course ID from the query parameters
-            questionType: type // Pass the selected question type
-          },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}` // Include the token for authentication
+            course_id: this.$route.query.courseId, // Pass the course ID from the query parameters
+            type: type // Pass the selected question type
           }
         });
 
