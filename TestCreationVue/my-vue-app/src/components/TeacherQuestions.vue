@@ -50,7 +50,8 @@
         </div>
 
         <div v-if="question.type === 'Multiple Choice'">
-          <strong>Correct Answer:</strong> {{ question.correctOption && question.correctOption.option_text || 'Not specified' }}<br>
+          <strong>Correct Answer:</strong> {{ (question.correctOption && question.correctOption.option_text) ||
+            'Not specified' }}<br>
           <p><strong>Other Options:</strong></p>
           <ul>
             <li v-for="(option, i) in question.incorrectOptions" :key="i" class="incorrect-answer">
@@ -212,7 +213,8 @@ export default {
       selectedQuestionType: '',
       matchingPairs: [], // Array to store matching pairs for matching question type
       questions: [], // Initialize questions as an empty array
-      selectedQuestionId: null // To store the ID of the selected question for editing
+      selectedQuestionId: null, // To store the ID of the selected question for editing
+      editingQuestionId: null // To store the ID of the question being edited
     };
   },
   methods: {
@@ -335,19 +337,18 @@ export default {
     //function to post new question to the database
     async handleQuestionSave() {
       try {
+        const isEditing = !!this.editingQuestionId;
+
         const payload = {
           question_text: this.question,
-          type: this.selectedQuestionType,
-          course_id: this.courseId,
           default_points: parseInt(this.points),
           est_time: parseInt(this.time),
-          grading_instructions: this.instructions,
           chapter_number: this.chapter,
           section_number: this.section,
-          source: 'manual'
+          grading_instructions: this.instructions,
         };
 
-        // Add type-specific fields
+        // Type-specific fields
         if (this.selectedQuestionType === 'True/False') {
           payload.true_false_answer = this.answer === 'True';
         }
@@ -366,7 +367,9 @@ export default {
         }
 
         if (this.selectedQuestionType === 'Fill in the Blank') {
-          payload.blanks = [this.answer];
+          payload.blanks = [{
+            correct_text: this.answer
+          }];
         }
 
         if (this.selectedQuestionType === 'Short Answer') {
@@ -374,7 +377,7 @@ export default {
         }
 
         if (this.selectedQuestionType === 'Essay') {
-          payload.instructions = this.instructions;
+          payload.grading_instructions = this.instructions;
         }
 
         if (this.selectedQuestionType === 'Matching') {
@@ -384,23 +387,35 @@ export default {
           }));
         }
 
-        // 🔐 Send to backend
-        const response = await api.post('/questions', payload, {
+        const headers = {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
-        });
+        };
 
-        alert('Question created successfully!');
+        if (isEditing) {
+          // PATCH request to update existing question
+          await api.patch(`/questions/${this.editingQuestionId}`, payload, headers);
+          alert('Question updated successfully!');
+        } else {
+          // POST request to create new question
+          payload.course_id = this.courseId;
+          payload.type = this.selectedQuestionType;
+          payload.source = 'manual';
+          await api.post('/questions', payload, headers);
+          alert('Question created successfully!');
+        }
+
         this.closeForm();
         this.resetForm();
         this.fetchQuestions(this.selectedQuestionType);
 
       } catch (error) {
-        console.error('Error posting question:', error);
-        alert('Failed to create question. Please check your inputs or login.');
+        console.error('Error saving question:', error);
+        alert('Something went wrong. Please try again.');
       }
     },
+
 
     handleImageUpload(event) {
       const file = event.target.files[0];
@@ -436,6 +451,7 @@ export default {
       this.imagePreview = '';
       this.matchingPairs = [];
       this.selectedQuestionType = '';
+      this.editingQuestionId = null;
     },
 
     //functions to edit and delete questions when selected box
@@ -444,15 +460,26 @@ export default {
     },
 
     editQuestion(question) {
-      // Open and populate form
+      this.editingQuestionId = question.id;
       this.question = question.text;
       this.chapter = question.chapter;
       this.section = question.section;
       this.points = question.points;
       this.time = question.time;
       this.instructions = question.instructions;
+      this.answer = question.answer || '';
       this.selectedQuestionType = question.type;
-      this.edit();
+
+      if (question.type === 'Multiple Choice') {
+        this.answerChoices = [
+          ...(question.correctOption ? [question.correctOption.option_text] : []),
+          ...(question.incorrectOptions || []).map(o => o.option_text)
+        ].join(', ');
+      } else if (question.type === 'Matching') {
+        this.matchingPairs = question.pairs || [];
+      }
+
+      document.getElementById('q_edit').style.display = 'block';
     },
 
     async deleteQuestion(id) {
