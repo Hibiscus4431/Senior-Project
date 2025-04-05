@@ -14,15 +14,16 @@
       </router-link>
       <button class="t_button" @click="importTest">Import Test</button>
       <br>
+      <!-- Dropdown to select question type -->
       <div class="dropdown">
         <button class="dropbtn">Question Type</button>
         <div class="dropdown-content">
-          <a href="#" @click="displayQuestionType('True/False')">True/False</a>
-          <a href="#" @click="displayQuestionType('Multiple Choice')">Multiple Choice</a>
-          <a href="#" @click="displayQuestionType('Matching')">Matching</a>
-          <a href="#" @click="displayQuestionType('Fill in the Blank')">Fill in the Blank</a>
-          <a href="#" @click="displayQuestionType('Short Answer')">Short Answer</a>
-          <a href="#" @click="displayQuestionType('Essay')">Essay</a>
+          <a href="#" @click="fetchQuestions('True/False')">True/False</a>
+          <a href="#" @click="fetchQuestions('Multiple Choice')">Multiple Choice</a>
+          <a href="#" @click="fetchQuestions('Matching')">Matching</a>
+          <a href="#" @click="fetchQuestions('Fill in the Blank')">Fill in the Blank</a>
+          <a href="#" @click="fetchQuestions('Short Answer')">Short Answer</a>
+          <a href="#" @click="fetchQuestions('Essay')">Essay</a>
         </div>
       </div>
       <button class="t_button" @click="edit">New Question</button>
@@ -31,8 +32,72 @@
       </router-link>
       <div id="selectedQuestionType" class="center large-paragraph">{{ selectedQuestionType }}</div>
     </div>
+
+    <!-- Insert the fetched questions display here -->
+    <ul>
+      <li v-for="(question, index) in questions" :key="index" class="question-box"
+        @click="toggleQuestionSelection(question.id)">
+        <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
+        <span><strong>Type:</strong> {{ question.type }}</span><br>
+        <span><strong>Chapter:</strong> {{ question.chapter || 'N/A' }}</span><br>
+        <span><strong>Section:</strong> {{ question.section || 'N/A' }}</span><br>
+        <span><strong>Points:</strong> {{ question.points }}</span><br>
+        <span><strong>Estimated Time:</strong> {{ question.time }} minutes</span><br>
+
+        <!-- Answer types -->
+        <div v-if="question.type === 'True/False'">
+          <strong>Answer:</strong> {{ question.answer ? 'True' : 'False' }}
+        </div>
+
+        <div v-if="question.type === 'Multiple Choice'">
+          <strong>Correct Answer:</strong> {{ question.correctOption && question.correctOption.option_text || 'Not specified' }}<br>
+          <p><strong>Other Options:</strong></p>
+          <ul>
+            <li v-for="(option, i) in question.incorrectOptions" :key="i" class="incorrect-answer">
+              {{ option.option_text }}
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Short Answer'">
+          <strong>Answer:</strong> {{ question.answer || 'Not provided' }}
+        </div>
+
+        <div v-if="question.type === 'Fill in the Blank'">
+          <strong>Correct Answer(s):</strong>
+          <ul>
+            <li v-for="(blank, i) in question.blanks" :key="i">{{ blank.correct_text }}</li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Matching'">
+          <strong>Pairs:</strong>
+          <ul>
+            <li v-for="(pair, i) in question.pairs" :key="i">{{ pair.term }} - {{ pair.definition }}</li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Essay'">
+          <strong>Essay Instructions:</strong> {{ question.instructions || 'None' }}
+        </div>
+
+        <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
+
+        <!-- Buttons shown only if selected -->
+        <div v-if="selectedQuestionId === question.id" class="button-group">
+          <button @click.stop="editQuestion(question)">Edit</button>
+          <button @click.stop="deleteQuestion(question.id)">Delete</button>
+        </div>
+      </li>
+    </ul>
+
+
+
+
     <!--file input element -->
     <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
+
+
     <!-- contents of popup-->
     <div class="form-popup" id="q_edit">
       <form class="form-container" @submit.prevent="handleQuestionSave">
@@ -56,10 +121,6 @@
           <option value="Short Answer">Short Answer</option>
           <option value="Essay">Essay</option>
         </select><br><br>
-
-        <label for="question_t"><b>Question Type</b></label><br>
-        <input type="text" id="question_t" v-model="question" required><br>
-
 
         <label for="question"><b>Question</b></label><br>
         <input type="text" id="question" v-model="question"><br>
@@ -136,6 +197,7 @@ export default {
   data() {
     return {
       courseTitle: this.$route.query.courseTitle || 'Untitled Course',
+      courseId: this.$route.query.courseId || null,
       chapter: '',
       section: '',
       question: '',
@@ -148,13 +210,104 @@ export default {
       image: '',
       imagePreview: '',
       selectedQuestionType: '',
-      matchingPairs: [] // Array to store matching pairs for matching question type
+      matchingPairs: [], // Array to store matching pairs for matching question type
+      questions: [], // Initialize questions as an empty array
+      selectedQuestionId: null // To store the ID of the selected question for editing
     };
   },
   methods: {
+    //function to fetch questions from the database based on selected question type
+    async fetchQuestions(type) {
+      this.selectedQuestionType = type;
+      try {
+        const response = await api.get(`/questions`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          },
+          params: {
+            course_id: this.$route.query.courseId,
+            type: type
+          }
+        });
+
+        console.log('Questions fetched:', response.data);
+
+        if (Array.isArray(response.data.questions)) {
+          this.questions = response.data.questions.map((question) => {
+            // Common base
+            const base = {
+              text: question.question_text,
+              type: question.type,
+              points: question.default_points,
+              id: question.id,
+              instructions: question.grading_instructions || '',
+              time: question.est_time,
+              chapter: question.chapter_number,
+              section: question.section_number
+            };
+
+            // Extend based on type
+            switch (question.type) {
+              case 'True/False':
+                return {
+                  ...base,
+                  answer: question.true_false_answer
+                };
+              case 'Multiple Choice':
+                return {
+                  ...base,
+                  correctOption: question.correct_option || null,
+                  incorrectOptions: question.incorrect_options || []
+                };
+
+
+              case 'Matching':
+                return {
+                  ...base,
+                  pairs: (question.matches || []).map(pair => ({
+                    term: pair.prompt_text,
+                    definition: pair.match_text
+                  }))
+                };
+              case 'Fill in the Blank':
+                return {
+                  ...base,
+                  blanks: question.blanks || [],
+                  instructions: question.grading_instructions || ''
+                };
+
+              case 'Short Answer':
+                return {
+                  ...base,
+                  answer: question.answer || ''
+                };
+              case 'Essay':
+                return {
+                  ...base,
+                  instructions: question.instructions || ''
+                };
+              default:
+                return base;
+            }
+          });
+        } else {
+          this.questions = [];
+        }
+
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        this.questions = [];
+      }
+    },
+    //function to display questions fetched
+    displayQuestionType(type) {
+      this.selectedQuestionType = `Selected Question Type: ${type}`;
+    },
+
+
     created() {
-  console.log('Query Parameters:', this.$route.query);
-},
+      console.log('Query Parameters:', this.$route.query);
+    },
 
     addPair() {
       this.matchingPairs.push({ term: '', definition: '' });
@@ -178,26 +331,77 @@ export default {
         console.error('No file selected.');
       }
     },
-    handleQuestionSave() {
-      const questionData = {
-        chapter: this.chapter,
-        section: this.section,
-        question: this.question,
-        reference: this.reference,
-        answer: this.answer,
-        answerChoices: this.answerChoices,
-        points: this.points,
-        time: this.time,
-        instructions: this.instructions,
-        image: this.image
-      };
 
-      localStorage.setItem('questionData', JSON.stringify(questionData));
-      this.closeForm();
+    //function to post new question to the database
+    async handleQuestionSave() {
+      try {
+        const payload = {
+          question_text: this.question,
+          type: this.selectedQuestionType,
+          course_id: this.courseId,
+          default_points: parseInt(this.points),
+          est_time: parseInt(this.time),
+          grading_instructions: this.instructions,
+          chapter_number: this.chapter,
+          section_number: this.section,
+          source: 'manual'
+        };
+
+        // Add type-specific fields
+        if (this.selectedQuestionType === 'True/False') {
+          payload.true_false_answer = this.answer === 'True';
+        }
+
+        if (this.selectedQuestionType === 'Multiple Choice') {
+          const choices = this.answerChoices.split(',').map(c => c.trim());
+          if (choices.length < 2) {
+            alert('Please provide at least two answer choices.');
+            return;
+          }
+
+          payload.options = choices.map(choice => ({
+            option_text: choice,
+            is_correct: choice.toLowerCase() === this.answer.trim().toLowerCase()
+          }));
+        }
+
+        if (this.selectedQuestionType === 'Fill in the Blank') {
+          payload.blanks = [this.answer];
+        }
+
+        if (this.selectedQuestionType === 'Short Answer') {
+          payload.answer = this.answer;
+        }
+
+        if (this.selectedQuestionType === 'Essay') {
+          payload.instructions = this.instructions;
+        }
+
+        if (this.selectedQuestionType === 'Matching') {
+          payload.matches = this.matchingPairs.map(pair => ({
+            prompt_text: pair.term,
+            match_text: pair.definition
+          }));
+        }
+
+        // 🔐 Send to backend
+        const response = await api.post('/questions', payload, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        alert('Question created successfully!');
+        this.closeForm();
+        this.resetForm();
+        this.fetchQuestions(this.selectedQuestionType);
+
+      } catch (error) {
+        console.error('Error posting question:', error);
+        alert('Failed to create question. Please check your inputs or login.');
+      }
     },
-    displayQuestionType(type) {
-      this.selectedQuestionType = `Selected Question Type: ${type}`;
-    },
+
     handleImageUpload(event) {
       const file = event.target.files[0];
       if (file) {
@@ -216,7 +420,59 @@ export default {
     },
     closeForm() {
       document.getElementById('q_edit').style.display = 'none';
+    },
+    //helper function to reset form fields
+    resetForm() {
+      this.chapter = '';
+      this.section = '';
+      this.question = '';
+      this.reference = '';
+      this.answer = '';
+      this.answerChoices = '';
+      this.points = '';
+      this.time = '';
+      this.instructions = '';
+      this.image = '';
+      this.imagePreview = '';
+      this.matchingPairs = [];
+      this.selectedQuestionType = '';
+    },
+
+    //functions to edit and delete questions when selected box
+    toggleQuestionSelection(id) {
+      this.selectedQuestionId = this.selectedQuestionId === id ? null : id;
+    },
+
+    editQuestion(question) {
+      // Open and populate form
+      this.question = question.text;
+      this.chapter = question.chapter;
+      this.section = question.section;
+      this.points = question.points;
+      this.time = question.time;
+      this.instructions = question.instructions;
+      this.selectedQuestionType = question.type;
+      this.edit();
+    },
+
+    async deleteQuestion(id) {
+      if (confirm('Are you sure you want to delete this question?')) {
+        try {
+          await api.delete(`/questions/${id}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          this.questions = this.questions.filter(q => q.id !== id);
+          alert('Question deleted.');
+        } catch (err) {
+          console.error(err);
+          alert('Failed to delete question.');
+        }
+      }
     }
+
+
   }
 };
 </script>
@@ -231,6 +487,4 @@ export default {
   display: flex;
   flex-direction: column;
 }
-
-
 </style>
