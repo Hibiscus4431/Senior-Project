@@ -215,13 +215,13 @@ def update_question(question_id):
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
         return jsonify(auth_data[0]), auth_data[1]
-    
+
     user_id = auth_data['user_id']
     data = request.get_json()
-    
+
     conn = Config.get_db_connection()
     cur = conn.cursor()
-    
+
     # Ensure question exists and is not published
     cur.execute("SELECT owner_id, is_published, type FROM Questions WHERE id = %s;", (question_id,))
     question = cur.fetchone()
@@ -231,23 +231,48 @@ def update_question(question_id):
         return jsonify({"error": "Published questions cannot be edited."}), 403
     if question[0] != user_id:
         return jsonify({"error": "Unauthorized."}), 403
-    
-    # Update question text if provided
-    if "question_text" in data:
-        cur.execute("UPDATE Questions SET question_text = %s WHERE id = %s;", 
-                    (data["question_text"], question_id))
 
-    # Handle Multiple-Choice Updates
-    if question[2] == "Multiple Choice" and "options" in data and isinstance(data["options"], list):
+    question_type = question[2]
+
+    # ✅ General updates (if provided)
+    fields_to_update = {
+        "question_text": "question_text",
+        "default_points": "default_points",
+        "est_time": "est_time",
+        "chapter_number": "chapter_number",
+        "section_number": "section_number",
+        "grading_instructions": "grading_instructions",
+        "true_false_answer": "true_false_answer"
+    }
+
+    for field, column in fields_to_update.items():
+        if field in data:
+            cur.execute(
+                f"UPDATE Questions SET {column} = %s WHERE id = %s;",
+                (data[field], question_id)
+            )
+
+    # ✅ Type-specific updates
+
+    ## Short Answer
+    if question_type == "Short Answer" and "answer" in data:
+        cur.execute("UPDATE Questions SET short_answer = %s WHERE id = %s;", (data["answer"], question_id))
+
+    ## Essay
+    if question_type == "Essay" and "instructions" in data:
+        cur.execute("UPDATE Questions SET grading_instructions = %s WHERE id = %s;", (data["instructions"], question_id))
+
+    ## Multiple Choice
+    if question_type == "Multiple Choice" and "options" in data and isinstance(data["options"], list):
         cur.execute("SELECT option_id FROM QuestionOptions WHERE question_id = %s;", (question_id,))
         existing_option_ids = {row[0] for row in cur.fetchall()}
 
-        correct_answer_count = 0  # Track correct answers
+        correct_answer_count = 0
 
         for option in data["options"]:
             option_id = option.get("option_id")
-            if option["is_correct"]:  
-                correct_answer_count += 1  # Count correct answers
+            if option["is_correct"]:
+                correct_answer_count += 1
 
             if option_id in existing_option_ids:
                 cur.execute(
@@ -260,28 +285,22 @@ def update_question(question_id):
                     "INSERT INTO QuestionOptions (question_id, option_text, is_correct) VALUES (%s, %s, %s);",
                     (question_id, option["option_text"], option["is_correct"])
                 )
-                if option["is_correct"]:  
-                    correct_answer_count += 1  # Count newly added correct answer
 
-        # Handle explicit deletions
-        if "to_delete" in data and isinstance(data["to_delete"], list):
+        if "to_delete" in data:
             for delete_id in data["to_delete"]:
                 if delete_id in existing_option_ids:
                     cur.execute("SELECT is_correct FROM QuestionOptions WHERE option_id = %s;", (delete_id,))
                     is_correct = cur.fetchone()
-                    if is_correct and is_correct[0]:  
-                        correct_answer_count -= 1  # Remove a correct answer from the count
-
+                    if is_correct and is_correct[0]:
+                        correct_answer_count -= 1
                     cur.execute("DELETE FROM QuestionOptions WHERE option_id = %s;", (delete_id,))
 
-        # Final Check: Ensure at least ONE correct answer exists
         if correct_answer_count < 1:
-            conn.rollback()  # Cancel all updates if the condition is not met
+            conn.rollback()
             return jsonify({"error": "Multiple Choice questions must have at least one correct answer."}), 400
 
-
-    # Handle Fill-in-the-Blank Updates
-    if question[2] == "Fill in the Blank" and "blanks" in data and isinstance(data["blanks"], list):
+    ## Fill in the Blank
+    if question_type == "Fill in the Blank" and "blanks" in data and isinstance(data["blanks"], list):
         cur.execute("SELECT blank_id FROM QuestionFillBlanks WHERE question_id = %s;", (question_id,))
         existing_blank_ids = {row[0] for row in cur.fetchall()}
 
@@ -299,13 +318,13 @@ def update_question(question_id):
                     (question_id, blank["correct_text"])
                 )
 
-        if "to_delete" in data and isinstance(data["to_delete"], list):
+        if "to_delete" in data:
             for delete_id in data["to_delete"]:
                 if delete_id in existing_blank_ids:
                     cur.execute("DELETE FROM QuestionFillBlanks WHERE blank_id = %s;", (delete_id,))
 
-    # Handle Matching Question Updates
-    if question[2] == "Matching" and "matches" in data and isinstance(data["matches"], list):
+    ## Matching
+    if question_type == "Matching" and "matches" in data and isinstance(data["matches"], list):
         cur.execute("SELECT match_id FROM QuestionMatches WHERE question_id = %s;", (question_id,))
         existing_match_ids = {row[0] for row in cur.fetchall()}
 
@@ -323,16 +342,17 @@ def update_question(question_id):
                     (question_id, match["prompt_text"], match["match_text"])
                 )
 
-        if "to_delete" in data and isinstance(data["to_delete"], list):
+        if "to_delete" in data:
             for delete_id in data["to_delete"]:
                 if delete_id in existing_match_ids:
                     cur.execute("DELETE FROM QuestionMatches WHERE match_id = %s;", (delete_id,))
 
-    # Commit all changes and close the connection
+    # ✅ Done: save and close
     conn.commit()
     cur.close()
-    
+
     return jsonify({"message": "Question updated successfully."}), 200
+
 
 # DELETE Question
 @question_bp.route('<int:question_id>', methods=['DELETE'])
