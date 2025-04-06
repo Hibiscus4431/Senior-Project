@@ -411,3 +411,71 @@ def get_questions_in_testbank_publihser(testbank_id):
     cur.close()
     conn.close()
     return jsonify({"questions": questions}), 200
+
+
+#######--------------------Common ----------------------------##############################
+@testbank_bp.route('/<int:testbank_id>', methods=['DELETE'])    
+def delete_testbank(testbank_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    user_id = auth_data["user_id"]
+
+    conn = Config.get_db_connection()
+    cursor = conn.cursor()
+
+    # Check ownership
+    cursor.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
+    result = cursor.fetchone()
+    if not result:
+        return jsonify({"error": "Testbank not found"}), 404
+    if result[0] != user_id:
+        return jsonify({"error": "You do not own this testbank"}), 403
+
+    # Delete the testbank
+    cursor.execute("DELETE FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Testbank deleted successfully"}), 200
+
+
+# Removing the question from the testbank
+# A buttin or something may need to be provided to delete the question from the testbank 
+@testbank_bp.route('/<int:testbank_id>/questions/<int:question_id>', methods=['DELETE'])
+def remove_question_from_testbank(testbank_id, question_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    role = auth_data.get("role")
+    user_id = auth_data.get("user_id")
+
+    if role not in ["teacher", "publisher"]:
+        return jsonify({"error": "Unauthorized role"}), 403
+
+    conn = Config.get_db_connection()
+    cursor = conn.cursor()
+
+    # Check ownership of the testbank
+    cursor.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
+    result = cursor.fetchone()
+    if not result:
+        return jsonify({"error": "Testbank not found"}), 404
+    if result[0] != user_id:
+        return jsonify({"error": "You do not own this testbank"}), 403
+
+    # Delete the association
+    cursor.execute("""
+        DELETE FROM test_bank_questions
+        WHERE test_bank_id = %s AND question_id = %s;
+    """, (testbank_id, question_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Question removed from testbank"}), 200

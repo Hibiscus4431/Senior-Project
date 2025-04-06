@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from auth import authorize_request
+from .auth import authorize_request
 from psycopg2 import sql
 from app.config import Config   
 import psycopg2.extras
@@ -50,13 +50,30 @@ def get_feedback_by_test(test_id):
 
     conn = Config.get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("SELECT * FROM Feedback WHERE test_id = %s", (test_id,))
+
+    cur.execute("""
+        SELECT f.comment_field, u.username, u.role
+        FROM Feedback f
+        JOIN Users u ON f.user_id = u.user_id
+        WHERE f.test_id = %s
+    """, (test_id,))
+
     feedback = cur.fetchall()
     cur.close()
     conn.close()
-    return jsonify([dict(row) for row in feedback]), 200
 
-# Get feedback for a specific question 
+    results = []
+    for row in feedback:
+        results.append({
+            "username": row["username"],
+            "comment": row["comment_field"],
+            "role": row["role"]
+        })
+
+    return jsonify(results), 200
+
+
+# Get feedback for a specific question with user info
 @feedback_bp.route('/question/<int:question_id>', methods=['GET'])
 def get_feedback_by_question(question_id):
     auth_data = authorize_request()
@@ -65,11 +82,28 @@ def get_feedback_by_question(question_id):
 
     conn = Config.get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("SELECT * FROM Feedback WHERE question_id = %s", (question_id,))
+
+    cur.execute("""
+        SELECT f.comment_field, u.username, u.role
+        FROM Feedback f
+        JOIN Users u ON f.user_id = u.user_id
+        WHERE f.question_id = %s
+    """, (question_id,))
+    
     feedback = cur.fetchall()
     cur.close()
     conn.close()
-    return jsonify([dict(row) for row in feedback]), 200
+
+    results = []
+    for row in feedback:
+        results.append({
+            "username": row["username"],
+            "comment": row["comment_field"],
+            "role": row["role"]
+        })
+
+    return jsonify(results), 200
+
 
 # Update feedback 
 @feedback_bp.route('/update/<int:feedback_id>', methods=['PATCH'])
@@ -108,16 +142,21 @@ def delete_feedback(feedback_id):
 
     conn = Config.get_db_connection()
     cur = conn.cursor()
+
+    # Add RETURNING clause here
     cur.execute("""
         DELETE FROM Feedback
         WHERE feedback_id = %s AND user_id = %s
+        RETURNING feedback_id
     """, (feedback_id, str(user_id)))
+
     deleted = cur.fetchone()
     conn.commit()
     cur.close()
     conn.close()
+
     if deleted:
         return jsonify({"message": "Feedback deleted"}), 200
-        
     return jsonify({"error": "Feedback not found or unauthorized"}), 403
+
 
