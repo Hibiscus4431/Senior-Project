@@ -28,7 +28,7 @@ def create_teacher_testbank():
     cursor = conn.cursor()
 
     insert_query = sql.SQL("""
-        INSERT INTO Testbank (name, course_id, owner_id)
+        INSERT INTO Test_bank (name, course_id, owner_id)
         VALUES (%s, %s, %s)
         RETURNING testbank_id;
     """)
@@ -68,7 +68,7 @@ def get_teacher_testbanks_by_course():
 
     cursor.execute("""
         SELECT testbank_id, name, course_id
-        FROM Testbank
+        FROM Test_bank
         WHERE owner_id = %s AND course_id = %s
         ORDER BY name;
     """, (user_id, course_id))
@@ -112,7 +112,7 @@ def add_questions_to_testbank(testbank_id):
 
     # Verify the testbank is owned by the teacher
     cursor.execute("""
-        SELECT owner_id FROM Testbank WHERE testbank_id = %s;
+        SELECT owner_id FROM Test_bank WHERE testbank_id = %s;
     """, (testbank_id,))
     result = cursor.fetchone()
 
@@ -125,7 +125,7 @@ def add_questions_to_testbank(testbank_id):
     for qid in question_ids:
         try:
             cursor.execute("""
-                INSERT INTO testbank_questions (testbank_id, question_id)
+                INSERT INTO test_bank_questions (test_bank_id, question_id)
                 VALUES (%s, %s)
                 ON CONFLICT DO NOTHING;
             """, (testbank_id, qid))
@@ -158,7 +158,7 @@ def get_questions_in_testbank(testbank_id):
     cur = conn.cursor()
 
     # Confirm ownership
-    cur.execute("SELECT owner_id FROM Testbank WHERE testbank_id = %s", (testbank_id,))
+    cur.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
     result = cur.fetchone()
     if not result:
         return jsonify({"error": "Testbank not found"}), 404
@@ -168,9 +168,9 @@ def get_questions_in_testbank(testbank_id):
     # Base query: get questions linked to testbank
     cur.execute("""
         SELECT q.id, q.question_text, q.type, q.chapter_number, q.section_number
-        FROM testbank_questions tbq
+        FROM test_bank_questions tbq
         JOIN questions q ON tbq.question_id = q.id
-        WHERE tbq.testbank_id = %s;
+        WHERE tbq.test_bank_id = %s;
     """, (testbank_id,))
     
     column_names = [desc[0] for desc in cur.description]
@@ -243,7 +243,7 @@ def create_publisher_testbank():
     cursor = conn.cursor()
 
     insert_query = sql.SQL("""
-        INSERT INTO Testbank (name, textbook_id, owner_id)
+        INSERT INTO Test_bank (name, textbook_id, owner_id)
         VALUES (%s, %s, %s)
         RETURNING testbank_id;
     """)
@@ -281,7 +281,7 @@ def get_publisher_testbanks_by_textbook():
 
     cursor.execute("""
         SELECT testbank_id, name, textbook_id
-        FROM Testbank
+        FROM Test_bank
         WHERE owner_id = %s AND textbook_id = %s
         ORDER BY name;
     """, (user_id, textbook_id))
@@ -301,3 +301,113 @@ def get_publisher_testbanks_by_textbook():
     return jsonify({"testbanks": testbanks}), 200
 
 
+@testbank_bp.route('/publisher/<int:testbank_id>/questions', methods=['POST'])
+def add_questions_to_testbank_publihser(testbank_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    if auth_data.get("role") != "publisher":
+        return jsonify({"error": "Only publishers can add to these testbanks"}), 403
+
+    user_id = auth_data["user_id"]
+    data = request.get_json()
+    question_ids = data.get("question_ids")
+
+    if not question_ids or not isinstance(question_ids, list):
+        return jsonify({"error": "question_ids must be a list of integers"}), 400
+
+    conn = Config.get_db_connection()
+    cursor = conn.cursor()
+
+    # Check ownership
+    cursor.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
+    result = cursor.fetchone()
+    if not result:
+        return jsonify({"error": "Testbank not found"}), 404
+    if result[0] != user_id:
+        return jsonify({"error": "You do not own this testbank"}), 403
+
+    for qid in question_ids:
+        try:
+            cursor.execute("""
+                INSERT INTO test_bank_questions (test_bank_id, question_id)
+                VALUES (%s, %s)
+                ON CONFLICT DO NOTHING;
+            """, (testbank_id, qid))
+        except Exception as e:
+            conn.rollback()
+            return jsonify({"error": f"Error adding question {qid}: {str(e)}"}), 500
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Questions added to testbank successfully"}), 201
+
+
+@testbank_bp.route('/publisher/<int:testbank_id>/questions', methods=['GET'])
+def get_questions_in_testbank_publihser(testbank_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    if auth_data.get("role") != "publisher":
+        return jsonify({"error": "Only publishers can view this testbank"}), 403
+
+    user_id = auth_data["user_id"]
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
+    result = cur.fetchone()
+    if not result:
+        return jsonify({"error": "Testbank not found"}), 404
+    if result[0] != user_id:
+        return jsonify({"error": "You do not own this testbank"}), 403
+
+    cur.execute("""
+        SELECT q.id, q.question_text, q.type, q.chapter_number, q.section_number
+        FROM test_bank_questions tbq
+        JOIN questions q ON tbq.question_id = q.id
+        WHERE tbq.test_bank_id = %s;
+    """, (testbank_id,))
+
+    column_names = [desc[0] for desc in cur.description]
+    questions = [dict(zip(column_names, row)) for row in cur.fetchall()]
+
+    # Enrich as before...
+    for q in questions:
+        qid = q['id']
+        qtype = q['type']
+
+        if qtype == 'Multiple Choice':
+            cur.execute("""
+                SELECT option_id, option_text, is_correct
+                FROM QuestionOptions
+                WHERE question_id = %s;
+            """, (qid,))
+            options = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
+            q['correct_option'] = next((o for o in options if o['is_correct']), None)
+            q['incorrect_options'] = [o for o in options if not o['is_correct']]
+
+        elif qtype == 'Matching':
+            cur.execute("""
+                SELECT match_id, prompt_text, match_text 
+                FROM QuestionMatches 
+                WHERE question_id = %s;
+            """, (qid,))
+            q['matches'] = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
+
+        elif qtype == 'Fill in the Blank':
+            cur.execute("""
+                SELECT blank_id, correct_text 
+                FROM QuestionFillBlanks 
+                WHERE question_id = %s;
+            """, (qid,))
+            q['blanks'] = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
+
+    cur.close()
+    conn.close()
+    return jsonify({"questions": questions}), 200
