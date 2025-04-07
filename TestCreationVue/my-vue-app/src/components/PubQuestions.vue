@@ -29,7 +29,7 @@
           <input type="text" v-model="questionData.section" required />
 
           <label><b>Question Type</b><br /></label>
-          
+
           <select v-model="selectedQuestionType" required>
             <option disabled value="">Select a type</option>
             <option>True/False</option>
@@ -54,10 +54,10 @@
           </div>
 
           <div v-if="selectedQuestionType === 'Multiple Choice'">
-            <label><b>Answer Choices (comma-separated)</b></label>
-            <input type="text" v-model="questionData.answerChoices" />
             <label><b>Correct Answer</b></label>
             <input type="text" v-model="questionData.answer" />
+            <label><b>Incorrect Answer Choices (comma-separated)</b></label>
+            <input type="text" v-model="questionData.answerChoices" />
           </div>
 
           <div v-if="selectedQuestionType === 'Matching'">
@@ -81,8 +81,6 @@
           </div>
 
           <div v-if="selectedQuestionType === 'Essay'">
-            <label><b>Grading Instructions</b></label>
-            <textarea v-model="questionData.instructions" placeholder="Instructions"></textarea>
           </div>
 
           <br />
@@ -99,7 +97,7 @@
           <input type="file" @change="handleImageUpload" accept="image/*" />
           <img v-if="imagePreview" :src="imagePreview" alt="Preview" style="max-width: 100%;" />
           <br /><br />
-          
+
           <button type="submit" class="btn">Save</button>
           <button type="button" class="btn cancel" @click="closeForm">Close</button>
         </form>
@@ -131,7 +129,7 @@ export default {
         points: '',
         time: '',
         instructions: '',
-        image: ''
+        image: null
       }
     };
   },
@@ -155,55 +153,139 @@ export default {
     handleImageUpload(event) {
       const file = event.target.files[0];
       if (file) {
+        this.questionData.imageFile = file;
+
         const reader = new FileReader();
         reader.onload = (e) => {
-          this.questionData.image = e.target.result;
           this.imagePreview = e.target.result;
         };
         reader.readAsDataURL(file);
       }
+    }
+    ,
+
+    //function to reset the form after saved question posts
+    resetForm() {
+      this.questionData = {
+        chapter: '',
+        section: '',
+        question: '',
+        reference: '',
+        answer: '',
+        answerChoices: '',
+        points: '',
+        time: '',
+        instructions: '',
+        image: ''
+      };
+      this.selectedQuestionType = '';
+      this.matchingPairs = [];
+      this.imagePreview = '';
     },
+    //function to post the question to the server
     async handleQuestionSave() {
       try {
-        const payload = {
-          question_text: this.questionData.question,
-          default_points: parseInt(this.questionData.points),
-          est_time: parseInt(this.questionData.time),
-          chapter_number: this.questionData.chapter,
-          section_number: this.questionData.section,
-          grading_instructions: this.questionData.instructions,
-          type: this.selectedQuestionType,
-          source: 'manual',
-          textbook_id: this.textbookId
-        };
+        let postData;
+        let config;
 
-        if (this.selectedQuestionType === 'True/False') {
-          payload.true_false_answer = this.questionData.answer === 'True';
-        } else if (this.selectedQuestionType === 'Multiple Choice') {
-          const choices = this.questionData.answerChoices.split(',').map(c => c.trim());
-          payload.options = choices.map(choice => ({
-            option_text: choice,
-            is_correct: choice.toLowerCase() === this.questionData.answer.toLowerCase()
-          }));
-        } else if (this.selectedQuestionType === 'Matching') {
-          payload.matches = this.matchingPairs.map(pair => ({
-            prompt_text: pair.term,
-            match_text: pair.definition
-          }));
-        } else if (this.selectedQuestionType === 'Fill in the Blank') {
-          payload.blanks = [{ correct_text: this.questionData.answer }];
-        } else if (this.selectedQuestionType === 'Short Answer') {
-          payload.answer = this.questionData.answer;
-        } else if (this.selectedQuestionType === 'Essay') {
-          payload.grading_instructions = this.questionData.instructions;
+        if (this.questionData.imageFile) {
+          // Use FormData for file + data
+          postData = new FormData();
+
+          postData.append('file', this.questionData.imageFile);
+          postData.append('question_text', this.questionData.question);
+          postData.append('default_points', this.questionData.points);
+          postData.append('est_time', this.questionData.time);
+          postData.append('chapter_number', this.questionData.chapter);
+          postData.append('section_number', this.questionData.section);
+          postData.append('grading_instructions', this.questionData.instructions);
+          postData.append('type', this.selectedQuestionType);
+          postData.append('source', 'manual');
+          postData.append('textbook_id', this.textbookId);
+
+          if (this.selectedQuestionType === 'True/False') {
+            postData.append('true_false_answer', this.questionData.answer === 'True');
+          } else if (this.selectedQuestionType === 'Multiple Choice') {
+            const incorrectChoices = this.questionData.answerChoices
+              .split(',')
+              .map(c => c.trim())
+              .filter(c => c.length > 0);
+
+            const options = [
+              { option_text: this.questionData.answer.trim(), is_correct: true },
+              ...incorrectChoices.map(choice => ({
+                option_text: choice,
+                is_correct: false
+              }))
+            ];
+            postData.append('options', JSON.stringify(options));
+          } else if (this.selectedQuestionType === 'Matching') {
+            postData.append('matches', JSON.stringify(this.matchingPairs));
+          } else if (this.selectedQuestionType === 'Fill in the Blank') {
+            postData.append('blanks', JSON.stringify([{ correct_text: this.questionData.answer }]));
+          } else if (this.selectedQuestionType === 'Short Answer') {
+            postData.append('answer', this.questionData.answer);
+          } else if (this.selectedQuestionType === 'Essay') {
+            postData.append('grading_instructions', this.questionData.instructions);
+          }
+
+          config = {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          };
+        } else {
+          // fallback: standard JSON if no file
+          postData = {
+            question_text: this.questionData.question,
+            default_points: parseInt(this.questionData.points),
+            est_time: parseInt(this.questionData.time),
+            chapter_number: this.questionData.chapter,
+            section_number: this.questionData.section,
+            grading_instructions: this.questionData.instructions,
+            type: this.selectedQuestionType,
+            source: 'manual',
+            textbook_id: this.textbookId
+          };
+
+          if (this.selectedQuestionType === 'True/False') {
+            postData.true_false_answer = this.questionData.answer === 'True';
+          } else if (this.selectedQuestionType === 'Multiple Choice') {
+            const incorrectChoices = this.questionData.answerChoices
+              .split(',')
+              .map(c => c.trim())
+              .filter(c => c.length > 0);
+
+            postData.options = [
+              { option_text: this.questionData.answer.trim(), is_correct: true },
+              ...incorrectChoices.map(choice => ({
+                option_text: choice,
+                is_correct: false
+              }))
+            ];
+          } else if (this.selectedQuestionType === 'Matching') {
+            postData.matches = this.matchingPairs;
+          } else if (this.selectedQuestionType === 'Fill in the Blank') {
+            postData.blanks = [{ correct_text: this.questionData.answer }];
+          } else if (this.selectedQuestionType === 'Short Answer') {
+            postData.answer = this.questionData.answer;
+          } else if (this.selectedQuestionType === 'Essay') {
+            postData.grading_instructions = this.questionData.instructions;
+          }
+
+          config = {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          };
         }
 
-        await api.post('/questions', payload, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
+        await api.post('/questions', postData, config);
+
 
         alert('Question saved successfully!');
         this.closeForm();
+        this.resetForm();
+
 
       } catch (err) {
         console.error('Error saving question:', err);

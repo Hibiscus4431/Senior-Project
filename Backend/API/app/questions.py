@@ -122,8 +122,9 @@ def create_question():
         if 'blanks' not in data or not isinstance(data['blanks'], list):
             return jsonify({"error": "Fill in the blank questions require blanks."}), 400
         for blank in data['blanks']:
-            cur.execute("INSERT INTO QuestionFillBlanks (question_id, correct_text) VALUES (%s, %s);", 
-                        (question_id, blank))
+                cur.execute("INSERT INTO QuestionFillBlanks (question_id, correct_text) VALUES (%s, %s);", 
+                (question_id, blank['correct_text']))
+
     
     elif data['type'] == 'Matching':
         if 'matches' not in data or not isinstance(data['matches'], list):
