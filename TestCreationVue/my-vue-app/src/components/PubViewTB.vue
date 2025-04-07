@@ -2,22 +2,26 @@
 <template>
   <div class="pub-viewTB-container">
     <div class="center large-heading sticky">
-      <h1 id="pageTitle">View Test Banks - {{ selectedTestBank }}</h1>
+      <h1 id="pageTitle">{{ selectedTestBank }} Test Bank</h1>
     </div>
     <div class="center large-paragraph">
-      <!--It might be easier to make this a drop down option in question page-->
+      <!-- Dropdown to select question type -->
       <div class="dropdown">
-        <button class="dropbtn">Select Test Bank</button>
+        <button class="dropbtn">Question Type</button>
         <div class="dropdown-content">
-          <a href="#" @click="selectTestBank('Bank 1')">Bank 1</a>
-          <a href="#" @click="selectTestBank('Bank 2')">Bank 2</a>
-          <a href="#" @click="selectTestBank('Bank 3')">Bank 3</a>
+          <a href="#" @click="fetchQuestions('True/False')">True/False</a>
+          <a href="#" @click="fetchQuestions('Multiple Choice')">Multiple Choice</a>
+          <a href="#" @click="fetchQuestions('Matching')">Matching</a>
+          <a href="#" @click="fetchQuestions('Fill in the Blank')">Fill in the Blank</a>
+          <a href="#" @click="fetchQuestions('Short Answer')">Short Answer</a>
+          <a href="#" @click="fetchQuestions('Essay')">Essay</a>
         </div>
       </div>
 
       <router-link to="PubQuestions">
         <button class="p_button">Return to Question Page</button>
       </router-link><br>
+      
       <router-link :to="{ name: 'PubViewFeedback', params: { testbank_id: selectedTestBankId } }">
         <button class="p_button">View Test Bank Feedback</button>
       </router-link>
@@ -27,6 +31,73 @@
       <div id="questionsContainer">
         <p v-for="question in selectedQuestions" :key="question">{{ question }}</p>
       </div>
+
+      <!-- Insert the fetched questions display here -->
+    <ul>
+      <li v-for="(question, index) in questions" :key="index" class="question-box"
+        @click="toggleQuestionSelection(question.id)">
+        <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
+        <span><strong>Type:</strong> {{ question.type }}</span><br>
+        <span><strong>Chapter:</strong> {{ question.chapter || 'N/A' }}</span><br>
+        <span><strong>Section:</strong> {{ question.section || 'N/A' }}</span><br>
+        <span><strong>Points:</strong> {{ question.points }}</span><br>
+        <span><strong>Estimated Time:</strong> {{ question.time }} minutes</span><br>
+
+        <!-- Answer types -->
+        <div v-if="question.type === 'True/False'">
+          <strong>Answer:</strong> {{ question.answer ? 'True' : 'False' }}
+        </div>
+
+        <div v-if="question.type === 'Multiple Choice'">
+          <strong>Correct Answer:</strong> {{ (question.correctOption && question.correctOption.option_text) ||
+            'Not specified' }}<br>
+          <p><strong>Other Options:</strong></p>
+          <ul>
+            <li v-for="(option, i) in question.incorrectOptions" :key="i" class="incorrect-answer">
+              {{ option.option_text }}
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Short Answer'">
+          <strong>Answer:</strong> {{ question.answer || 'Not provided' }}
+        </div>
+
+        <div v-if="question.type === 'Fill in the Blank'">
+          <strong>Correct Answer(s):</strong>
+          <ul>
+            <li v-for="(blank, i) in question.blanks" :key="i">{{ blank.correct_text }}</li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Matching'">
+          <strong>Pairs:</strong>
+          <ul>
+            <li v-for="(pair, i) in question.pairs" :key="i">{{ pair.term }} - {{ pair.definition }}</li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Essay'">
+          <strong>Essay Instructions:</strong> {{ question.instructions || 'None' }}
+        </div>
+
+        <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
+
+        <!-- Buttons shown only if selected -->
+        <div v-if="selectedQuestionId === question.id" class="button-group">
+          <button @click.stop="editQuestion(question)">Edit</button>
+          <button @click.stop="deleteQuestion(question.id)">Delete</button>
+        </div>
+      </li>
+    </ul>
+
+
+
+
+    <!--file input element -->
+    <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
+
+
     </div>
   </div>
 </template>
@@ -35,16 +106,26 @@
 export default {
   name: 'PublisherViewTB',
   data() {
-    return {
-      showPopup: false,
-      selectedTestBank: '',
-      questions: {
-        'Bank 1': ['Question 1 from Bank 1', 'Question 2 from Bank 1', 'Question 3 from Bank 1'],
-        'Bank 2': ['Question 1 from Bank 2', 'Question 2 from Bank 2', 'Question 3 from Bank 2'],
-        'Bank 3': ['Question 1 from Bank 3', 'Question 2 from Bank 3', 'Question 3 from Bank 3']
-      }
-    };
-  },
+  return {
+    showPopup: false,
+    selectedTestBank: this.$route.query.name || 'No Test Bank Selected',
+    selectedTestBankId: this.$route.query.testbank_id || null,
+    questions: {}
+  };
+},
+async mounted() {
+  if (this.selectedTestBankId) {
+    try {
+      const response = await api.get(`/testbanks/publisher/${this.selectedTestBankId}/questions`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      this.questions = response.data.questions.map(q => q.question_text); // or full objects if needed
+    } catch (error) {
+      console.error('Error loading test bank questions:', error);
+    }
+  }
+},
+
   computed: {
     selectedQuestions() {
       return this.questions[this.selectedTestBank] || [];

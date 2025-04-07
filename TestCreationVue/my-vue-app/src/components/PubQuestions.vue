@@ -3,11 +3,16 @@
     <div class="center large-heading sticky">
       <h1 id="textbook-title">{{ textbookTitle }}</h1>
     </div>
-
-    <div class="center large-paragraph">
-      <router-link to="PubViewTB">
-        <button class="p_button">View Test Banks</button>
-      </router-link>
+    <!-- Test Bank Selector -->
+    <div class="dropdown">
+      <button class="dropbtn">
+        {{ selectedTestBank ? selectedTestBank.name : 'Select Test Bank' }}
+      </button>
+      <div class="dropdown-content">
+        <a v-for="tb in testBanks" :key="tb.testbank_id" href="#" @click.prevent="selectTestBank(tb)">
+          {{ tb.name }}
+        </a>
+      </div>
 
       <router-link :to="{ path: 'PubNewTB', query: { textbook_id: textbookId } }">
         <button class="p_button">New Test Bank</button>
@@ -119,6 +124,8 @@ export default {
       selectedQuestionType: '',
       matchingPairs: [],
       imagePreview: '',
+      testBanks: [],
+      selectedTestBank: null,
       questionData: {
         chapter: '',
         section: '',
@@ -134,6 +141,30 @@ export default {
     };
   },
   methods: {
+    async fetchTestBanks() {
+      try {
+        const response = await api.get('/testbanks/publisher', {
+          params: { textbook_id: this.textbookId },
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        this.testBanks = response.data.testbanks;
+      } catch (error) {
+        console.error('Error loading test banks:', error);
+      }
+    },
+
+
+    selectTestBank(tb) {
+      this.$router.push({
+        name: 'PubViewTB',
+        query: {
+          testbank_id: tb.testbank_id,
+          name: tb.name
+        }
+      });
+    },
+
+
     selectQuestionType(type) {
       this.selectedQuestionType = type;
       this.edit();
@@ -296,6 +327,9 @@ export default {
   mounted() {
     this.textbookTitle = this.$route.query.title || 'Book Title';
     this.textbookId = this.$route.query.textbook_id || '';
+    if (this.textbookId) {
+      this.fetchTestBanks();
+    }
   }
 };
 </script>
