@@ -235,6 +235,8 @@ def create_publisher_testbank():
     data = request.get_json()
     testbank_name = data.get("testbank_name")
     textbook_id = data.get("textbook_id")
+    chapter_number = data.get("chapter_number")
+    section_number = data.get("section_number")
 
     if not testbank_name or not textbook_id:
         return jsonify({"error": "Missing testbank_name or textbook_id"}), 400
@@ -243,11 +245,11 @@ def create_publisher_testbank():
     cursor = conn.cursor()
 
     insert_query = sql.SQL("""
-        INSERT INTO Test_bank (name, textbook_id, owner_id)
-        VALUES (%s, %s, %s)
+        INSERT INTO Test_bank (name, textbook_id, owner_id, chapter_number, section_number)
+        VALUES (%s, %s, %s, %s, %s)
         RETURNING testbank_id;
     """)
-    cursor.execute(insert_query, (testbank_name, textbook_id, auth_data["user_id"]))
+    cursor.execute(insert_query, (testbank_name, textbook_id, auth_data["user_id"], chapter_number, section_number))
     testbank_id = cursor.fetchone()[0]
     conn.commit()
 
