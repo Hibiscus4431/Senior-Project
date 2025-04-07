@@ -6,7 +6,7 @@
       </div>
       <div class="center large-paragraph">
         <!-- This is the page where the teacher can create a new test bank-->
-        <form @submit.prevent="handleSubmit">
+        <form @submit.prevent="saveTestBank">
           <!-- create TB Name text box-->
           <label for="bankName">Name of Test Bank:</label>
           <input type="text" id="bankName" v-model="bankName" style="height: 20px;"><br>
@@ -30,28 +30,40 @@
   </template>
   
   <script>
+  import api from '@/api';
+
   export default {
     name: 'TeacherNewTB',
     data() {
       return {
+        courseId: this.$route.query.courseId || '',
         bankName: '',
         bankChapter: '',
         bankSection: ''
       };
     },
     methods: {
-      handleSubmit() {
-        if (this.bankName && this.bankChapter && this.bankSection) {
+      async saveTestBank() {
+        if (this.bankName && this.bankChapter && this.bankSection && this.courseId) {
+          const testBankData = {
+            testbank_name: this.bankName,
+            chapter: this.bankChapter,
+            section: this.bankSection,
+            course_id: this.courseId
+          };
+
           try {
-            // Save the values to local storage
-            localStorage.setItem('bankName', this.bankName);
-            localStorage.setItem('bankChapter', this.bankChapter);
-            localStorage.setItem('bankSection', this.bankSection);
-  
-            // Redirect to the next page
-            this.$router.push({ path: 'TeacherViewTB' });
+            const response = await api.post('/testbanks/teacher', testBankData, {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            console.log('Test bank saved successfully:', response.data);
+            alert('Test bank saved successfully!');
+            this.$router.push({ path: '/TeacherQuestions' });
           } catch (error) {
-            console.error('Error saving test bank data:', error);
+            console.error('Error saving test bank:', error);
+            alert('Failed to save the test bank. Please try again.');
           }
         } else {
           alert('Please fill out all fields.');
