@@ -14,7 +14,7 @@
         <button class="dropbtn">Select Textbook</button>
         <div class="dropdown-content">
           <router-link v-for="textbook in textbooks" :key="textbook.id"
-            :to="{ path: 'PubQuestions', query: { title: textbook.title } }">
+          :to="{ path: 'PubQuestions', query: { title: textbook.title, textbook_id: textbook.id } }">
             {{ textbook.title }}
           </router-link>
         </div>
