@@ -212,7 +212,7 @@ def save_qti_questions(import_id):
         cursor.execute("""
             INSERT INTO test_bank (owner_id, name, course_id)
             VALUES (%s, %s, %s)
-            RETURNING id;
+            RETURNING testbank_id;
         """, (user_id, quiz_title, course_id))
         test_bank_id = cursor.fetchone()[0]
 
@@ -360,6 +360,8 @@ def save_qti_questions(import_id):
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
+
+
 
     finally:
         cursor.close()

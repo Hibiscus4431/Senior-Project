@@ -9,11 +9,13 @@ from app.qti_import import qti_bp
 from app.testbanks import testbank_bp
 from app.feedback import feedback_bp
 
+
+
 def create_app():
     app = Flask(__name__)
     
     # Initialize CORS
-    CORS(app)
+    CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}})
 
     # Initialize Supabase client for authentication
     app.supabase = Config.get_supabase_client()
@@ -29,4 +31,5 @@ def create_app():
     app.register_blueprint(qti_bp, url_prefix="/qti")
     app.register_blueprint(testbank_bp, url_prefix="/testbanks")
     app.register_blueprint(feedback_bp, url_prefix="/feedback")
+
     return app

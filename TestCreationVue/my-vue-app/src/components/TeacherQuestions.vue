@@ -324,13 +324,52 @@ export default {
     importTest() {
       document.getElementById('fileInput').click();
     },
-    handleFileUpload(event) {
+    async handleFileUpload(event) {
       const file = event.target.files[0];
-      if (file) {
-        console.log('File selected:', file.name);
-        // Code that connects file to the database will go here
-      } else {
-        console.error('No file selected.');
+      if (!file)  {
+        alert("No file selected.");
+        return;
+      }
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try{
+        //Phase 1: Uplod QTI file
+        const uploadResponse = await api.post('/qti/upload',formData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        const file_path = uploadResponse.data.file_path;
+        console.log('File uploaded successfully:', file_path);
+
+        //Phase 1.B: Create import record
+        const importResponse= await api.post('/qti/import', { file_path}, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          }
+        });
+        const import_id = importResponse.data.import_id;
+        console.log('QTI import created. Import ID:', import_id);
+
+        //Phase 3: save imported questions to the database
+        const saveResponse = await api.post(`qti/save/${import_id}`,{
+          course_id: this.courseId
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          }
+        });
+        alert(saveResponse.data.message || 'Questions imported successfully!');
+        console.log('Questions imported successfully:', saveResponse.data);
+
+        //refrsh the question list
+        this.fetchQuestions(this.selectedQuestionType);
+      }
+      catch (error) {
+        console.error('QTI import Failed:', error);
+        alert('Failed to upload file. Please try again.');
       }
     },
 
