@@ -9,7 +9,7 @@
       <router-link to="/TeacherViewTB">
         <button class="t_button">View Test Banks</button>
       </router-link>
-      <router-link to="/TeacherNewTB">
+      <router-link :to="{ path: '/TeacherNewTB', query: { courseId: courseId } }">
         <button class="t_button">New Test Bank</button>
       </router-link>
       <button class="t_button" @click="importTest">Import Test</button>
