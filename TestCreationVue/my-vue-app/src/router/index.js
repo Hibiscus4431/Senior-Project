@@ -6,6 +6,7 @@ import PubLog from '../components/PubLog.vue';
 import PubNewBook from '../components/PubNewBook.vue';
 import PubNewTB from '../components/PubNewTB.vue';
 import PubQuestions from '../components/PubQuestions.vue';
+import PubViewFeedback from '../components/PubViewFeedback.vue';
 import PubViewTB from '../components/PubViewTB.vue';
 import TeacherHome from '../components/TeacherHome.vue';
 import TeacherLog from '../components/TeacherLog.vue';
@@ -26,6 +27,7 @@ const routes = [
   { path: '/PubNewBook', name: 'PubNewBook', component: PubNewBook },
   { path: '/PubNewTB', name: 'PubNewTB', component: PubNewTB },
   { path: '/PubQuestions', name: 'PubQuestions', component: PubQuestions },
+  { path: '/PubViewFeedback', name: 'PubViewFeedback', component: PubViewFeedback },
   { path: '/PubViewTB', name: 'PubViewTB', component: PubViewTB },
   { path: '/TeacherHome', name: 'TeacherHome', component: TeacherHome },
   { path: '/TeacherLog', name: 'TeacherLog', component: TeacherLog },

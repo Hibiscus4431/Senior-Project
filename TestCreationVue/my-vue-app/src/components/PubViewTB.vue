@@ -1,6 +1,6 @@
 <!-- filepath: c:\Users\laure\Senior-Project\TestCreationVue\my-vue-app\src\components\PubViewTB.vue -->
 <template>
-  <div  class="pub-viewTB-container">
+  <div class="pub-viewTB-container">
     <div class="center large-heading sticky">
       <h1 id="pageTitle">View Test Banks - {{ selectedTestBank }}</h1>
     </div>
@@ -18,9 +18,11 @@
       <router-link to="PubQuestions">
         <button class="p_button">Return to Question Page</button>
       </router-link><br>
+      <router-link :to="{ name: 'PubViewFeedback', params: { testbank_id: selectedTestBankId } }">
+        <button class="p_button">View Test Bank Feedback</button>
+      </router-link>
 
       <hr>
-
       <!--Test bank questions will be generated here-->
       <div id="questionsContainer">
         <p v-for="question in selectedQuestions" :key="question">{{ question }}</p>
@@ -67,50 +69,51 @@ export default {
 
 
 .pub-viewTB-container {
-    background-color: #17552a;
-    font-family: Arial, sans-serif;
-    height: 100vh;
+  background-color: #17552a;
+  font-family: Arial, sans-serif;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  }
-  .dropbtn {
-    background-color: rgb(48, 191, 223);
-    color: black;
-    padding: 10px;
-    font-size: 20px;
-    border: none;
-  }
+}
 
-  .dropdown {
-    position: relative;
-    display: inline-block;
-  }
+.dropbtn {
+  background-color: rgb(48, 191, 223);
+  color: black;
+  padding: 10px;
+  font-size: 20px;
+  border: none;
+}
 
-  .dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #f1f1f1;
-    min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-    z-index: 1;
-  }
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
 
-  .dropdown-content a {
-    color: black;
-    padding: 10px 15px;
-    text-decoration: none;
-    display: block;
-  }
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
 
-  .dropdown-content a:hover {
-    background-color: rgb(48, 191, 223);
-  }
+.dropdown-content a {
+  color: black;
+  padding: 10px 15px;
+  text-decoration: none;
+  display: block;
+}
 
-  .dropdown:hover .dropdown-content {
-    display: block;
-  }
+.dropdown-content a:hover {
+  background-color: rgb(48, 191, 223);
+}
 
-  .dropdown:hover .dropbtn {
-    background-color: rgb(40, 151, 176);
-  }
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown:hover .dropbtn {
+  background-color: rgb(40, 151, 176);
+}
 </style>
