@@ -47,8 +47,8 @@
         if (this.bankName && this.bankChapter && this.bankSection && this.courseId) {
           const testBankData = {
             testbank_name: this.bankName,
-            chapter: this.bankChapter,
-            section: this.bankSection,
+            chapter_number: this.bankChapter,
+            section_number: this.bankSection,
             course_id: this.courseId
           };
 
