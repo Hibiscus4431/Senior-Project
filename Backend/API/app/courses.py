@@ -143,17 +143,17 @@ def update_course(course_id):
         return jsonify({"error": "Permission denied"}), 403
 
     data = request.get_json()
-    course_name = data.get("course_name")
-    textbook_id = data.get("textbook_id")
+    raw_name = data.get("course_name")
+    course_number = data.get("course_number")
 
-    if not course_name and not textbook_id:
-        return jsonify({"error": "Missing course_name or textbook_id"}), 400
+    if not raw_name and not course_number:
+        return jsonify({"error": "Missing course_name or course_number"}), 400
 
     conn = Config.get_db_connection()
     cursor = conn.cursor()
 
     # Ensure course exists and is owned by user
-    cursor.execute("SELECT * FROM Courses WHERE course_id = %s AND teacher_id = %s", (course_id, user_id))
+    cursor.execute("SELECT course_name FROM Courses WHERE course_id = %s AND teacher_id = %s", (course_id, user_id))
     course = cursor.fetchone()
 
     if not course:
@@ -161,31 +161,25 @@ def update_course(course_id):
         conn.close()
         return jsonify({"error": "Course not found"}), 404
 
-    # Dynamically build the update query
-    update_fields = []
-    values = []
+    # Extract existing values for fallback
+    current_name_parts = course[0].split()
+    existing_name = raw_name.strip() if raw_name else current_name_parts[0]
+    existing_number = course_number.strip() if course_number else current_name_parts[1] if len(current_name_parts) > 1 else ""
 
-    if course_name:
-        update_fields.append("course_name = %s")
-        values.append(course_name)
-    if textbook_id:
-        update_fields.append("textbook_id = %s")
-        values.append(textbook_id)
+    combined_name = f"{existing_name} {existing_number}".strip()
 
-    values.append(course_id)
+    # Perform the update
+    cursor.execute("""
+        UPDATE Courses SET course_name = %s
+        WHERE course_id = %s AND teacher_id = %s
+    """, (combined_name, course_id, user_id))
 
-    update_query = f"""
-        UPDATE Courses SET {", ".join(update_fields)}
-        WHERE course_id = %s;
-    """
-
-    cursor.execute(update_query, tuple(values))
     conn.commit()
-
     cursor.close()
     conn.close()
 
     return jsonify({"message": "Course updated successfully"}), 200
+
 
 # DELETE Course by course_id
 # we wont have a delete course rn we will delete through supabase
