@@ -78,6 +78,7 @@ def create_question():
     section_number = data.get('section_number')
     true_false_answer = data.get('true_false_answer') if data['type'] == 'True/False' else None
     
+    
     is_published = True if role == 'publisher' else False
 
     
