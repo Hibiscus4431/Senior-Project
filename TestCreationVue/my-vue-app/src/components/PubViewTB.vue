@@ -18,8 +18,7 @@
         </div>
       </div>
 
-      <router-link :to="{path: '/PubQuestions', query: { title: this.textbookTitle, textbook_id: this.textbookId}
-  }">
+      <router-link :to="{path: '/PubQuestions', query: { title: this.textbookTitle, textbook_id: this.textbookId}}">
         <button class="p_button">Return to Question Page</button>
       </router-link><br>
       
