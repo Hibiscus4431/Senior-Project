@@ -248,6 +248,51 @@ def get_questions_in_testbank(testbank_id):
     return jsonify({"questions": questions}), 200
 
 
+# UPDATE Teacher Testbank Info (name, chapter, section)
+@testbank_bp.route('/teacher/<int:testbank_id>', methods=['PUT'])
+def update_teacher_testbank(testbank_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    if auth_data.get("role") != "teacher":
+        return jsonify({"error": "Only teachers can update testbanks"}), 403
+
+    data = request.get_json()
+    name = data.get("name")
+    chapter_number = data.get("chapter_number")
+    section_number = data.get("section_number")
+
+    if not name:
+        return jsonify({"error": "Testbank name is required"}), 400
+
+    user_id = auth_data["user_id"]
+
+    conn = Config.get_db_connection()
+    cursor = conn.cursor()
+
+    # Check ownership
+    cursor.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
+    result = cursor.fetchone()
+    if not result:
+        return jsonify({"error": "Testbank not found"}), 404
+    if result[0] != user_id:
+        return jsonify({"error": "You do not own this testbank"}), 403
+
+    # Update testbank
+    cursor.execute("""
+        UPDATE Test_bank
+        SET name = %s, chapter_number = %s, section_number = %s
+        WHERE testbank_id = %s;
+    """, (name, chapter_number, section_number, testbank_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Testbank updated successfully"}), 200
+
+
 ######################### ----------------------Publihser ---------------------------------- #########################
 @testbank_bp.route('/publisher', methods=['POST'])
 def create_publisher_testbank():
