@@ -16,7 +16,7 @@
       </div>
     </div>
 
-    <router-link to="TeacherQuestions">
+    <router-link :to="{ path: '/TeacherQuestions', query: { courseTitle: courseTitle, courseId: courseId } }">
       <button class="t_button">Return to Question Page</button>
     </router-link><br>
 
@@ -57,7 +57,9 @@ export default {
         'Bank 1': ['Question 1 from Bank 1', 'Question 2 from Bank 1', 'Question 3 from Bank 1'],
         'Bank 2': ['Question 1 from Bank 2', 'Question 2 from Bank 2', 'Question 3 from Bank 2'],
         'Bank 3': ['Question 1 from Bank 3', 'Question 2 from Bank 3', 'Question 3 from Bank 3']
-      }
+      },
+      courseId: this.$route.query.courseId || '',
+      courseTitle: this.$route.query.courseTitle || ''
     };
   },
   computed: {
