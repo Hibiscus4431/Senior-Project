@@ -5,10 +5,12 @@
       <h1>{{ courseTitle }}</h1>
     </div>
     <div class="center large-paragraph">
-      <router-link to="/TeacherViewTB">
+      <router-link :to= "{path: '/TeacherViewTB', query: { courseId: courseId, courseTitle: courseTitle }}">
+        
         <button class="t_button">View Test Banks</button>
       </router-link>
-      <router-link :to="{ path: '/TeacherNewTB', query: { courseId: courseId } }">
+      <router-link :to="{ path: '/TeacherNewTB', query: { courseId: courseId, courseTitle: courseTitle } }">
+
         <button class="t_button">New Test Bank</button>
       </router-link>
       <button class="t_button" @click="importTest">Import Test</button>
