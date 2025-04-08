@@ -44,41 +44,6 @@ export default {
     };
   },
   methods: {
-    /*
-    async handleSubmit() {
-      if (!this.bankName || !this.textbookId) {
-        alert('Please fill out all required fields (bank name and textbook ID).');
-        return;
-      }
-
-      try {
-        const token = localStorage.getItem('token');
-
-        const payload = {
-          testbank_name: this.bankName,
-          textbook_id: this.textbookId
-        };
-
-        console.log('Submitting new testbank:', payload);
-
-        const response = await api.post('/testbank/publisher', payload, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        console.log('Testbank created:', response.data);
-        alert('Testbank created successfully!');
-        this.$router.push({ path: 'PubQuestions', query: { textbook_id: this.textbookId } });
-
-      } catch (error) {
-        console.error('Error creating testbank:', error.response ? error.response.data : error.message);
-        this.error = (error.response && error.response.data && error.response.data.error)
-          ? error.response.data.error
-          : 'Failed to create testbank. Please try again.';
-      }
-    }
-      */
     async saveTestBank() {
       if (this.bankName && this.bankChapter && this.bankSection && this.textbookId) {
         const testBankData = {
@@ -96,7 +61,7 @@ export default {
           });
           console.log('Test bank saved successfully:', response.data);
           alert('Test bank saved successfully!');
-          this.$router.push({ path: 'PubNewTB', query: { title: textbookTitle, textbook_id: textbookId } });
+          this.$router.push({ path: 'PubQuestions', query: { title: this.textbookTitle, textbook_id: this.textbookId } });
         } catch (error) {
           console.error('Error saving test bank:', error);
           alert('Failed to save the test bank. Please try again.');
@@ -105,8 +70,6 @@ export default {
         alert('Please fill out all fields.');
       }
     }
-      ////////
-
   }
 };
 </script>
