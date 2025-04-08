@@ -159,7 +159,9 @@ export default {
         name: 'PubViewTB',
         query: {
           testbank_id: tb.testbank_id,
-          name: tb.name
+          name: tb.name,
+          textbook_id: this.textbookId,
+          title: this.textbookTitle
         }
       });
     },

@@ -18,7 +18,8 @@
         </div>
       </div>
 
-      <router-link to="PubQuestions">
+      <router-link :to="{path: '/PubQuestions', query: { title: this.textbookTitle, textbook_id: this.textbookId}
+  }">
         <button class="p_button">Return to Question Page</button>
       </router-link><br>
       
@@ -110,6 +111,8 @@ export default {
     showPopup: false,
     selectedTestBank: this.$route.query.name || 'No Test Bank Selected',
     selectedTestBankId: this.$route.query.testbank_id || null,
+    textbookId: this.$route.query.textbook_id || null, //
+    textbookTitle: this.$route.query.title || null,
     questions: {}
   };
 },
