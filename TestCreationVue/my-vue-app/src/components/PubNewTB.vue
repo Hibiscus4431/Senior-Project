@@ -4,7 +4,7 @@
       <h1>Create New Test Bank</h1>
     </div>
     <div class="center large-paragraph">
-      <form @submit.prevent="handleSubmit">
+      <form @submit.prevent="saveTestBank">
         <div class="form-row">
           <label for="bankName">Name of Test Bank:</label>
           <input type="text" id="bankName" v-model="bankName" required />
@@ -39,10 +39,12 @@ export default {
       bankChapter: '',
       bankSection: '',
       textbookId: this.$route.query.textbook_id || '',
+      textbookTitle: this.$route.query.title || '',
       error: null
     };
   },
   methods: {
+    /*
     async handleSubmit() {
       if (!this.bankName || !this.textbookId) {
         alert('Please fill out all required fields (bank name and textbook ID).');
@@ -76,6 +78,35 @@ export default {
           : 'Failed to create testbank. Please try again.';
       }
     }
+      */
+    async saveTestBank() {
+      if (this.bankName && this.bankChapter && this.bankSection && this.textbookId) {
+        const testBankData = {
+          testbank_name: this.bankName,
+          chapter_number: this.bankChapter,
+          section_number: this.bankSection,
+          textbook_id: this.textbookId
+        };
+
+        try {
+          const response = await api.post('/testbanks/publisher', testBankData, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          console.log('Test bank saved successfully:', response.data);
+          alert('Test bank saved successfully!');
+          this.$router.push({ path: 'PubNewTB', query: { title: textbookTitle, textbook_id: textbookId } });
+        } catch (error) {
+          console.error('Error saving test bank:', error);
+          alert('Failed to save the test bank. Please try again.');
+        }
+      } else {
+        alert('Please fill out all fields.');
+      }
+    }
+      ////////
+
   }
 };
 </script>

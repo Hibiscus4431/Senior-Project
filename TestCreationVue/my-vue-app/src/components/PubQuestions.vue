@@ -14,7 +14,7 @@
         </a>
       </div>
 
-      <router-link :to="{ path: 'PubNewTB', query: { textbook_id: textbookId } }">
+      <router-link :to="{ path: 'PubNewTB', query: { title: textbookTitle, textbook_id: textbookId } }">
         <button class="p_button">New Test Bank</button>
       </router-link>
 
