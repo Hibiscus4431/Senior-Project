@@ -5,9 +5,16 @@
       <h1>{{ courseTitle }}</h1>
     </div>
     <div class="center large-paragraph">
-      <router-link to="/TeacherViewTB">
-        <button class="t_button">View Test Banks</button>
-      </router-link>
+      <div class="dropdown">
+        <button class="dropbtn">
+          {{ selectedTestBank ? selectedTestBank.name : 'Select Test Bank' }}
+        </button>
+        <div class="dropdown-content">
+          <a v-for="tb in testBanks" :key="tb.testbank_id" href="#" @click.prevent="selectTestBank(tb)">
+            {{ tb.name }}
+          </a>
+        </div>
+      </div>
       <router-link :to="{ path: '/TeacherNewTB', query: { courseId: courseId } }">
         <button class="t_button">New Test Bank</button>
       </router-link>
@@ -33,7 +40,8 @@
     </div>
 
     <ul>
-      <div v-for="(question, index) in questions" :key="index" :class="['question-box', { selected: selectedQuestionId === question.id }]"
+      <div v-for="(question, index) in questions" :key="index"
+        :class="['question-box', { selected: selectedQuestionId === question.id }]"
         @click="toggleQuestionSelection(question.id)">
         <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
         <span><strong>Type:</strong> {{ question.type }}</span><br>
@@ -193,10 +201,40 @@ export default {
       questions: [], // Initialize questions as an empty array
       selectedQuestionId: null, // To store the ID of the selected question for editing
       editingQuestionId: null, // To store the ID of the question being edited
-      showForm: false
+      showForm: false,
+      selectedTestbank: null,
+      testBanks: [], // Array to store testbank options
     };
   },
+  mounted() {
+    const testbankId = this.$route.params.id;
+    console.log("Viewing testbank:", testbankId);
+    this.loadTestbanks();
+  },
   methods: {
+    async loadTestbanks() {
+      try {
+        const response = await api.get(`/testbanks/teacher?course_id=${this.courseId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          },
+        });
+
+        this.testBanks = response.data.testbanks;
+      } catch (error) {
+        console.error("Failed to load teacher testbanks:", error);
+      }
+    },
+    selectTestBank(tb) {
+      this.selectedTestBank = tb;
+      this.selectedTestbankId = tb.value;
+      this.$router.push({
+        name: 'TeacherViewTB',
+        params: { id: tb.value },
+        query: { courseId: this.courseId }
+      });
+    },
+
     //function to fetch questions from the database based on selected question type
     async fetchQuestions(type) {
       this.selectedQuestionType = type;
@@ -572,5 +610,4 @@ export default {
   display: flex;
   flex-direction: column;
 }
-
 </style>

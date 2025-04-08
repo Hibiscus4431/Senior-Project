@@ -130,7 +130,7 @@ def create_question():
             return jsonify({"error": "Fill in the blank questions require blanks."}), 400
         for blank in data['blanks']:
                 cur.execute("INSERT INTO QuestionFillBlanks (question_id, correct_text) VALUES (%s, %s);", 
-                (question_id, blank))
+                (question_id, blank['correct_text']))
 
     
     elif data['type'] == 'Matching':
