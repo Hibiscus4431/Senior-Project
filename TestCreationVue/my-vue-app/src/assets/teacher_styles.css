@@ -366,6 +366,8 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  list-style-type: none;
+  padding-left: 0;
 }
 .question-box {
   background: #f8f8f8;
@@ -375,10 +377,18 @@ html, body {
   box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   transition: transform 0.2s;
-  max-width: 900px;
+  max-width: 800px;
+  min-width: 500px; /* ✅ Add this line */
   margin-left: auto;
   margin-right: auto;
 }
+
+
+.question-box.selected {
+  background-color: #f8f8f8;
+  border: 5px solid rgb(10, 134, 63);
+}
+
 
 .question-box:hover {
   transform: scale(1.01);

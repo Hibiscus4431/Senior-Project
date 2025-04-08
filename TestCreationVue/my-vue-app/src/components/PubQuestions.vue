@@ -213,6 +213,24 @@ export default {
       this.matchingPairs = [];
       this.imagePreview = '';
     },
+    //function to reset the form after saved question posts
+    resetForm() {
+      this.questionData = {
+        chapter: '',
+        section: '',
+        question: '',
+        reference: '',
+        answer: '',
+        answerChoices: '',
+        points: '',
+        time: '',
+        instructions: '',
+        image: ''
+      };
+      this.selectedQuestionType = '';
+      this.matchingPairs = [];
+      this.imagePreview = '';
+    },
     //function to post the question to the server
     async handleQuestionSave() {
       try {
@@ -249,15 +267,20 @@ export default {
                 is_correct: false
               }))
             ];
-            postData.append('options', JSON.stringify(options));
+            postData.append('options', new Blob([JSON.stringify(options)], { type: 'application/json' }));
           } else if (this.selectedQuestionType === 'Matching') {
-            postData.append('matches', JSON.stringify(this.matchingPairs));
+            const matches = this.matchingPairs.map(pair => ({
+              prompt_text: pair.term,
+              match_text: pair.definition
+            }));
+            postData.append('matches', new Blob([JSON.stringify(matches)], { type: 'application/json' }));
           } else if (this.selectedQuestionType === 'Fill in the Blank') {
-            postData.append('blanks', JSON.stringify([{ correct_text: this.questionData.answer }]));
+            const blanks = [{ correct_text: this.answer }];
+            postData.append('blanks', new Blob([JSON.stringify(blanks)], { type: 'application/json' }));
           } else if (this.selectedQuestionType === 'Short Answer') {
-            postData.append('answer', this.questionData.answer);
+            postData.append('answer', this.answer);
           } else if (this.selectedQuestionType === 'Essay') {
-            postData.append('grading_instructions', this.questionData.instructions);
+            postData.append('grading_instructions', this.instructions);
           }
 
           config = {

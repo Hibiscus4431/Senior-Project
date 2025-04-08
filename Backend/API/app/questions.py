@@ -423,4 +423,3 @@ def delete_question(question_id):
     cur.close()
 
     return jsonify({"message": "Question deleted successfully."}), 200
-

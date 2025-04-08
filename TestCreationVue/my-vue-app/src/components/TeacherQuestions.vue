@@ -33,7 +33,7 @@
     </div>
 
     <ul>
-      <li v-for="(question, index) in questions" :key="index" class="question-box"
+      <div v-for="(question, index) in questions" :key="index" :class="['question-box', { selected: selectedQuestionId === question.id }]"
         @click="toggleQuestionSelection(question.id)">
         <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
         <span><strong>Type:</strong> {{ question.type }}</span><br>
@@ -76,7 +76,7 @@
           <button @click.stop="editQuestion(question)">Edit</button>
           <button @click.stop="deleteQuestion(question.id)">Delete</button>
         </div>
-      </li>
+      </div>
     </ul>
 
     <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
@@ -341,126 +341,126 @@ export default {
     },
 
     async handleQuestionSave() {
-  try {
-    let postData;
-    let config;
+      try {
+        let postData;
+        let config;
 
-    if (this.image) {
-      postData = new FormData();
+        if (this.image) {
+          postData = new FormData();
 
-      postData.append('file', this.image);  // ✅ Correct now
-      postData.append('question_text', this.question);
-      postData.append('default_points', this.points);
-      postData.append('est_time', this.time);
-      postData.append('chapter_number', this.chapter);
-      postData.append('section_number', this.section);
-      postData.append('grading_instructions', this.instructions);
-      postData.append('type', this.selectedQuestionType);
-      postData.append('source', 'manual');
-      postData.append('course_id', this.courseId);  // required for teacher questions
+          postData.append('file', this.image);  // ✅ Correct now
+          postData.append('question_text', this.question);
+          postData.append('default_points', this.points);
+          postData.append('est_time', this.time);
+          postData.append('chapter_number', this.chapter);
+          postData.append('section_number', this.section);
+          postData.append('grading_instructions', this.instructions);
+          postData.append('type', this.selectedQuestionType);
+          postData.append('source', 'manual');
+          postData.append('course_id', this.courseId);  // required for teacher questions
 
-      // Type-specific fields
-      if (this.selectedQuestionType === 'True/False') {
-        postData.append('true_false_answer', this.answer === 'True');
-      } else if (this.selectedQuestionType === 'Multiple Choice') {
-        const incorrectChoices = this.answerChoices
-          .split(',')
-          .map(c => c.trim())
-          .filter(Boolean);
+          // Type-specific fields
+          if (this.selectedQuestionType === 'True/False') {
+            postData.append('true_false_answer', this.answer === 'True');
+          } else if (this.selectedQuestionType === 'Multiple Choice') {
+            const incorrectChoices = this.answerChoices
+              .split(',')
+              .map(c => c.trim())
+              .filter(Boolean);
 
-        const options = [
-          { option_text: this.answer.trim(), is_correct: true },
-          ...incorrectChoices.map(choice => ({
-            option_text: choice,
-            is_correct: false
-          }))
-        ];
-        postData.append('options', JSON.stringify(options));
-      } else if (this.selectedQuestionType === 'Matching') {
-        postData.append('matches', JSON.stringify(
-          this.matchingPairs.map(pair => ({
-            prompt_text: pair.term,
-            match_text: pair.definition
-          }))
-        ));
-      } else if (this.selectedQuestionType === 'Fill in the Blank') {
-        postData.append('blanks', JSON.stringify([{ correct_text: this.answer }]));
-      } else if (this.selectedQuestionType === 'Short Answer') {
-        postData.append('answer', this.answer);
-      } else if (this.selectedQuestionType === 'Essay') {
-        postData.append('grading_instructions', this.instructions);
-      }
+            const options = [
+              { option_text: this.answer.trim(), is_correct: true },
+              ...incorrectChoices.map(choice => ({
+                option_text: choice,
+                is_correct: false
+              }))
+            ];
+            postData.append('options', JSON.stringify(options));
+          } else if (this.selectedQuestionType === 'Matching') {
+            postData.append('matches', JSON.stringify(
+              this.matchingPairs.map(pair => ({
+                prompt_text: pair.term,
+                match_text: pair.definition
+              }))
+            ));
+          } else if (this.selectedQuestionType === 'Fill in the Blank') {
+            postData.append('blanks', JSON.stringify([{ correct_text: this.answer }]));
+          } else if (this.selectedQuestionType === 'Short Answer') {
+            postData.append('answer', this.answer);
+          } else if (this.selectedQuestionType === 'Essay') {
+            postData.append('grading_instructions', this.instructions);
+          }
 
-      // Optional: log FormData for debugging
-      for (let [key, val] of postData.entries()) {
-        console.log(`${key}:`, val);
-      }
+          // Optional: log FormData for debugging
+          for (let [key, val] of postData.entries()) {
+            console.log(`${key}:`, val);
+          }
 
-      config = {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'multipart/form-data'
+          config = {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          };
+
+        } else {
+          // No image = JSON fallback
+          postData = {
+            question_text: this.question,
+            default_points: parseInt(this.points),
+            est_time: parseInt(this.time),
+            chapter_number: this.chapter,
+            section_number: this.section,
+            grading_instructions: this.instructions,
+            type: this.selectedQuestionType,
+            source: 'manual',
+            course_id: this.courseId
+          };
+
+          if (this.selectedQuestionType === 'True/False') {
+            postData.true_false_answer = this.answer === 'True';
+          } else if (this.selectedQuestionType === 'Multiple Choice') {
+            const incorrectChoices = this.answerChoices
+              .split(',')
+              .map(c => c.trim())
+              .filter(Boolean);
+
+            postData.options = [
+              { option_text: this.answer.trim(), is_correct: true },
+              ...incorrectChoices.map(choice => ({ option_text: choice, is_correct: false }))
+            ];
+          } else if (this.selectedQuestionType === 'Matching') {
+            postData.matches = this.matchingPairs;
+          } else if (this.selectedQuestionType === 'Fill in the Blank') {
+            postData.blanks = [{ correct_text: this.answer }];
+          } else if (this.selectedQuestionType === 'Short Answer') {
+            postData.answer = this.answer;
+          } else if (this.selectedQuestionType === 'Essay') {
+            postData.grading_instructions = this.instructions;
+          }
+
+          config = {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          };
         }
-      };
 
-    } else {
-      // No image = JSON fallback
-      postData = {
-        question_text: this.question,
-        default_points: parseInt(this.points),
-        est_time: parseInt(this.time),
-        chapter_number: this.chapter,
-        section_number: this.section,
-        grading_instructions: this.instructions,
-        type: this.selectedQuestionType,
-        source: 'manual',
-        course_id: this.courseId
-      };
+        await api.post('/questions', postData, config);
+        alert('Question saved successfully!');
+        this.closeForm();
+        this.resetForm();
+        this.fetchQuestions(this.selectedQuestionType);
 
-      if (this.selectedQuestionType === 'True/False') {
-        postData.true_false_answer = this.answer === 'True';
-      } else if (this.selectedQuestionType === 'Multiple Choice') {
-        const incorrectChoices = this.answerChoices
-          .split(',')
-          .map(c => c.trim())
-          .filter(Boolean);
-
-        postData.options = [
-          { option_text: this.answer.trim(), is_correct: true },
-          ...incorrectChoices.map(choice => ({ option_text: choice, is_correct: false }))
-        ];
-      } else if (this.selectedQuestionType === 'Matching') {
-        postData.matches = this.matchingPairs;
-      } else if (this.selectedQuestionType === 'Fill in the Blank') {
-        postData.blanks = [{ correct_text: this.answer }];
-      } else if (this.selectedQuestionType === 'Short Answer') {
-        postData.answer = this.answer;
-      } else if (this.selectedQuestionType === 'Essay') {
-        postData.grading_instructions = this.instructions;
-      }
-
-      config = {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+      } catch (err) {
+        let serverMsg = 'Something went wrong.';
+        if (err && err.response && err.response.data) {
+          serverMsg = err.response.data.error || err.response.data.message || serverMsg;
         }
-      };
-    }
-
-    await api.post('/questions', postData, config);
-    alert('Question saved successfully!');
-    this.closeForm();
-    this.resetForm();
-    this.fetchQuestions(this.selectedQuestionType);
-
-  } catch (err) {
-    let serverMsg = 'Something went wrong.';
-    if (err && err.response && err.response.data) {
-      serverMsg = err.response.data.error || err.response.data.message || serverMsg;
-    }
-    alert('Save failed: ' + serverMsg);
-    console.error('Error saving question:', err);
-  }
-},
+        alert('Save failed: ' + serverMsg);
+        console.error('Error saving question:', err);
+      }
+    },
 
 
     selectQuestionType(type) {
@@ -481,17 +481,17 @@ export default {
     },
 
     handleImageUpload(event) {
-  const file = event.target.files[0];
-  if (file) {
-    this.image = file;  // ✅ This was the missing link
+      const file = event.target.files[0];
+      if (file) {
+        this.image = file;  // ✅ This was the missing link
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      this.imagePreview = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-},
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.imagePreview = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    },
     resetForm() {
       this.chapter = '';
       this.section = '';
@@ -535,6 +535,12 @@ export default {
       document.getElementById('q_edit').style.display = 'block';
     },
 
+
+    //functions to delete questions
+    toggleQuestionSelection(questionId) {
+      this.selectedQuestionId = this.selectedQuestionId === questionId ? null : questionId;
+    },
+
     async deleteQuestion(id) {
       if (confirm('Are you sure you want to delete this question?')) {
         try {
@@ -567,25 +573,4 @@ export default {
   flex-direction: column;
 }
 
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
-.form-popup-modal {
-  background: white;
-  padding: 2rem;
-  border-radius: 10px;
-  width: 500px;
-  max-height: 90%;
-  overflow-y: auto;
-}
 </style>
