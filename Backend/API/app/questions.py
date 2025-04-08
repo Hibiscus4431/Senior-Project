@@ -5,6 +5,7 @@ from app.config import Config
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from io import BytesIO 
+import json
 # Create Blueprint
 question_bp = Blueprint('questions', __name__)
 
@@ -23,7 +24,13 @@ def create_question():
         data = request.get_json()
     else:
         data = request.form.to_dict()
-
+        for key in ['options', 'matches', 'blanks']:
+            if key in data:
+                try:
+                    data[key] = json.loads(data[key])
+                except Exception as e:
+                    return jsonify({"error": f"Invalid format for '{key}': {str(e)}"}), 400
+                
     conn = Config.get_db_connection()
     cur = conn.cursor()
     # Handle file upload
@@ -123,7 +130,7 @@ def create_question():
             return jsonify({"error": "Fill in the blank questions require blanks."}), 400
         for blank in data['blanks']:
                 cur.execute("INSERT INTO QuestionFillBlanks (question_id, correct_text) VALUES (%s, %s);", 
-                (question_id, blank['correct_text']))
+                (question_id, blank))
 
     
     elif data['type'] == 'Matching':
@@ -149,80 +156,71 @@ def get_questions():
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
         return jsonify(auth_data[0]), auth_data[1]
-    
+
     user_id = auth_data['user_id']
+    role = auth_data['role']
     view_type = request.args.get('view', 'user')  # Default to user's questions
-    question_type = request.args.get('type', None)  # Optional: question type filter
+    question_type = request.args.get('type', None)
+    course_id_filter = request.args.get('course_id', None)
+    textbook_id_filter = request.args.get('textbook_id', None)
+
     conn = Config.get_db_connection()
     cur = conn.cursor()
-
-    course_id_filter = request.args.get('course_id', None)
-
     params = []
-    if view_type == 'published':
+
+    # View override for canvas-imported questions
+    if view_type == 'canvas':
         query = """
-        SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
-        FROM Questions q
-        LEFT JOIN Courses c ON q.course_id = c.course_id
-        LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
-        WHERE q.is_published = TRUE
+            SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
+            FROM Questions q
+            LEFT JOIN Courses c ON q.course_id = c.course_id
+            LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
+            WHERE q.source = 'canvas_qti'
         """
-    elif view_type == 'canvas':
-        query = """
-        SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
-        FROM Questions q
-        LEFT JOIN Courses c ON q.course_id = c.course_id
-        LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
-        WHERE q.source = 'canvas_qti'
-        """
+
+    # Role-based filtering
     else:
         query = """
-        SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
-        FROM Questions q
-        LEFT JOIN Courses c ON q.course_id = c.course_id
-        LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
-        WHERE (q.owner_id = %s OR q.is_published = TRUE)
+            SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
+            FROM Questions q
+            LEFT JOIN Courses c ON q.course_id = c.course_id
+            LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
+            WHERE q.owner_id = %s
         """
         params.append(user_id)
 
-        if course_id_filter:
+        if role == 'teacher' and course_id_filter:
             query += " AND q.course_id = %s"
             params.append(course_id_filter)
 
+        elif role == 'publisher' and textbook_id_filter:
+            query += " AND q.textbook_id = %s"
+            params.append(textbook_id_filter)
+
+    # Optional question type filter
     if question_type:
         query += " AND q.type = %s"
         params.append(question_type)
 
-    
+    # Execute the query
     cur.execute(query, tuple(params))
-    column_names = [desc[0] for desc in cur.description]  # Get column names
-    questions = [dict(zip(column_names, row)) for row in cur.fetchall()]  # Convert to dicts
+    column_names = [desc[0] for desc in cur.description]
+    questions = [dict(zip(column_names, row)) for row in cur.fetchall()]
 
+    # Attach type-specific data
     for q in questions:
         qid = q['id']
         qtype = q['type']
 
         if qtype == 'Multiple Choice':
-            # Fetch options and categorize them
             cur.execute("""
                 SELECT option_id, option_text, is_correct
                 FROM QuestionOptions
                 WHERE question_id = %s;
             """, (qid,))
             options = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
-
-            # Separate the correct answer from the other options
-            correct_option = None
-            incorrect_options = []
-
-            for option in options:
-                if option['is_correct']:
-                    correct_option = option  # Store the correct answer
-                else:
-                    incorrect_options.append(option)  # Store the incorrect options
-
-            q['correct_option'] = correct_option  # Add the correct option separately
-            q['incorrect_options'] = incorrect_options  # Add the incorrect options separately
+            q['correct_option'] = next((opt for opt in options if opt['is_correct']), None)
+            q['incorrect_options'] = [opt for opt in options if not opt['is_correct']]
 
         elif qtype == 'Matching':
             cur.execute("""
@@ -240,10 +238,10 @@ def get_questions():
             """, (qid,))
             q['blanks'] = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
 
-
     cur.close()
     conn.close()
     return jsonify({"questions": questions}), 200
+
 
 # UPDATE Question (only unpublished questions can be updated) - this is a PATCH request
 # the only things that can be updated are the question_text, options, blanks, and matches!

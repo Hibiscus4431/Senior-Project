@@ -267,3 +267,67 @@ def copy_published_question_for_teacher():
         "new_question_id": new_qid
     }), 201
 
+
+# Get all published questions 
+@resources_bp.route('/published', methods=['GET'])
+def get_published_questions():
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    question_type = request.args.get('type', None)
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+
+    query = """
+        SELECT q.*, c.course_name AS course_name, t.textbook_title AS textbook_title
+        FROM Questions q
+        LEFT JOIN Courses c ON q.course_id = c.course_id
+        LEFT JOIN Textbook t ON q.textbook_id = t.textbook_id
+        WHERE q.is_published = TRUE
+    """
+    params = []
+
+    if question_type:
+        query += " AND q.type = %s"
+        params.append(question_type)
+
+    cur.execute(query, tuple(params))
+    column_names = [desc[0] for desc in cur.description]
+    questions = [dict(zip(column_names, row)) for row in cur.fetchall()]
+
+    # Attach type-specific data
+    for q in questions:
+        qid = q['id']
+        qtype = q['type']
+
+        if qtype == 'Multiple Choice':
+            cur.execute("""
+                SELECT option_id, option_text, is_correct
+                FROM QuestionOptions
+                WHERE question_id = %s;
+            """, (qid,))
+            options = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
+            q['correct_option'] = next((opt for opt in options if opt['is_correct']), None)
+            q['incorrect_options'] = [opt for opt in options if not opt['is_correct']]
+
+        elif qtype == 'Matching':
+            cur.execute("""
+                SELECT match_id, prompt_text, match_text 
+                FROM QuestionMatches 
+                WHERE question_id = %s;
+            """, (qid,))
+            q['matches'] = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
+
+        elif qtype == 'Fill in the Blank':
+            cur.execute("""
+                SELECT blank_id, correct_text 
+                FROM QuestionFillBlanks 
+                WHERE question_id = %s;
+            """, (qid,))
+            q['blanks'] = [dict(zip([desc[0] for desc in cur.description], row)) for row in cur.fetchall()]
+
+    cur.close()
+    conn.close()
+    return jsonify({"questions": questions}), 200
