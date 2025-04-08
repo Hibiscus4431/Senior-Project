@@ -37,6 +37,7 @@
     data() {
       return {
         courseId: this.$route.query.courseId || '',
+        courseTitle: this.$route.query.title || '',
         bankName: '',
         bankChapter: '',
         bankSection: ''
@@ -60,7 +61,7 @@
             });
             console.log('Test bank saved successfully:', response.data);
             alert('Test bank saved successfully!');
-            this.$router.push({ path: '/TeacherQuestions' });
+            this.$router.push({ path: '/TeacherQuestions', query: {title:this.courseTitle, course_id: this.courseId } });
           } catch (error) {
             console.error('Error saving test bank:', error);
             alert('Failed to save the test bank. Please try again.');
