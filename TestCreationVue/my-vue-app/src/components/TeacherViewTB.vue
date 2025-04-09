@@ -10,108 +10,72 @@
       <button class="t_button" @click="showEditForm = true">Edit Draft Pool Info</button>
 
       <!-- Edit Test Bank Info Popup Form -->
-      <div class="form-popup" v-if="showEditForm">
-        <form class="form-container" @submit.prevent="updateTestBank">
-          <label><strong>Test Bank Name:</strong></label>
-          <input type="text" v-model="editForm.name" required />
+      <!-- Modal Popup -->
+      <div class="popup-overlay" v-if="showEditForm">
+        <div class="form-popup-modal">
+          <form class="form-container" @submit.prevent="updateTestBank">
+            <label><strong>Draft Pool Name:</strong></label>
+            <input type="text" v-model="editForm.name" required />
 
-          <label><strong>Chapter Number:</strong></label>
-          <input type="number" v-model="editForm.chapter" required />
+            <label><strong>Chapter Number:</strong></label>
+            <input type="text" v-model="editForm.chapter" required />
 
-          <label><strong>Section Number:</strong></label>
-          <input type="number" v-model="editForm.section" required />
+            <label><strong>Section Number:</strong></label>
+            <input type="text" v-model="editForm.section" required />
 
-          <button type="submit" class="btn">Save Changes</button>
-          <button type="button" class="btn cancel" @click="showEditForm = false">Cancel</button>
-        </form>
+            <button type="submit" class="btn">Save Changes</button>
+            <button type="button" class="btn cancel" @click="showEditForm = false">Cancel</button>
+          </form>
+        </div>
       </div>
 
 
-      <router-link :to="{ path: '/TeacherQuestions', query: { courseTitle: courseTitle, courseId: courseId } }">
-        <button class="t_button">Return to Question Page</button>
-      </router-link><br>
+        <router-link :to="{ path: '/TeacherQuestions', query: { courseTitle: courseTitle, courseId: courseId } }">
+          <button class="t_button">Return to Question Page</button>
+        </router-link><br>
 
-      <router-link to="TeacherNewTest">
-        <button class="t_button">Create New Test</button>
-      </router-link>
+        <router-link to="TeacherNewTest">
+          <button class="t_button">Create New Test</button>
+        </router-link>
 
-      <button class="t_button" @click="viewPrevious">View Previous Tests</button>
-      <br>
-      <hr>
-
-      <!--Test bank questions will be generated here-->
-      <div v-for="(q, index) in selectedQuestions" :key="q.id" class="question-box"
-        :class="{ selected: selectedQuestionId === q.id }" @click="toggleQuestionSelection(q.id)">
-
-        <strong>Question {{ index + 1 }}:</strong> {{ q.question_text }}<br>
-        <span><strong>Type:</strong> {{ q.type }}</span><br>
-        <span><strong>Points:</strong> {{ q.default_points }}</span><br>
-        <span><strong>Chapter:</strong> {{ q.chapter_number }}</span><br>
-        <span><strong>Section:</strong> {{ q.section_number }}</span><br>
-        <span><strong>Estimated Time:</strong> {{ q.est_time }} minutes</span><br>
-
-        <div v-if="q.type === 'True/False'">
-          <strong>Answer:</strong> {{ q.true_false_answer ? 'True' : 'False' }}
-        </div>
-
-        <div v-if="q.type === 'Multiple Choice'">
-          <strong>Correct Answer:</strong> {{ q.correct_option && q.correct_option.option_text || 'Not specified' }}
-          <br>
-          <strong>Other Options:</strong>
-          <ul>
-            <li v-for="(option, i) in q.incorrect_options" :key="i">{{ option.option_text }}</li>
-          </ul>
-        </div>
-
-        <div v-if="q.type === 'Matching'">
-          <strong>Pairs:</strong>
-          <ul>
-            <li v-for="(pair, i) in q.matches" :key="i">
-              {{ pair.prompt_text }} - {{ pair.match_text }}
-            </li>
-          </ul>
-        </div>
-
-        <div v-if="q.type === 'Fill in the Blank'">
-          <strong>Correct Answer(s):</strong>
-          <ul>
-            <li v-for="(blank, i) in q.blanks" :key="i">{{ blank.correct_text }}</li>
-          </ul>
-        </div>
-
-        <div v-if="q.type === 'Short Answer'">
-          <strong>Answer:</strong> {{ q.answer || 'Not provided' }}
-        </div>
-
-        <div v-if="q.type === 'Essay'">
-          <strong>Essay Instructions:</strong> {{ q.instructions || 'None' }}
-        </div>
-
-        <span><strong>Grading Instructions:</strong> {{ q.grading_instructions || 'None' }}</span><br>
-
-        <div v-if="selectedQuestionId === q.id" class="button-group">
-          <button @click.stop="editQuestion(q)">Edit</button>
-          <button @click.stop="removeQuestionFromTestBank(q.id)">Remove from Test Bank</button>
-        </div>
-
+        <button class="t_button" @click="viewPrevious">View Previous Tests</button>
+        <br>
         <hr>
-      </div>
+
+        <!--Test bank questions will be generated here-->
+        <div v-for="(q, index) in selectedQuestions" :key="q.id"
+          :class="['question-box', { selected: selectedQuestionId === q.id }]" @click="toggleQuestionSelection(q.id)">
+          <strong>Question {{ index + 1 }}:</strong> {{ q.question_text }}<br>
+          <span><strong>Type:</strong> {{ q.type }}</span><br>
+          <span><strong>Points:</strong> {{ q.default_points }}</span><br>
+          <span><strong>Chapter:</strong> {{ q.chapter_number }}</span><br>
+          <span><strong>Section:</strong> {{ q.section_number }}</span><br>
+          <span><strong>Estimated Time:</strong> {{ q.est_time }} minutes</span><br>
+          <span><strong>Grading Instructions:</strong> {{ q.grading_instructions }}</span><br>
+
+          <!-- Action buttons shown only when this question is selected -->
+          <div v-if="selectedQuestionId === q.id" class="button-group">
+            <button @click.stop="editQuestion(q)">Edit</button>
+            <button @click.stop="removeQuestionFromTestBank(q.id)">Remove</button>
+          </div>
+
+          <hr>
+        </div>
 
 
 
-
-      <!-- contents of popup-->
-      <div class="form-popup" id="test_view">
-        <form action="#" class="form-container">
-          Please select draft version to view:
-          <!--Figure out how to list the old test versions-->
-          <!--When version is clicked it will send them to test view page-->
-          <button type="submit" class="btn">Save</button>
-          <button type="button" class="btn cancel" @click="closeForm">Close</button>
-        </form>
+        <!-- contents of popup-->
+        <div class="form-popup" id="test_view">
+          <form action="#" class="form-container">
+            Please select draft version to view:
+            <!--Figure out how to list the old test versions-->
+            <!--When version is clicked it will send them to test view page-->
+            <button type="submit" class="btn">Save</button>
+            <button type="button" class="btn cancel" @click="closeForm">Close</button>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script>
