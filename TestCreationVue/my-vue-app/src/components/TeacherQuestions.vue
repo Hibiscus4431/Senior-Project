@@ -7,7 +7,7 @@
     <div class="center large-paragraph">
       <div class="dropdown">
         <button class="dropbtn">
-          {{ selectedTestBank ? selectedTestBank.name : 'Select Test Bank' }}
+          {{ selectedTestBank ? selectedTestBank.name : 'Select Draft Pool' }}
         </button>
         <div class="dropdown-content">
           <a v-for="tb in testBanks" :key="tb.testbank_id" href="#" @click.prevent="selectTestBank(tb)">
@@ -16,7 +16,7 @@
         </div>
       </div>
       <router-link :to="{ path: '/TeacherNewTB', query: { courseId: courseId } }">
-        <button class="t_button">New Test Bank</button>
+        <button class="t_button">New Draft Pool</button>
       </router-link>
       <button class="t_button" @click="importTest">Import Test</button>
 
@@ -34,9 +34,10 @@
 
       <button class="t_button" @click="edit">New Question</button>
       <router-link to="/TeacherPubQ">
-        <button class="t_button">Publisher Textbook Page</button>
+        <button class="t_button">Community Resources</button>
       </router-link>
       <div id="selectedQuestionType" class="center large-paragraph">{{ selectedQuestionType }}</div>
+      <hr>
     </div>
 
     <ul>
