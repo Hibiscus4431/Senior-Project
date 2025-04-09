@@ -87,8 +87,8 @@ export default {
       testFiles: [],
       courseId: this.$route.query.courseId || '',
       courseTitle: this.$route.query.courseTitle || '',
-      testBankId: this.$route.query.testBankId || '',
-      testBankName: this.$route.query.testBankName || 'Untitled Bank',
+      testBankId: this.$route.params.id || '',
+      testBankName: this.$route.query.testBankName || '', // will fetch it below
       selectedQuestions: [],
       editForm: {           // ← and this
         name: this.$route.query.testBankName || '',
@@ -97,7 +97,9 @@ export default {
       }
     };
   },
-
+  mounted() {
+    this.initialize();
+  },
   methods: {
     async viewPrevious() {
       try {
@@ -119,85 +121,87 @@ export default {
     },
     closeForm() {
       this.showPopup = false;
-    }
-  },
-  async fetchQuestions() {
-    if (!this.testBankId) return;
-    try {
-      const response = await api.get(`/testbanks/${this.testBankId}/questions`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      this.selectedQuestions = response.data.questions || [];
-    } catch (err) {
-      console.error('Error fetching questions for test bank:', err);
-      this.selectedQuestions = [];
-    }
-  },
+    },
+    async fetchQuestions() {
+      if (!this.testBankId) return;
+      try {
+        const response = await api.get(`/testbanks/${this.testBankId}/questions`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        this.selectedQuestions = response.data.questions || [];
+      } catch (err) {
+        console.error('Error fetching questions for test bank:', err);
+        this.selectedQuestions = [];
+      }
+    },
 
-  //helper functions for generated questions
-  toggleQuestionSelection(questionId) {
-    this.selectedQuestionId = this.selectedQuestionId === questionId ? null : questionId;
-  },
+    //helper functions for generated questions
+    toggleQuestionSelection(questionId) {
+      this.selectedQuestionId = this.selectedQuestionId === questionId ? null : questionId;
+    },
 
-  async removeQuestionFromTestBank(questionId) {
-    if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
+    async removeQuestionFromTestBank(questionId) {
+      if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
 
-    try {
-      await api.delete(`/testbanks/${this.testBankId}/questions/${questionId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      this.selectedQuestions = this.selectedQuestions.filter(q => q.id !== questionId);
-      alert('Question removed from test bank.');
-    } catch (err) {
-      console.error('Error removing question:', err);
-      alert('Failed to remove question from test bank.');
-    }
-  },
+      try {
+        await api.delete(`/testbanks/${this.testBankId}/questions/${questionId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        this.selectedQuestions = this.selectedQuestions.filter(q => q.id !== questionId);
+        alert('Question removed from test bank.');
+      } catch (err) {
+        console.error('Error removing question:', err);
+        alert('Failed to remove question from test bank.');
+      }
+    },
 
-  editQuestion(q) {
-    alert(`Edit feature is not implemented on this page yet.\nPlease go to "Return to Question Page" to edit the question.`);
-  },
-  async updateTestBank() {
-    try {
-      await api.put(`/teacher/${this.testBankId}`, {
-        name: this.editForm.name,
-        chapter_number: this.editForm.chapter,
-        section_number: this.editForm.section
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+    editQuestion(q) {
+      alert(`Edit feature is not implemented on this page yet.\nPlease go to "Return to Question Page" to edit the question.`);
+    },
+    async updateTestBank() {
+      try {
+        await api.put(`/teacher/${this.testBankId}`, {
+          name: this.editForm.name,
+          chapter_number: this.editForm.chapter,
+          section_number: this.editForm.section
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
 
 
-      this.testBankName = this.editForm.name; // update title
-      this.showEditForm = false;
-      alert('Test bank updated successfully.');
-    } catch (err) {
-      console.error('Error updating test bank:', err);
-      alert('Failed to update test bank.');
-    }
-  },
+        this.testBankName = this.editForm.name; // update title
+        this.showEditForm = false;
+        alert('Test bank updated successfully.');
+      } catch (err) {
+        console.error('Error updating test bank:', err);
+        alert('Failed to update test bank.');
+      }
+    },
 
-  async mounted() {
-    this.fetchQuestions();
-    try {
-      const res = await api.get(`/testbanks/${this.testBankId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      this.editForm.chapter = res.data.chapter_number;
-      this.editForm.section = res.data.section_number;
-    } catch (err) {
-      console.warn("Couldn't load testbank details:", err);
-    }
-  }
+    async initialize() {
+      await this.fetchQuestions();
+      try {
+        const res = await api.get(`/testbanks/${this.testBankId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        this.testBankName = res.data.name;
+        this.editForm.name = res.data.name;
+        this.editForm.chapter = res.data.chapter_number;
+        this.editForm.section = res.data.section_number;
+      } catch (err) {
+        console.warn("Couldn't load testbank details:", err);
+      }
 
+    }  // ✅ no comma here — last method in the block
+  }  // ✅ closes methods
 };
 
 </script>

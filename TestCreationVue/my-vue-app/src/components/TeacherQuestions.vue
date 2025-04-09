@@ -231,8 +231,12 @@ export default {
       this.$router.push({
         name: 'TeacherViewTB',
         params: { id: tb.value },
-        query: { courseId: this.courseId }
-      });
+        query: {
+          courseId: this.courseId,
+          courseTitle: this.courseTitle,
+          testBankName: tb.name
+        }
+      }); // ✅ closes $router.push properly
     },
 
     //function to fetch questions from the database based on selected question type
