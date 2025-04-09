@@ -99,6 +99,9 @@
     <!-- Add to Test Bank Modal -->
     <div class="popup-overlay" v-show="showAddToTBModal" @click.self="closeAddToTBModal">
       <div class="form-popup-modal">
+        <p style="color: red; font-weight: bold; margin-bottom: 1rem;">
+          Once the question is added to a test bank, it can no longer be edited.
+        </p>
         <h2>Select Test Bank</h2>
         <ul>
           <li v-for="tb in testBanks" :key="tb.testbank_id">
