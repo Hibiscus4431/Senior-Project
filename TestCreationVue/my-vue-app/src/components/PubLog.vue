@@ -1,11 +1,11 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/PubLog.vue -->
 <template>
-  <div class="pub-log-container">
-    <div class="center large-heading">
-      <h1>Publisher Login</h1>
-    </div>
+  <div class="theme-publisher">
+  <div class="top-banner">
+  <div class="banner-title">Publisher Login</div>
+</div>
     <!-- This is the page where publishers log in-->
-    <div class="center large-paragraph">
+    <div class="center large-paragraph" style ="color: #222">
       Please enter your publisher username and password:
       <br />
       <br />

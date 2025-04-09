@@ -1,16 +1,25 @@
 <template>
-  <div class="pub-questions-container">
-    <div class="center large-heading sticky">
-  <h1>{{ textbookTitle }}</h1>
+
+<div class="theme-publisher">
+  <div class="top-banner">
+  <div class="banner-title">{{ textbookTitle }}</div>
+
+  <div class="banner-actions">
+    <router-link to="/PubHome" class="banner-btn">Home</router-link>
+    <router-link to="/" class="banner-btn">Log Out</router-link>
+  </div>
 </div>
 
+
+
 <!-- Toolbar -->
-<div class="center large-paragraph">
-  <div class="dropdown">
-    <button class="dropbtn">
+ <div class="page-wrapper">
+<div class="button-row">
+  <div class="p_dropdown">
+    <button class="p_dropbtn">
       {{ selectedTestBank ? selectedTestBank.name : 'Select Draft Pool' }}
     </button>
-    <div class="dropdown-content">
+    <div class="p_dropdown-content">
       <a v-for="tb in testBanks" :key="tb.testbank_id" href="#" @click.prevent="selectTestBank(tb)">
         {{ tb.name }}
       </a>
@@ -21,9 +30,9 @@
     <button class="p_button">New Draft Pool</button>
   </router-link>
 
-  <div class="dropdown">
-    <button class="dropbtn">Question Type</button>
-    <div class="dropdown-content">
+  <div class="p_dropdown">
+    <button class="p_dropbtn">Question Type</button>
+    <div class="p_dropdown-content">
       <a href="#" @click="fetchQuestions('True/False')">True/False</a>
       <a href="#" @click="fetchQuestions('Multiple Choice')">Multiple Choice</a>
       <a href="#" @click="fetchQuestions('Matching')">Matching</a>
@@ -37,7 +46,7 @@
 </div>
 
 <!-- Optional display of selected type -->
-<div id="selectedQuestionType" class="center large-paragraph">
+<div id="selectedQuestionType"style = "color: #222;" class="center large-paragraph">
   {{ selectedQuestionType }}
 </div>
 
@@ -204,6 +213,7 @@
     </div>
   </div>
   </div>
+</div>
 </template>
 
 <script>
@@ -553,11 +563,4 @@ export default {
 <style scoped>
 @import '../assets/publisher_styles.css';
 
-.pub-questions-container {
-  background-color: #17552a;
-  font-family: Arial, sans-serif;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
 </style>
