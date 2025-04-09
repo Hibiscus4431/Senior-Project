@@ -25,7 +25,7 @@
       <div class="popup-overlay" v-if="showEditForm">
         <div class="form-popup-modal">
           <form class="form-container" @submit.prevent="updateTestBank">
-            <label><strong>Test Bank Name:</strong></label>
+            <label><strong>Draft Pool Name:</strong></label>
             <input type="text" v-model="editForm.name" required />
 
             <label><strong>Chapter Number:</strong></label>
