@@ -5,6 +5,10 @@
       <h1>{{ courseTitle }}</h1>
     </div>
     <div class="center large-paragraph">
+      <!--button to edit course info-->
+      <button class="t_button" @click="showCourseEditPopup = true">Edit Course Info</button>
+
+
       <div class="dropdown">
         <button class="dropbtn">
           {{ selectedTestBank ? selectedTestBank.name : 'Select Draft Pool' }}
@@ -174,6 +178,25 @@
         </form>
       </div>
     </div>
+
+    <!-- Course Edit Popup -->
+    <div class="popup-overlay" v-if="showCourseEditPopup" @click.self="showCourseEditPopup = false">
+      <div class="form-popup-modal">
+        <form class="form-container" @submit.prevent="saveCourseInfo">
+          <h1>Edit Course Info</h1>
+
+          <label><b>Course Title</b></label>
+          <input type="text" v-model="editCourseTitle" required />
+
+          <label><b>Course Number</b></label>
+          <input type="text" v-model="editCourseNumber" required />
+
+          <br />
+          <button type="submit" class="btn">Save</button>
+          <button type="button" class="btn cancel" @click="showCourseEditPopup = false">Cancel</button>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -205,6 +228,9 @@ export default {
       showForm: false,
       selectedTestbank: null,
       testBanks: [], // Array to store testbank options
+      showCourseEditPopup: false,
+      editCourseTitle: this.$route.query.courseTitle || '',
+      editCourseNumber: '',
     };
   },
   mounted() {
@@ -213,6 +239,37 @@ export default {
     this.loadTestbanks();
   },
   methods: {
+    //functions to edit course info
+    openCourseEditPopup() {
+      const titleParts = this.courseTitle.trim().split(' ');
+      this.editCourseNumber = titleParts.length > 1 ? titleParts.pop() : '';
+      this.editCourseTitle = titleParts.join(' ');
+      this.showCourseEditPopup = true;
+    },
+
+        async saveCourseInfo() {
+      try {
+        const response = await api.patch(`/courses/${this.courseId}`, {
+          course_name: this.editCourseTitle,
+          course_number: this.editCourseNumber
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        const newTitle = `${this.editCourseTitle} ${this.editCourseNumber}`.trim();
+        this.courseTitle = newTitle;
+        document.title = newTitle;
+        this.showCourseEditPopup = false;
+        alert('Course info updated successfully.');
+      } catch (error) {
+        console.error('Failed to update course:', error);
+        alert('Failed to update course.');
+      }
+    },
+
+
     async loadTestbanks() {
       try {
         const response = await api.get(`/testbanks/teacher?course_id=${this.courseId}`, {
