@@ -40,24 +40,63 @@
       <hr>
 
       <!--Test bank questions will be generated here-->
-      <div v-for="(q, index) in selectedQuestions" :key="q.id"
-        :class="['question-box', { selected: selectedQuestionId === q.id }]" @click="toggleQuestionSelection(q.id)">
+      <div v-for="(q, index) in selectedQuestions" :key="q.id" class="question-box"
+        :class="{ selected: selectedQuestionId === q.id }" @click="toggleQuestionSelection(q.id)">
+
         <strong>Question {{ index + 1 }}:</strong> {{ q.question_text }}<br>
         <span><strong>Type:</strong> {{ q.type }}</span><br>
         <span><strong>Points:</strong> {{ q.default_points }}</span><br>
         <span><strong>Chapter:</strong> {{ q.chapter_number }}</span><br>
         <span><strong>Section:</strong> {{ q.section_number }}</span><br>
         <span><strong>Estimated Time:</strong> {{ q.est_time }} minutes</span><br>
-        <span><strong>Grading Instructions:</strong> {{ q.grading_instructions }}</span><br>
 
-        <!-- Action buttons shown only when this question is selected -->
+        <div v-if="q.type === 'True/False'">
+          <strong>Answer:</strong> {{ q.true_false_answer ? 'True' : 'False' }}
+        </div>
+
+        <div v-if="q.type === 'Multiple Choice'">
+          <strong>Correct Answer:</strong> {{ q.correct_option && q.correct_option.option_text || 'Not specified' }}
+          <br>
+          <strong>Other Options:</strong>
+          <ul>
+            <li v-for="(option, i) in q.incorrect_options" :key="i">{{ option.option_text }}</li>
+          </ul>
+        </div>
+
+        <div v-if="q.type === 'Matching'">
+          <strong>Pairs:</strong>
+          <ul>
+            <li v-for="(pair, i) in q.matches" :key="i">
+              {{ pair.prompt_text }} - {{ pair.match_text }}
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="q.type === 'Fill in the Blank'">
+          <strong>Correct Answer(s):</strong>
+          <ul>
+            <li v-for="(blank, i) in q.blanks" :key="i">{{ blank.correct_text }}</li>
+          </ul>
+        </div>
+
+        <div v-if="q.type === 'Short Answer'">
+          <strong>Answer:</strong> {{ q.answer || 'Not provided' }}
+        </div>
+
+        <div v-if="q.type === 'Essay'">
+          <strong>Essay Instructions:</strong> {{ q.instructions || 'None' }}
+        </div>
+
+        <span><strong>Grading Instructions:</strong> {{ q.grading_instructions || 'None' }}</span><br>
+
         <div v-if="selectedQuestionId === q.id" class="button-group">
           <button @click.stop="editQuestion(q)">Edit</button>
-          <button @click.stop="removeQuestionFromTestBank(q.id)">Remove</button>
+          <button @click.stop="removeQuestionFromTestBank(q.id)">Remove from Test Bank</button>
         </div>
 
         <hr>
       </div>
+
 
 
 
@@ -90,6 +129,7 @@ export default {
       testBankId: this.$route.params.id || '',
       testBankName: this.$route.query.testBankName || '', // will fetch it below
       selectedQuestions: [],
+      selectedQuestionId: null,
       editForm: {           // ← and this
         name: this.$route.query.testBankName || '',
         chapter: '',
@@ -219,5 +259,20 @@ export default {
 
 .form-popup {
   width: 300px;
+}
+
+.question-box {
+  background-color: #ffffff;
+  /* or a soft color */
+  color: #000000;
+  /* black text */
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: left;
+  text-align: left;
 }
 </style>

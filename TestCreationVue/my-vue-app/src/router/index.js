@@ -37,7 +37,7 @@ const routes = [
   { path: '/TeacherPubQ', name: 'TeacherPubQ', component: TeacherPubQ },
   { path: '/TeacherQuestions', name: 'TeacherQuestions', component: TeacherQuestions },
   { path: '/TeacherTemplate', name: 'TeacherTemplate', component: TeacherTemplate },
-  { path: '/TeacherViewTB', name: 'TeacherViewTB', component: TeacherViewTB },
+  { path: '/TeacherViewTB/:id', name: 'TeacherViewTB', component: TeacherViewTB },
   { path: '/WebmasterHome', name: 'WebmasterHome', component: WebmasterHome },
   { path: '/WebmasterLog', name: 'WebmasterLog', component: WebmasterLog },
 ];
