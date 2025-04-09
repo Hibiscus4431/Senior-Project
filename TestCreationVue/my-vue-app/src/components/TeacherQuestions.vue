@@ -27,12 +27,13 @@
       <div class="dropdown">
         <button class="dropbtn">Question Type</button>
         <div class="dropdown-content">
-          <a href="#" @click="fetchQuestions('True/False')">True/False</a>
-          <a href="#" @click="fetchQuestions('Multiple Choice')">Multiple Choice</a>
-          <a href="#" @click="fetchQuestions('Matching')">Matching</a>
-          <a href="#" @click="fetchQuestions('Fill in the Blank')">Fill in the Blank</a>
-          <a href="#" @click="fetchQuestions('Short Answer')">Short Answer</a>
-          <a href="#" @click="fetchQuestions('Essay')">Essay</a>
+          <a href="#" @click="selectQuestionType('True/False')">True/False</a>
+          <a href="#" @click="selectQuestionType('Multiple Choice')">Multiple Choice</a>
+          <a href="#" @click="selectQuestionType('Matching')">Matching</a>
+          <a href="#" @click="selectQuestionType('Fill in the Blank')">Fill in the Blank</a>
+          <a href="#" @click="selectQuestionType('Short Answer')">Short Answer</a>
+          <a href="#" @click="selectQuestionType('Essay')">Essay</a>
+
         </div>
       </div>
 
@@ -88,9 +89,24 @@
         <div v-if="selectedQuestionId === question.id" class="button-group">
           <button @click.stop="editQuestion(question)">Edit</button>
           <button @click.stop="deleteQuestion(question.id)">Delete</button>
+          <button @click.stop="openAddToTestBank(question.id)">Add to Draft Pool</button>
         </div>
       </div>
     </ul>
+
+
+    <!-- Add to Test Bank Modal -->
+    <div class="popup-overlay" v-show="showAddToTBModal" @click.self="closeAddToTBModal">
+      <div class="form-popup-modal">
+        <h2>Select draft pool to add question to:</h2>
+        <ul>
+          <li v-for="tb in testBanks" :key="tb.testbank_id">
+            <button @click="assignQuestionToTestBank(tb.testbank_id)">{{ tb.name }}</button>
+          </li>
+        </ul>
+        <button @click="closeAddToTBModal">Cancel</button>
+      </div>
+    </div>
 
     <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
 
@@ -231,6 +247,8 @@ export default {
       showCourseEditPopup: false,
       editCourseTitle: this.$route.query.courseTitle || '',
       editCourseNumber: '',
+      showAddToTBModal: false,
+      questionToAddToTB: null,
     };
   },
   mounted() {
@@ -239,6 +257,32 @@ export default {
     this.loadTestbanks();
   },
   methods: {
+    //functions to add question to test bank
+    openAddToTestBank(questionId) {
+      this.questionToAddToTB = questionId;
+      this.showAddToTBModal = true;
+    },
+    closeAddToTBModal() {
+      this.questionToAddToTB = null;
+      this.showAddToTBModal = false;
+    },
+    async assignQuestionToTestBank(testbankId) {
+      if (!this.questionToAddToTB) return;
+      try {
+        await api.post(`/testbanks/${testbankId}/questions`, {
+          question_ids: [this.questionToAddToTB]
+        }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+
+
+        alert('Question successfully added to testbank!');
+        this.closeAddToTBModal();
+      } catch (error) {
+        console.error('Failed to add question to testbank:', error);
+        alert('Failed to add question.');
+      }
+    },
     //functions to edit course info
     openCourseEditPopup() {
       const titleParts = this.courseTitle.trim().split(' ');
@@ -247,7 +291,7 @@ export default {
       this.showCourseEditPopup = true;
     },
 
-        async saveCourseInfo() {
+    async saveCourseInfo() {
       try {
         const response = await api.patch(`/courses/${this.courseId}`, {
           course_name: this.editCourseTitle,
@@ -562,10 +606,9 @@ export default {
       }
     },
 
-
     selectQuestionType(type) {
-      this.selectedQuestionType = type;
-      this.edit();
+      this.selectedQuestionType = `Selected Question Type: ${type}`;
+      this.fetchQuestions(type);
     },
     edit() {
       this.showForm = true;
