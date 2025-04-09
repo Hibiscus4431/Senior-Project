@@ -485,6 +485,50 @@ def get_questions_in_testbank_publihser(testbank_id):
     conn.close()
     return jsonify({"questions": questions}), 200
 
+@testbank_bp.route('/<int:testbank_id>/publish', methods=['POST'])
+def publish_testbank_and_questions(testbank_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    role = auth_data.get("role")
+    if role not in ["teacher", "publisher"]:
+        return jsonify({"error": "Only teachers or publishers can publish testbanks"}), 403
+
+    user_id = auth_data["user_id"]
+    conn = Config.get_db_connection()
+    cursor = conn.cursor()
+
+    # ✅ Verify the testbank is owned by the user
+    cursor.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s;", (testbank_id,))
+    result = cursor.fetchone()
+    if not result or result[0] != user_id:
+        return jsonify({"error": "You do not own this testbank"}), 403
+
+    # ✅ Mark the testbank as published
+    cursor.execute("""
+        UPDATE Test_bank
+        SET is_published = TRUE
+        WHERE testbank_id = %s;
+    """, (testbank_id,))
+
+    # ✅ Mark all questions in the testbank as published
+    cursor.execute("""
+        UPDATE Questions
+        SET is_published = TRUE
+        WHERE id IN (
+            SELECT question_id
+            FROM test_bank_questions
+            WHERE test_bank_id = %s
+        );
+    """, (testbank_id,))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Testbank and all linked questions published successfully."}), 200
+
 
 #######--------------------Common ----------------------------##############################
 @testbank_bp.route('/<int:testbank_id>', methods=['DELETE'])    
