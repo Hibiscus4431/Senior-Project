@@ -3,6 +3,7 @@
     <div class="center large-heading sticky">
       <h1 id="textbook-title">{{ textbookTitle }}</h1>
     </div>
+
     <!-- Test Bank Selector -->
     <div class="dropdown">
       <button class="dropbtn">
@@ -18,7 +19,94 @@
         <button class="p_button">New Test Bank</button>
       </router-link>
 
+      <!-- Question Type Dropdown -->
+      <div class="dropdown">
+        <button class="dropbtn">Question Type</button>
+        <div class="dropdown-content">
+          <a href="#" @click="fetchQuestions('True/False')">True/False</a>
+          <a href="#" @click="fetchQuestions('Multiple Choice')">Multiple Choice</a>
+          <a href="#" @click="fetchQuestions('Matching')">Matching</a>
+          <a href="#" @click="fetchQuestions('Fill in the Blank')">Fill in the Blank</a>
+          <a href="#" @click="fetchQuestions('Short Answer')">Short Answer</a>
+          <a href="#" @click="fetchQuestions('Essay')">Essay</a>
+        </div>
+      </div>
+
       <button class="p_button" @click="edit">New Question</button>
+    </div>
+
+    <!-- Selected Question Type Display -->
+    <div id="selectedQuestionType" class="center large-paragraph">
+      {{ selectedQuestionType ? `Selected Question Type: ${selectedQuestionType}` : '' }}
+    </div>
+
+    <!-- Question List Display -->
+    <ul>
+      <div v-for="(question, index) in questions" :key="index" class="question-box"
+        :class="{ selected: selectedQuestionId === question.id }"
+        @click="toggleQuestionSelection(question.id)">
+        <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
+        <span><strong>Type:</strong> {{ question.type }}</span><br>
+        <span><strong>Chapter:</strong> {{ question.chapter || 'N/A' }}</span><br>
+        <span><strong>Section:</strong> {{ question.section || 'N/A' }}</span><br>
+        <span><strong>Points:</strong> {{ question.points }}</span><br>
+        <span><strong>Estimated Time:</strong> {{ question.time }} minutes</span><br>
+
+        <div v-if="question.type === 'True/False'">
+          <strong>Answer:</strong> {{ question.answer ? 'True' : 'False' }}
+        </div>
+
+        <div v-if="question.type === 'Multiple Choice'">
+          <strong>Correct Answer:</strong> {{ question.correctOption && question.correctOption.option_text || 'Not specified' }}<br>
+          <strong>Other Options:</strong>
+          <ul>
+            <li v-for="(option, i) in question.incorrectOptions" :key="i">{{ option.option_text }}</li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Matching'">
+          <strong>Pairs:</strong>
+          <ul>
+            <li v-for="(pair, i) in question.pairs" :key="i">{{ pair.term }} - {{ pair.definition }}</li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Fill in the Blank'">
+          <strong>Correct Answer(s):</strong>
+          <ul>
+            <li v-for="(blank, i) in question.blanks" :key="i">{{ blank.correct_text }}</li>
+          </ul>
+        </div>
+
+        <div v-if="question.type === 'Short Answer'">
+          <strong>Answer:</strong> {{ question.answer || 'Not provided' }}
+        </div>
+
+        <div v-if="question.type === 'Essay'">
+          <strong>Essay Instructions:</strong> {{ question.instructions || 'None' }}
+        </div>
+
+        <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span>
+
+        <div v-if="selectedQuestionId === question.id" class="button-group">
+          <button @click.stop="editQuestion(question)">Edit</button>
+          <button @click.stop="deleteQuestion(question.id)">Delete</button>
+          <button @click.stop="openAddToTestBank(question.id)">Add to Test Bank</button>
+        </div>
+      </div>
+    </ul>
+
+    <!-- Add to Test Bank Modal -->
+    <div class="popup-overlay" v-show="showAddToTBModal" @click.self="closeAddToTBModal">
+      <div class="form-popup-modal">
+        <h2>Select Test Bank</h2>
+        <ul>
+          <li v-for="tb in testBanks" :key="tb.testbank_id">
+            <button @click="assignQuestionToTestBank(tb.testbank_id)">{{ tb.name }}</button>
+          </li>
+        </ul>
+        <button @click="closeAddToTBModal">Cancel</button>
+      </div>
     </div>
 
     <!-- Popup Overlay -->
@@ -120,12 +208,16 @@ export default {
     return {
       textbookTitle: '',
       textbookId: '',
-      showForm: false,
-      selectedQuestionType: '',
-      matchingPairs: [],
-      imagePreview: '',
       testBanks: [],
       selectedTestBank: null,
+      selectedQuestionType: '',
+      questions: [],
+      selectedQuestionId: null,
+      showForm: false,
+      showAddToTBModal: false,
+      questionToAddToTB: null,
+      matchingPairs: [],
+      imagePreview: '',
       questionData: {
         chapter: '',
         section: '',
@@ -152,7 +244,66 @@ export default {
         console.error('Error loading test banks:', error);
       }
     },
-
+    async fetchQuestions(type) {
+      this.selectedQuestionType = type;
+      try {
+        const response = await api.get(`/questions`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          params: { textbook_id: this.textbookId, type: type }
+        });
+        if (Array.isArray(response.data.questions)) {
+          this.questions = response.data.questions.map((question) => {
+            const base = {
+              text: question.question_text,
+              type: question.type,
+              points: question.default_points,
+              id: question.id,
+              instructions: question.grading_instructions || '',
+              time: question.est_time,
+              chapter: question.chapter_number,
+              section: question.section_number
+            };
+            switch (question.type) {
+              case 'True/False': return { ...base, answer: question.true_false_answer };
+              case 'Multiple Choice': return { ...base, correctOption: question.correct_option || null, incorrectOptions: question.incorrect_options || [] };
+              case 'Matching': return { ...base, pairs: (question.matches || []).map(pair => ({ term: pair.prompt_text, definition: pair.match_text })) };
+              case 'Fill in the Blank': return { ...base, blanks: question.blanks || [] };
+              case 'Short Answer': return { ...base, answer: question.answer || '' };
+              case 'Essay': return base;
+              default: return base;
+            }
+          });
+        } else {
+          this.questions = [];
+        }
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        this.questions = [];
+      }
+    },
+    openAddToTestBank(questionId) {
+      this.questionToAddToTB = questionId;
+      this.showAddToTBModal = true;
+    },
+    closeAddToTBModal() {
+      this.questionToAddToTB = null;
+      this.showAddToTBModal = false;
+    },
+    async assignQuestionToTestBank(testbankId) {
+      if (!this.questionToAddToTB) return;
+      try {
+        await api.post(`/testbanks/publisher/${testbankId}/questions`, {
+          question_ids: [this.questionToAddToTB]
+        }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        alert('Question successfully added to testbank!');
+        this.closeAddToTBModal();
+      } catch (error) {
+        console.error('Failed to add question to testbank:', error);
+        alert('Failed to add question.');
+      }
+    },
 
     selectTestBank(tb) {
       this.$router.push({
@@ -169,8 +320,9 @@ export default {
 
 
     },
-
-
+    toggleQuestionSelection(id) {
+      this.selectedQuestionId = this.selectedQuestionId === id ? null : id;
+    },
     selectQuestionType(type) {
       this.selectedQuestionType = type;
       this.edit();
@@ -180,6 +332,7 @@ export default {
     },
     closeForm() {
       this.showForm = false;
+      this.resetForm();
     },
     addPair() {
       this.matchingPairs.push({ term: '', definition: '' });
@@ -191,167 +344,63 @@ export default {
       const file = event.target.files[0];
       if (file) {
         this.questionData.imageFile = file;
-
         const reader = new FileReader();
         reader.onload = (e) => {
           this.imagePreview = e.target.result;
         };
         reader.readAsDataURL(file);
       }
-    }
-    ,
-
-    //function to reset the form after saved question posts
+    },
     resetForm() {
       this.questionData = {
-        chapter: '',
-        section: '',
-        question: '',
-        reference: '',
-        answer: '',
-        answerChoices: '',
-        points: '',
-        time: '',
-        instructions: '',
-        image: ''
+        chapter: '', section: '', question: '', reference: '', answer: '',
+        answerChoices: '', points: '', time: '', instructions: '', image: ''
       };
       this.selectedQuestionType = '';
       this.matchingPairs = [];
       this.imagePreview = '';
     },
-    //function to reset the form after saved question posts
-    resetForm() {
-      this.questionData = {
-        chapter: '',
-        section: '',
-        question: '',
-        reference: '',
-        answer: '',
-        answerChoices: '',
-        points: '',
-        time: '',
-        instructions: '',
-        image: ''
-      };
-      this.selectedQuestionType = '';
-      this.matchingPairs = [];
-      this.imagePreview = '';
+
+    editQuestion(question) {
+      this.editingQuestionId = question.id;
+      this.questionData.question = question.text;
+      this.questionData.chapter = question.chapter;
+      this.questionData.section = question.section;
+      this.questionData.points = question.points;
+      this.questionData.time = question.time;
+      this.questionData.instructions = question.instructions;
+      this.questionData.answer = question.answer || '';
+      this.selectedQuestionType = question.type;
+
+      if (question.type === 'Multiple Choice') {
+        this.questionData.answerChoices = [
+          ...(question.correctOption ? [question.correctOption.option_text] : []),
+          ...(question.incorrectOptions || []).map(o => o.option_text)
+        ].join(', ');
+      } else if (question.type === 'Matching') {
+        this.matchingPairs = question.pairs || [];
+      }
+
+      this.showForm = true;
     },
-    //function to post the question to the server
-    async handleQuestionSave() {
-      try {
-        let postData;
-        let config;
 
-        if (this.questionData.imageFile) {
-          // Use FormData for file + data
-          postData = new FormData();
-
-          postData.append('file', this.questionData.imageFile);
-          postData.append('question_text', this.questionData.question);
-          postData.append('default_points', this.questionData.points);
-          postData.append('est_time', this.questionData.time);
-          postData.append('chapter_number', this.questionData.chapter);
-          postData.append('section_number', this.questionData.section);
-          postData.append('grading_instructions', this.questionData.instructions);
-          postData.append('type', this.selectedQuestionType);
-          postData.append('source', 'manual');
-          postData.append('textbook_id', this.textbookId);
-
-          if (this.selectedQuestionType === 'True/False') {
-            postData.append('true_false_answer', this.questionData.answer === 'True');
-          } else if (this.selectedQuestionType === 'Multiple Choice') {
-            const incorrectChoices = this.questionData.answerChoices
-              .split(',')
-              .map(c => c.trim())
-              .filter(c => c.length > 0);
-
-            const options = [
-              { option_text: this.questionData.answer.trim(), is_correct: true },
-              ...incorrectChoices.map(choice => ({
-                option_text: choice,
-                is_correct: false
-              }))
-            ];
-            postData.append('options', new Blob([JSON.stringify(options)], { type: 'application/json' }));
-          } else if (this.selectedQuestionType === 'Matching') {
-            const matches = this.matchingPairs.map(pair => ({
-              prompt_text: pair.term,
-              match_text: pair.definition
-            }));
-            postData.append('matches', new Blob([JSON.stringify(matches)], { type: 'application/json' }));
-          } else if (this.selectedQuestionType === 'Fill in the Blank') {
-            const blanks = [{ correct_text: this.answer }];
-            postData.append('blanks', new Blob([JSON.stringify(blanks)], { type: 'application/json' }));
-          } else if (this.selectedQuestionType === 'Short Answer') {
-            postData.append('answer', this.answer);
-          } else if (this.selectedQuestionType === 'Essay') {
-            postData.append('grading_instructions', this.instructions);
-          }
-
-          config = {
+    async deleteQuestion(id) {
+      if (confirm('Are you sure you want to delete this question?')) {
+        try {
+          await api.delete(`/questions/${id}`, {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-              'Content-Type': 'multipart/form-data'
+              Authorization: `Bearer ${localStorage.getItem('token')}`
             }
-          };
-        } else {
-          // fallback: standard JSON if no file
-          postData = {
-            question_text: this.questionData.question,
-            default_points: parseInt(this.questionData.points),
-            est_time: parseInt(this.questionData.time),
-            chapter_number: this.questionData.chapter,
-            section_number: this.questionData.section,
-            grading_instructions: this.questionData.instructions,
-            type: this.selectedQuestionType,
-            source: 'manual',
-            textbook_id: this.textbookId
-          };
-
-          if (this.selectedQuestionType === 'True/False') {
-            postData.true_false_answer = this.questionData.answer === 'True';
-          } else if (this.selectedQuestionType === 'Multiple Choice') {
-            const incorrectChoices = this.questionData.answerChoices
-              .split(',')
-              .map(c => c.trim())
-              .filter(c => c.length > 0);
-
-            postData.options = [
-              { option_text: this.questionData.answer.trim(), is_correct: true },
-              ...incorrectChoices.map(choice => ({
-                option_text: choice,
-                is_correct: false
-              }))
-            ];
-          } else if (this.selectedQuestionType === 'Matching') {
-            postData.matches = this.matchingPairs;
-          } else if (this.selectedQuestionType === 'Fill in the Blank') {
-            postData.blanks = [{ correct_text: this.questionData.answer }];
-          } else if (this.selectedQuestionType === 'Short Answer') {
-            postData.answer = this.questionData.answer;
-          } else if (this.selectedQuestionType === 'Essay') {
-            postData.grading_instructions = this.questionData.instructions;
-          }
-
-          config = {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-          };
+          });
+          this.questions = this.questions.filter(q => q.id !== id);
+          alert('Question deleted.');
+        } catch (err) {
+          console.error(err);
+          alert('Failed to delete question.');
         }
-
-        await api.post('/questions', postData, config);
-
-
-        alert('Question saved successfully!');
-        this.closeForm();
-        this.resetForm();
-
-
-      } catch (err) {
-        console.error('Error saving question:', err);
-        alert('Failed to save question.');
       }
     }
+
   },
   mounted() {
     this.textbookTitle = this.$route.query.title || 'Book Title';
@@ -365,7 +414,6 @@ export default {
 
 <style scoped>
 @import '../assets/publisher_styles.css';
-
 .pub-questions-container {
   background-color: #17552a;
   font-family: Arial, sans-serif;
