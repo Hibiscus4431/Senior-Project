@@ -255,7 +255,13 @@ export default {
     const testbankId = this.$route.params.id;
     console.log("Viewing testbank:", testbankId);
     this.loadTestbanks();
+
+    // Set selectedTestBank from query if provided
+    if (this.$route.query.testBankName) {
+      this.selectedTestBank = { name: this.$route.query.testBankName };
+    }
   },
+
   methods: {
     //functions to add question to test bank
     openAddToTestBank(questionId) {
