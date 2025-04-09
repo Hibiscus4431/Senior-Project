@@ -7,7 +7,7 @@
     </div>
     <div class="center large-paragraph">
       <!-- Edit Test Bank Info Button -->
-      <button class="t_button" @click="showEditForm = true">Edit Test Bank Info</button>
+      <button class="t_button" @click="showEditForm = true">Edit Draft Pool Info</button>
 
       <!-- Edit Test Bank Info Popup Form -->
       <div class="form-popup" v-if="showEditForm">
