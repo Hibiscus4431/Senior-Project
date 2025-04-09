@@ -288,7 +288,7 @@ export default {
       this.selectedTestbankId = tb.value;
       this.$router.push({
         name: 'TeacherViewTB',
-        params: { id: tb.value },
+        params: { id: tb.testbank_id },
         query: {
           courseId: this.courseId,
           courseTitle: this.courseTitle,
