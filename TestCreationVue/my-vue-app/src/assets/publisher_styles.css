@@ -199,4 +199,11 @@ input[type="text"]:focus {
   overflow-y: auto;
 }
 
+.form-container label {
+  color: black; /* Make label text visible */
+  font-size: 18px;
+  display: block;
+  margin-bottom: 5px;
+}
+
 

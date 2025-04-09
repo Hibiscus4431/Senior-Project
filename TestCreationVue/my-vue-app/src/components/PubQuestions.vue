@@ -161,9 +161,13 @@ export default {
           testbank_id: tb.testbank_id,
           name: tb.name,
           textbook_id: this.textbookId,
-          title: this.textbookTitle
+          title: this.textbookTitle,
+          chapter: tb.chapter_number,     // ✅ added
+          section: tb.section_number      // ✅ added
         }
       });
+
+
     },
 
 

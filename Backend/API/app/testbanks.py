@@ -353,7 +353,7 @@ def get_publisher_testbanks_by_textbook():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT testbank_id, name, textbook_id
+        SELECT testbank_id, name, textbook_id, chapter_number, section_number
         FROM Test_bank
         WHERE owner_id = %s AND textbook_id = %s
         ORDER BY name;
@@ -362,11 +362,14 @@ def get_publisher_testbanks_by_textbook():
     rows = cursor.fetchall()
     testbanks = [
         {
-            "testbank_id": row[0],
-            "name": row[1],
-            "textbook_id": row[2]
+        "testbank_id": row[0],
+        "name": row[1],
+        "textbook_id": row[2],
+        "chapter_number": row[3],
+        "section_number": row[4]
         } for row in rows
     ]
+
 
     cursor.close()
     conn.close()
@@ -552,3 +555,49 @@ def remove_question_from_testbank(testbank_id, question_id):
     conn.close()
 
     return jsonify({"message": "Question removed from testbank"}), 200
+
+# UPDATE Publisher Testbank Info (name, chapter, section)
+# This endpoint allows publishers to update their testbank information
+@testbank_bp.route('/publisher/<int:testbank_id>', methods=['PUT'])
+def update_publisher_testbank(testbank_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    if auth_data.get("role") != "publisher":
+        return jsonify({"error": "Only publishers can update testbanks"}), 403
+
+    data = request.get_json()
+    name = data.get("name")
+    chapter_number = data.get("chapter_number")
+    section_number = data.get("section_number")
+
+    if not name:
+        return jsonify({"error": "Testbank name is required"}), 400
+
+    user_id = auth_data["user_id"]
+
+    conn = Config.get_db_connection()
+    cursor = conn.cursor()
+
+    # Check that the publisher owns this testbank
+    cursor.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
+    result = cursor.fetchone()
+
+    if not result:
+        return jsonify({"error": "Testbank not found"}), 404
+    if result[0] != user_id:
+        return jsonify({"error": "You do not own this testbank"}), 403
+
+    # Update the test bank
+    cursor.execute("""
+        UPDATE Test_bank
+        SET name = %s, chapter_number = %s, section_number = %s
+        WHERE testbank_id = %s;
+    """, (name, chapter_number, section_number, testbank_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Testbank updated successfully"}), 200
