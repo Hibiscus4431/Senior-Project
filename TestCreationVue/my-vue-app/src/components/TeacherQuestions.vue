@@ -5,9 +5,6 @@
       <h1>{{ courseTitle }}</h1>
     </div>
     <div class="center large-paragraph">
-      <!--button to edit course info-->
-      <button class="t_button" @click="showCourseEditPopup = true">Edit Course Info</button>
-
 
       <div class="dropdown">
         <button class="dropbtn">
@@ -36,6 +33,9 @@
 
         </div>
       </div>
+
+      <!--button to edit course info-->
+      <button class="t_button" @click="showCourseEditPopup = true">Edit Course Info</button>
 
       <button class="t_button" @click="edit">New Question</button>
       <router-link to="/TeacherPubQ">
