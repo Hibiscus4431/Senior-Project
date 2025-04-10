@@ -10,11 +10,21 @@
       </div>
     </div>
     <div class="page-wrapper">
-      <div style="display: flex; justify-content: center; width: 100%;">
       <div class="button-row">
-      <!-- Edit Test Bank Info Button -->
-      <button class="p_button" @click="showEditForm = true">Edit Test Bank Info</button>
+        <!-- Edit Test Bank Info Button -->
+        <button class="p_button" @click="showEditForm = true">Edit Test Bank Info</button>
 
+
+
+        <router-link
+          :to="{ path: '/PubQuestions', query: { title: this.textbookTitle, textbook_id: this.textbookId } }">
+          <button class="p_button">Return to Question Page</button>
+        </router-link>
+
+        <router-link :to="{ name: 'PubViewFeedback', params: { testbank_id: selectedTestBankId } }">
+          <button class="p_button">View Feedback</button>
+        </router-link>
+      </div>
       <!-- Modal Popup -->
       <div class="popup-overlay" v-if="showEditForm">
         <div class="form-popup-modal">
@@ -33,18 +43,8 @@
           </form>
         </div>
       </div>
-
-
-      <router-link :to="{ path: '/PubQuestions', query: { title: this.textbookTitle, textbook_id: this.textbookId } }">
-        <button class="p_button">Return to Question Page</button>
-      </router-link>
-
-      <router-link :to="{ name: 'PubViewFeedback', params: { testbank_id: selectedTestBankId } }">
-        <button class="p_button">View Feedback</button>
-      </router-link>
-      </div>
-
       <hr>
+      <br>
       <!--Test bank questions will be generated here-->
       <div id="questionsContainer">
         <p v-for="question in selectedQuestions" :key="question">{{ question }}</p>
@@ -52,8 +52,8 @@
 
       <!-- Insert the fetched questions display here -->
       <ul>
-        <li v-for="(question, index) in questions" :key="index" class="question-box"
-          @click="toggleQuestionSelection(question.id)">
+        <li v-for="(question, index) in questions" :key="index" class="p_question-box"
+          :class="{ 'selected': selectedQuestionId === question.id }" @click="toggleQuestionSelection(question.id)">
           <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
           <span><strong>Type:</strong> {{ question.type }}</span><br>
           <span><strong>Chapter:</strong> {{ question.chapter || 'N/A' }}</span><br>
@@ -102,22 +102,17 @@
           <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
 
           <!-- Buttons shown only if selected -->
-          <div v-if="selectedQuestionId === question.id" class="button-group">
-            <button @click.stop="editQuestion(question)">Edit</button>
-            <button @click.stop="deleteQuestion(question.id)">Delete</button>
+          <div v-if="selectedQuestionId === question.id" class="p_button-group">
+            <button @click.stop="removeQuestionFromTestBank(question.id)">Remove from Draft Pool</button>
           </div>
         </li>
       </ul>
-
-
-
 
       <!--file input element -->
       <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
 
 
     </div>
-  </div>
   </div>
 </template>
 
@@ -131,9 +126,10 @@ export default {
       showPopup: false,
       showEditForm: false,
       selectedTestBank: this.$route.query.name || 'No Test Bank Selected',
-      selectedTestBankId: this.$route.query.testbank_id || null,
+      selectedTestBankId: this.$route.query.testbank_id || this.$route.params.testbank_id || null,
       textbookId: this.$route.query.textbook_id || null,
       textbookTitle: this.$route.query.title || null,
+      selectedQuestionId: null,
       questions: {},
       editForm: {
         name: this.$route.query.name || '',
@@ -147,6 +143,10 @@ export default {
     selectedQuestions() {
       return this.questions[this.selectedTestBank] || [];
     }
+  },
+
+  mounted() {
+    this.loadQuestions();
   },
 
   methods: {
@@ -181,20 +181,52 @@ export default {
       }
     },
 
+    // ... your existing methods ...
+    async loadQuestions() {
+      if (this.selectedTestBankId) {
+        try {
+          const questionsRes = await api.get(`/testbanks/publisher/${this.selectedTestBankId}/questions`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          });
+          this.questions = questionsRes.data.questions || [];
+        } catch (error) {
+          console.error('Error loading test bank questions:', error);
+        }
+      }
+    },
+    toggleQuestionSelection(id) {
+      if (this.selectedQuestionId === id) {
+        this.selectedQuestionId = null; // Deselect if already selected
+      } else {
+        this.selectedQuestionId = id; // Select the clicked question
+      }
+    },
+    async removeQuestionFromTestBank(questionId) {
+      if (!this.selectedTestBankId) {
+        alert("Test bank ID is missing. Cannot remove question.");
+        return;
+      }
 
+      if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
 
-    async mounted() {
-  if (this.selectedTestBankId) {
-    try {
-      const questionsRes = await api.get(`/testbanks/publisher/${this.selectedTestBankId}/questions`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      this.questions = questionsRes.data.questions || [];
-    } catch (error) {
-      console.error('Error loading test bank questions:', error);
+      try {
+        console.log("Deleting question", questionId, "from test bank", this.selectedTestBankId);
+        await api.delete(`/testbanks/${this.selectedTestBankId}/questions/${questionId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        // Remove from local state
+        this.questions = this.questions.filter(q => q.id !== questionId);
+        this.selectedQuestionId = null;
+
+        alert('Question removed from test bank.');
+      } catch (err) {
+        console.error('Error removing question:', err);
+        alert('Failed to remove question from test bank.');
+      }
     }
-  }
-},
   }
 };
 </script>
@@ -202,53 +234,8 @@ export default {
 <style scoped>
 @import '../assets/publisher_styles.css';
 
-
-.pub-viewTB-container {
-  background-color: #17552a;
-  font-family: Arial, sans-serif;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.dropbtn {
-  background-color: rgb(48, 191, 223);
-  color: black;
-  padding: 10px;
-  font-size: 20px;
-  border: none;
-}
-
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #f1f1f1;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-  z-index: 1;
-}
-
-.dropdown-content a {
-  color: black;
-  padding: 10px 15px;
-  text-decoration: none;
-  display: block;
-}
-
-.dropdown-content a:hover {
-  background-color: rgb(48, 191, 223);
-}
-
-.dropdown:hover .dropdown-content {
-  display: block;
-}
-
-.dropdown:hover .dropbtn {
-  background-color: rgb(40, 151, 176);
+ul {
+  list-style-type: none;
+  padding-left: 0;
 }
 </style>

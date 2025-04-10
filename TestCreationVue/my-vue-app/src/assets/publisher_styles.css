@@ -236,7 +236,7 @@
 .teacher-questions-container {
   min-height: 100vh;
   padding-bottom: 50px; /* Prevent content from cutting off at the bottom */
-  background-color: #43215a;
+  background-color: #fdfdfd;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -255,6 +255,7 @@
   min-width: 500px; /* ✅ Add this line */
   margin-left: auto;
   margin-right: auto;
+  text-align: left;
 }
 
 

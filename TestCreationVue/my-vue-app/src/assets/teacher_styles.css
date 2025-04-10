@@ -352,13 +352,6 @@ uses all other formatting*/
   color: #b30000;
 }
 
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  background-color: #43215a; /* Ensure background extends */
-}
-
 .teacher-questions-container {
   min-height: 100vh;
   padding-bottom: 50px; /* Prevent content from cutting off at the bottom */
