@@ -11,7 +11,7 @@
 }
 
 .p_dropbtn:hover {
-  background-color: #2897b0;
+  background-color: #ADEBB3;
 }
 
 .p_dropdown {
@@ -41,8 +41,8 @@
 }
 
 .p_dropdown-content a:hover {
-  background-color: #2e7d32;
-  color: #fff;
+  background-color: #ADEBB3;
+  color: #222;
 }
 
 .p_dropdown:hover .p_dropdown-content {
@@ -62,7 +62,7 @@
 }
 
 .p_button:hover {
-  background-color: #2e7d32; /* a slightly darker green */
+  background-color: #ADEBB3; /* a slightly darker green */
 }
 
 /* === Page Styling === */
@@ -135,7 +135,7 @@
 }
 
 .theme-publisher input[type="submit"] {
-  background-color:#3d9342 !important;
+  background-color:#98FF98!important;
   color: var(--text-color);
   border: none;
   padding: 10px 20px;
@@ -146,16 +146,16 @@
 }
 
 .theme-publisher input[type="submit"]:hover {
-  background-color: #2e7d32;
+  background-color: #ADEBB3;
 }
 
 .theme-publisher {
-  --banner-color: #297640;   /* green */
-  --text-color: #222; /* ✅ dark text for white background */
-  background-color: #fdfdfd; /* ✅ off-white background */
+  --banner-color: #b6ffbb;
+  --text-color: #222;
+  --card-bg: #ffffff; /* ✅ Define this missing variable */
+  background-color: #fdfdfd;
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  
 }
 
 
@@ -188,9 +188,11 @@
 
 /* === Content Wrapper === */
 .page-wrapper {
+  display: block;
   width: 100%;
   margin: 0;
   padding: 30px;
+  text-align: center;
   background-color: var(--card-bg);
   border-radius: 0; /* Optional: remove rounding if full width */
   box-shadow: none; /* Optional: remove if not needed anymore */
@@ -204,7 +206,7 @@
 }
 
 .banner-btn {
-  background-color: #2e7d32;
+  background-color: #98FF98;
   color: #222;
   padding: 8px 16px;
   font-size: 16px;
@@ -218,13 +220,68 @@
 }
 
 .banner-btn:hover {
-  background-color: #1b5e20;
+  background-color: #ADEBB3;
 }
 
 .button-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 15px; /* ✅ spacing between buttons */
-  justify-content: center; /* optional: keeps things centered */
+  justify-content: center; /* centers items horizontally */
   align-items: center;
+  gap: 15px;
+  width: 100%; /* ensures it fills the parent width */
+  margin: 20px 0;
+}
+
+
+.teacher-questions-container {
+  min-height: 100vh;
+  padding-bottom: 50px; /* Prevent content from cutting off at the bottom */
+  background-color: #43215a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  list-style-type: none;
+  padding-left: 0;
+}
+.p_question-box {
+  background: #f8f8f8;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.2s;
+  max-width: 800px;
+  min-width: 500px; /* ✅ Add this line */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+.p_question-box.selected {
+  background-color: #f8f8f8;
+  border: 5px solid #b6ffbb;
+}
+
+
+.p_question-box:hover {
+  transform: scale(1.01);
+}
+
+.p_button-group {
+  margin-top: 10px;
+}
+
+.p_button-group button {
+  margin-right: 10px;
+  padding: 6px 14px;
+  border: none;
+  background-color: #b6ffbb;
+  color: #222;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.p_button-group button:hover {
+  background-color: #ADEBB3;
 }

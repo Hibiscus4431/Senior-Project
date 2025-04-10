@@ -1,24 +1,24 @@
 <template>
-  <div class="pub-newTB-container">
-    <div class="center large-heading sticky">
-      <h1>Create New Test Bank</h1>
+  <div class="theme-publisher">
+    <div class="top-banner">
+      <div class="banner-title">Create New Test Bank</div>
+
+      <div class="banner-actions">
+        <router-link to="/PubHome" class="banner-btn">Home</router-link>
+        <router-link to="/" class="banner-btn">Log Out</router-link>
+      </div>
     </div>
-    <div class="center large-paragraph">
+    <div class="center large-paragraph" style="color:#222">
       <form @submit.prevent="saveTestBank">
-        <div class="form-row">
-          <label for="bankName">Name of Test Bank:</label>
-          <input type="text" id="bankName" v-model="bankName" required />
-        </div>
 
-        <div class="form-row">
-          <label for="bankCh">Textbook Chapter:</label>
-          <input type="text" id="bankCh" v-model="bankChapter" />
-        </div>
+        <label for="bankName">Name of Test Bank:</label>
+        <input type="text" id="bankName" v-model="bankName" style ="height:20px"required /><br>
 
-        <div class="form-row">
-          <label for="bankSec">Textbook Section:</label>
-          <input type="text" id="bankSec" v-model="bankSection" />
-        </div>
+        <label for="bankCh">Textbook Chapter:</label>
+        <input type="text" id="bankCh" v-model="bankChapter" /><br>
+
+        <label for="bankSec">Textbook Section:</label>
+        <input type="text" id="bankSec" v-model="bankSection" /><br>
 
         <input type="submit" value="Submit" />
       </form>

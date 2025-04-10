@@ -54,7 +54,7 @@
 
   <!-- Question List Display -->
   <ul>
-    <div v-for="(question, index) in questions" :key="index" class="question-box"
+    <div v-for="(question, index) in questions" :key="index" class="p_question-box"
       :class="{ selected: selectedQuestionId === question.id }" @click="toggleQuestionSelection(question.id)">
       <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
       <span><strong>Type:</strong> {{ question.type }}</span><br>
@@ -101,7 +101,7 @@
 
       <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span>
 
-      <div v-if="selectedQuestionId === question.id" class="button-group">
+      <div v-if="selectedQuestionId === question.id" class="p_button-group">
         <button @click.stop="editQuestion(question)">Edit</button>
         <button @click.stop="deleteQuestion(question.id)">Delete</button>
         <button @click.stop="openAddToTestBank(question.id)">Add to Test Bank</button>

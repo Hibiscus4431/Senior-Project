@@ -1,25 +1,30 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/PubNewBook.vue -->
 <template>
-  <div class="pub-newBook-container">
-    <div class="center large-heading">
-      <h1>Add New Textbook</h1>
-    </div>
-    <div class="center large-paragraph">
+  <div class="theme-publisher">
+  <div class="top-banner">
+  <div class="banner-title">Add New Textbook</div>
+
+  <div class="banner-actions">
+    <router-link to="/PubHome" class="banner-btn">Home</router-link>
+    <router-link to="/" class="banner-btn">Log Out</router-link>
+  </div>
+</div>
+    <div class="center large-paragraph" style = "color:#222">
       <form @submit.prevent="saveBook">
         <label for="textbookTitle">Textbook Title:</label>
-        <input type="text" id="textbookTitle" v-model="textbookTitle" style="height:20px"><br><br>
+        <input type="text" id="textbookTitle" v-model="textbookTitle" style="height:20px"><br>
 
         <label for="author">Author:</label>
-        <input type="text" id="author" v-model="author" style="height:20px"><br><br>
+        <input type="text" id="author" v-model="author" style="height:20px"><br>
 
         <label for="ISBN">ISBN:</label>
-        <input type="text" id="ISBN" v-model="ISBN" style="height:20px"><br><br>
+        <input type="text" id="ISBN" v-model="ISBN" style="height:20px"><br>
 
         <label for="version">Version:</label>
-        <input type="text" id="version" v-model="version" style="height:20px"><br><br>
+        <input type="text" id="version" v-model="version" style="height:20px"><br>
 
         <label for="websiteLink">Website Link:</label>
-        <input type="text" id="websiteLink" v-model="websiteLink" style="height:20px"><br><br>
+        <input type="text" id="websiteLink" v-model="websiteLink" style="height:20px"><br>
 
         <div class="center large-heading">
           <input type="submit" value="Save">
@@ -80,20 +85,7 @@ export default {
 
 <style scoped>
 @import '../assets/publisher_styles.css';
-
-.pub-newBook-container {
-  background-color: #17552a;
-  font-family: Arial, sans-serif;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Larger submit button */
-input[type="submit"] {
-  background-color: rgb(48, 191, 223);
-  color: black;
-  font-size: 20px;
-  padding: 10px 20px;
+.small-font {
+  font-size: 15x;
 }
 </style>
