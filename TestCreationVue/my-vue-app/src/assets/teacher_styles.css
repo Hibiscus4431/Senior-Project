@@ -418,7 +418,6 @@ uses all other formatting*/
   align-items: center;
   z-index: 999;
 }
-
 .form-popup-modal {
   background: white;
   padding: 2rem;
@@ -426,5 +425,47 @@ uses all other formatting*/
   width: 500px;
   max-height: 90%;
   overflow-y: auto;
+  font-family: Arial, sans-serif; /* matches the rest */
+  font-size: 20px; /* matches .large-paragraph */
+  color: black;
 }
 
+.form-container label,
+.form-container input,
+.form-container button,
+.form-container strong {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+
+/* these classes are for teacherViewTB the create test popup button */
+.template-options button {
+  margin: 5px 10px 5px 0;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  background-color: #ccc;
+  cursor: pointer;
+}
+
+.template-options button.selected {
+  background-color: #4CAF50;
+  color: white;
+}
+.btn {
+  margin-top: 5px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn.cancel {
+  background-color: #f44336;
+}
+
+/*end create test popup button styling*/

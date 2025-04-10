@@ -30,121 +30,121 @@
       </div>
 
 
-        <router-link :to="{ path: '/TeacherQuestions', query: { courseTitle: courseTitle, courseId: courseId } }">
-          <button class="t_button">Return to Question Page</button>
-        </router-link><br>
+      <router-link :to="{ path: '/TeacherQuestions', query: { courseTitle: courseTitle, courseId: courseId } }">
+        <button class="t_button">Return to Question Page</button>
+      </router-link><br>
 
-        <!-- <router-link to="TeacherNewTest">
+      <!-- <router-link to="TeacherNewTest">
           <button class="t_button">Create New Test</button>
         </router-link> -->
 
-        <button class="t_button" @click="showCreateTestWarning = true">Create New Test</button>
-        <!--  -->
+      <button class="t_button" @click="showCreateTestPopup = true">Create New Test</button>
+      <!--  -->
 
-        <button class="t_button" @click="viewPrevious">View Previous Tests</button>
-        <br>
+      <button class="t_button" @click="viewPrevious">View Previous Tests</button>
+      <br>
+      <hr>
+
+      <!--Test bank questions will be generated here-->
+      <div v-for="(q, index) in selectedQuestions" :key="q.id" class="question-box"
+        :class="{ selected: selectedQuestionId === q.id }" @click="toggleQuestionSelection(q.id)">
+        <strong>Question {{ index + 1 }}:</strong> {{ q.question_text }}<br>
+        <span><strong>Type:</strong> {{ q.type }}</span><br>
+        <span><strong>Chapter:</strong> {{ q.chapter_number || 'N/A' }}</span><br>
+        <span><strong>Section:</strong> {{ q.section_number || 'N/A' }}</span><br>
+        <span><strong>Points:</strong> {{ q.default_points }}</span><br>
+        <span><strong>Estimated Time:</strong> {{ q.est_time }} minutes</span><br>
+
+        <!-- Conditional content by type -->
+        <div v-if="q.type === 'True/False'">
+          <strong>Answer:</strong> {{ q.true_false_answer ? 'True' : 'False' }}
+        </div>
+
+        <div v-if="q.type === 'Multiple Choice'">
+          <strong>Correct Answer:</strong> {{ q.correct_option && q.correct_option.option_text || 'Not specified' }}<br>
+          <strong>Other Options:</strong>
+          <ul>
+            <li v-for="(option, i) in q.incorrect_options || []" :key="i">{{ option.option_text }}</li>
+          </ul>
+        </div>
+
+        <div v-if="q.type === 'Matching'">
+          <strong>Pairs:</strong>
+          <ul>
+            <li v-for="(pair, i) in q.matches || []" :key="i">{{ pair.prompt_text }} - {{ pair.match_text }}</li>
+          </ul>
+        </div>
+
+        <div v-if="q.type === 'Fill in the Blank'">
+          <strong>Correct Answer(s):</strong>
+          <ul>
+            <li v-for="(blank, i) in q.blanks || []" :key="i">{{ blank.correct_text }}</li>
+          </ul>
+        </div>
+
+        <div v-if="q.type === 'Short Answer'">
+          <strong>Answer:</strong> {{ q.answer || 'Not provided' }}
+        </div>
+
+        <div v-if="q.type === 'Essay'">
+          <strong>Essay Instructions:</strong> {{ q.grading_instructions || 'None' }}
+        </div>
+
+        <span><strong>Grading Instructions:</strong> {{ q.grading_instructions || 'None' }}</span>
+
+        <!-- Action buttons -->
+        <div v-if="selectedQuestionId === q.id" class="button-group">
+          <!-- <button @click.stop="editQuestion(q)">Edit</button> -->
+          <button @click.stop="removeQuestionFromTestBank(q.id)">Remove</button>
+        </div>
         <hr>
-
-        <!--Test bank questions will be generated here-->
-        <div v-for="(q, index) in selectedQuestions" :key="q.id"
-          class="question-box" :class="{ selected: selectedQuestionId === q.id }" @click="toggleQuestionSelection(q.id)">
-          <strong>Question {{ index + 1 }}:</strong> {{ q.question_text }}<br>
-          <span><strong>Type:</strong> {{ q.type }}</span><br>
-          <span><strong>Chapter:</strong> {{ q.chapter_number || 'N/A' }}</span><br>
-          <span><strong>Section:</strong> {{ q.section_number || 'N/A' }}</span><br>
-          <span><strong>Points:</strong> {{ q.default_points }}</span><br>
-          <span><strong>Estimated Time:</strong> {{ q.est_time }} minutes</span><br>
-
-          <!-- Conditional content by type -->
-          <div v-if="q.type === 'True/False'">
-            <strong>Answer:</strong> {{ q.true_false_answer ? 'True' : 'False' }}
-          </div>
-
-          <div v-if="q.type === 'Multiple Choice'">
-            <strong>Correct Answer:</strong> {{ q.correct_option && q.correct_option.option_text || 'Not specified' }}<br>
-            <strong>Other Options:</strong>
-            <ul>
-              <li v-for="(option, i) in q.incorrect_options || []" :key="i">{{ option.option_text }}</li>
-            </ul>
-          </div>
-
-          <div v-if="q.type === 'Matching'">
-            <strong>Pairs:</strong>
-            <ul>
-              <li v-for="(pair, i) in q.matches || []" :key="i">{{ pair.prompt_text }} - {{ pair.match_text }}</li>
-            </ul>
-          </div>
-
-          <div v-if="q.type === 'Fill in the Blank'">
-            <strong>Correct Answer(s):</strong>
-            <ul>
-              <li v-for="(blank, i) in q.blanks || []" :key="i">{{ blank.correct_text }}</li>
-            </ul>
-          </div>
-
-          <div v-if="q.type === 'Short Answer'">
-            <strong>Answer:</strong> {{ q.answer || 'Not provided' }}
-          </div>
-
-          <div v-if="q.type === 'Essay'">
-            <strong>Essay Instructions:</strong> {{ q.grading_instructions || 'None' }}
-          </div>
-
-          <span><strong>Grading Instructions:</strong> {{ q.grading_instructions || 'None' }}</span>
-
-          <!-- Action buttons -->
-          <div v-if="selectedQuestionId === q.id" class="button-group">
-            <!-- <button @click.stop="editQuestion(q)">Edit</button> -->
-            <button @click.stop="removeQuestionFromTestBank(q.id)">Remove</button>
-          </div>
-          <hr>
-        </div>
+      </div>
 
 
 
 
-        <!-- contents of popup-->
-        <div class="form-popup" id="test_view">
-          <form action="#" class="form-container">
-            Please select draft version to view:
-            <!--Figure out how to list the old test versions-->
-            <!--When version is clicked it will send them to test view page-->
-            <button type="submit" class="btn">Save</button>
-            <button type="button" class="btn cancel" @click="closeForm">Close</button>
-          </form>
-        </div>
+      <!-- contents of popup-->
+      <div class="form-popup" id="test_view">
+        <form action="#" class="form-container">
+          Please select draft version to view:
+          <!--Figure out how to list the old test versions-->
+          <!--When version is clicked it will send them to test view page-->
+          <button type="submit" class="btn">Save</button>
+          <button type="button" class="btn cancel" @click="closeForm">Close</button>
+        </form>
       </div>
     </div>
-
-
-    <!-- Edit Modal Form -->
-    <div class="popup-overlay" v-if="showEditQuestionForm" @click.self="showEditQuestionForm = false">
-  <div class="form-popup-modal">
-    <form class="form-container" @submit.prevent="saveEditedQuestion">
-      <h2>Edit Question</h2>
-
-      <label><b>Question Text</b></label>
-      <input v-model="editingQuestionData.question" required />
-
-      <label><b>Points</b></label>
-      <input v-model="editingQuestionData.points" required />
-
-      <label><b>Time (min)</b></label>
-      <input v-model="editingQuestionData.time" required />
-
-      <label><b>Grading Instructions</b></label>
-      <input v-model="editingQuestionData.instructions" />
-
-      <!-- Add type-specific edits if needed -->
-
-      <button type="submit" class="btn">Save</button>
-      <button type="button" class="btn cancel" @click="showEditQuestionForm = false">Cancel</button>
-    </form>
   </div>
-</div>
-  
-      <!-- Popup for viewing previous tests -->
-      <!-- <div class="popup-overlay" v-if="showPopup" @click.self="closeForm">
+
+
+  <!-- Edit Modal Form -->
+  <div class="popup-overlay" v-if="showEditQuestionForm" @click.self="showEditQuestionForm = false">
+    <div class="form-popup-modal">
+      <form class="form-container" @submit.prevent="saveEditedQuestion">
+        <h2>Edit Question</h2>
+
+        <label><b>Question Text</b></label>
+        <input v-model="editingQuestionData.question" required />
+
+        <label><b>Points</b></label>
+        <input v-model="editingQuestionData.points" required />
+
+        <label><b>Time (min)</b></label>
+        <input v-model="editingQuestionData.time" required />
+
+        <label><b>Grading Instructions</b></label>
+        <input v-model="editingQuestionData.instructions" />
+
+        <!-- Add type-specific edits if needed -->
+
+        <button type="submit" class="btn">Save</button>
+        <button type="button" class="btn cancel" @click="showEditQuestionForm = false">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Popup for viewing previous tests -->
+  <!-- <div class="popup-overlay" v-if="showPopup" @click.self="closeForm">
         <div class="form-popup-modal">
           <h2>Previous Tests</h2>
           <ul>
@@ -159,20 +159,52 @@
         </div>
       </div> -->
 
-      <div class="popup-overlay" v-if="showCreateTestWarning" @click.self="showCreateTestWarning = false">
-        <div class="form-popup-modal">
-          <form class="form-container" @submit.prevent="goToCreateTest">
-            <h2 style="text-align: center; margin-bottom: 20px;">Create New Test</h2>
-            <p style="text-align: center; font-size: 16px; margin-bottom: 20px;">
-              Are you sure you want to start creating a new test?<br>
-              <strong>Unsaved changes to this test bank may be lost.</strong>
-            </p>
-            <button type="submit" class="btn">Yes, Continue</button>
-            <button type="button" class="btn cancel" @click="showCreateTestWarning = false">Cancel</button>
-          </form>
+  <!-- Popup for Creating a New Test -->
+  <div class="popup-overlay" v-if="showCreateTestPopup" @click.self="showCreateTestPopup = false">
+    <div class="form-popup-modal">
+      <form class="form-container" @submit.prevent="generateTest">
+        <h2 style="text-align: center; margin-bottom: 20px;">Create New Test</h2>
+
+        <label>
+          <strong>Test Name:</strong>
+          <input type="text" v-model="testOptions.testName" placeholder="Enter a name for this test" required />
+        </label>
+
+
+        <label>
+          <input type="checkbox" v-model="testOptions.addCoverPage" />
+          Add Cover Page
+        </label>
+
+        <div style="margin: 10px 0;">
+          <strong>Template Options:</strong>
+          <div class="template-options">
+            <button v-for="option in ['All Questions', 'Multiple Choice', 'Short Answer/Essay']" :key="option"
+              type="button" :class="{ selected: testOptions.template === option }"
+              @click="testOptions.template = option">
+              {{ option }}
+            </button>
+          </div>
         </div>
-      </div>
-      
+
+        <div style="margin: 10px 0;">
+          <strong>Embedded Graphic:</strong><br>
+          <button type="button" class="btn" @click="$refs.graphicInput.click()">Upload Image</button>
+          <input ref="graphicInput" type="file" accept="image/*" @change="handleGraphicUpload" style="display: none;" />
+          <div v-if="testOptions.graphicFileName" style="margin-top: 5px;">
+            Selected: {{ testOptions.graphicFileName }}
+          </div>
+        </div>
+
+
+        <button type="submit" class="btn">Generate Test</button>
+        <button type="button" class="btn cancel" @click="showCreateTestPopup = false">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+
+
 
 </template>
 
@@ -201,15 +233,23 @@ export default {
       showEditQuestionForm: false,
       editingQuestionData: {},
       editingQuestionId: null,
-      //////////
-      showCreateTestWarning: false
-      /////////
+      showCreateTestPopup: false,
+      testOptions: {
+        testName: '',
+        addCoverPage: false,
+        template: '',
+        graphicFile: null,
+        graphicFileName: ''
+      }
+
     };
   },
   mounted() {
     this.initialize();
   },
   methods: {
+
+    //function that will generate previously made tests related to testbank id
     async viewPrevious() {
       try {
         const response = await api.get('/tests', {
@@ -231,6 +271,8 @@ export default {
     closeForm() {
       this.showPopup = false;
     },
+
+    //function to fetch all questions for testbank
     async fetchQuestions() {
       if (!this.testBankId) return;
       try {
@@ -252,6 +294,7 @@ export default {
       this.selectedQuestionId = this.selectedQuestionId === questionId ? null : questionId;
     },
 
+    //function to remove question from test bank without deleting it from the database
     async removeQuestionFromTestBank(questionId) {
       if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
 
@@ -287,6 +330,8 @@ export default {
     //   };
     //   this.showEditQuestionForm = true;
     // },
+
+    //function to update testbank info
     async updateTestBank() {
       try {
         await api.put(`/testbanks/teacher/${this.testBankId}`, {
@@ -308,7 +353,7 @@ export default {
         alert('Failed to update test bank.');
       }
     },
-
+    //function to load data into edit testbank info on popup open
     async initialize() {
       await this.fetchQuestions();
       try {
@@ -351,9 +396,56 @@ export default {
 
     goToCreateTest() {
       this.$router.push('TeacherNewTest');
+    },
+
+    //function to take popup values from create test and send to TeacherTemplate
+    generateTest() {
+      if (!this.testOptions.testName) {
+        alert('Please enter a test name.');
+        return;
+      }
+
+      if (!this.testOptions.template) {
+        alert('Please select a template option.');
+        return;
+      }
+
+      // Prepare the object to save to localStorage
+      const payload = {
+        testName: this.testOptions.testName,
+        coverPage: this.testOptions.addCoverPage,
+        timeAllowed: this.testOptions.timeAllowed,
+        selectedTemplate: this.testOptions.template,
+        uploadedImage: this.testOptions.graphicFileName || ''
+      };
+
+      localStorage.setItem('testOptions', JSON.stringify(payload));
+
+      // Route to the TeacherTemplate page
+      this.$router.push({
+        path: '/TeacherTemplate',
+        query: {
+          courseId: this.courseId,
+          courseTitle: this.courseTitle,
+          testBankId: this.testBankId,
+          testBankName: this.testBankName
+        }
+      });
+    },
+
+    //function to grab embedded graphic file
+    handleGraphicUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.testOptions.graphicFile = file;
+        this.testOptions.graphicFileName = file.name;
+      }
     }
 
-  } 
+
+
+
+  }
 };
 
 </script>
