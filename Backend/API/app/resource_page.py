@@ -236,6 +236,30 @@ def get_published_questions():
         qid = q['id']
         qtype = q['type']
 
+        # 🔗 If the question has an attachment, generate signed URL
+        if q.get('attachment_id'):
+            cur.execute("""
+                SELECT name, filepath FROM Attachments WHERE attachments_id = %s;
+            """, (q['attachment_id'],))
+            attachment = cur.fetchone()
+            if attachment:
+                try:
+                    supabase = Config.get_supabase_client()
+                    signed = supabase.storage.from_(Config.ATTACHMENT_BUCKET).create_signed_url(
+                        path=attachment[1],
+                        expires_in=14400  # 4 hour expiration
+                    )
+                    q['attachment'] = {
+                        "name": attachment[0],
+                        "url": signed['signedURL']
+                    }
+                except Exception as e:
+                    q['attachment'] = {
+                        "name": attachment[0],
+                        "url": None,
+                        "error": f"Could not generate signed URL: {str(e)}"
+                    }
+
         if qtype == 'Multiple Choice':
             cur.execute("""
                 SELECT option_id, option_text, is_correct
@@ -316,6 +340,30 @@ def get_full_published_testbanks_by_course():
             qid = q["id"]
             qtype = q["type"]
 
+            # 🔗 If the question has an attachment, generate signed URL
+            if q.get('attachment_id'):
+                cur.execute("""
+                    SELECT name, filepath FROM Attachments WHERE attachments_id = %s;
+                """, (q['attachment_id'],))
+                attachment = cur.fetchone()
+                if attachment:
+                    try:
+                        supabase = Config.get_supabase_client()
+                        signed = supabase.storage.from_(Config.ATTACHMENT_BUCKET).create_signed_url(
+                            path=attachment[1],
+                            expires_in=14400  # 4 hour expiration
+                        )
+                        q['attachment'] = {
+                            "name": attachment[0],
+                            "url": signed['signedURL']
+                        }
+                    except Exception as e:
+                        q['attachment'] = {
+                            "name": attachment[0],
+                            "url": None,
+                            "error": f"Could not generate signed URL: {str(e)}"
+                        }
+                        
             if qtype == "Multiple Choice":
                 cur.execute("""
                     SELECT option_id, option_text, is_correct
