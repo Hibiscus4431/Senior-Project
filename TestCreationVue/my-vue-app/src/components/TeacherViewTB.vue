@@ -400,24 +400,38 @@ export default {
 
     //function to take popup values from create test and send to TeacherTemplate
     generateTest() {
-  if (!this.testOptions.testName) {
-    alert('Please enter a test name.');
-    return;
-  }
+      if (!this.testOptions.testName) {
+        alert('Please enter a test name.');
+        return;
+      }
 
-  if (!this.testOptions.template) {
-    alert('Please select a template option.');
-    return;
-  }
+      if (!this.testOptions.template) {
+        alert('Please select a template option.');
+        return;
+      }
 
-  console.log('Generating test with options:', this.testOptions);
-  //debugging line
-  //alert(`Test "${this.testOptions.testName}" generated with your selected options (placeholder).`);
+      // Prepare the object to save to localStorage
+      const payload = {
+        testName: this.testOptions.testName,
+        coverPage: this.testOptions.addCoverPage,
+        timeAllowed: this.testOptions.timeAllowed,
+        selectedTemplate: this.testOptions.template,
+        uploadedImage: this.testOptions.graphicFileName || ''
+      };
 
-  this.showCreateTestPopup = false;
-}
+      localStorage.setItem('testOptions', JSON.stringify(payload));
 
-    ,
+      // Route to the TeacherTemplate page
+      this.$router.push({
+        path: '/TeacherTemplate',
+        query: {
+          courseId: this.courseId,
+          courseTitle: this.courseTitle,
+          testBankId: this.testBankId,
+          testBankName: this.testBankName
+        }
+      });
+    },
 
     //function to grab embedded graphic file
     handleGraphicUpload(event) {
