@@ -192,12 +192,22 @@ def get_questions_in_testbank(testbank_id):
         return jsonify({"error": "You do not own this testbank"}), 403
 
     # Base query: get questions linked to testbank
+    #cur.execute("""
+    #    SELECT q.id, q.question_text, q.type, q.chapter_number, q.section_number
+    #    FROM test_bank_questions tbq
+    #    JOIN questions q ON tbq.question_id = q.id
+    #    WHERE tbq.test_bank_id = %s;
+    #""", (testbank_id,))
+
+    ###################
     cur.execute("""
-        SELECT q.id, q.question_text, q.type, q.chapter_number, q.section_number
+    SELECT q.id, q.question_text, q.type, q.chapter_number, q.section_number,
+        q.default_points, q.est_time, q.grading_instructions
         FROM test_bank_questions tbq
         JOIN questions q ON tbq.question_id = q.id
         WHERE tbq.test_bank_id = %s;
     """, (testbank_id,))
+    ###################
     
     column_names = [desc[0] for desc in cur.description]
     questions = [dict(zip(column_names, row)) for row in cur.fetchall()]
