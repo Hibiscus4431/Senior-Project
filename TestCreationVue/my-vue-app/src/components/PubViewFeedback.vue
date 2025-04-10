@@ -1,7 +1,7 @@
 <template>
     <div class="theme-publisher">
     <div class="top-banner">
-      <div class="banner-title">Create New Test Bank</div>
+      <div class="banner-title">Draft Pool: {{ selectedTestBank }}</div>
 
       <div class="banner-actions">
         <router-link to="/PubHome" class="banner-btn">Home</router-link>
@@ -35,17 +35,28 @@
   data() {
     return {
       feedbackList: [],
-      testbankId: null
+      testbankId: null,
+      selectedTestBank: this.$route.query.name || 'No Test Bank Selected'
     };
   },
   mounted() {
-    this.testbankId = this.$route.params.testbank_id;
-    console.log('Viewing feedback for Test Bank ID:', this.testbankId);
+  this.testbankId = this.$route.params.testbank_id;
+  console.log('Viewing feedback for Test Bank ID:', this.testbankId);
 
-    // You can now use this.testbankId to fetch data from your backend
-    // Example:
-    // api.get(`/feedback?testbank_id=${this.testbankId}`).then(...)
-  }
+  // Fetch feedback
+  fetch(`/api/feedback?testbank_id=${this.testbankId}`)
+    .then(res => res.json())
+    .then(data => {
+      this.feedbackList = data;
+    });
+
+  // Fetch testbank name
+  fetch(`/api/testbank/${this.testbankId}`)
+    .then(res => res.json())
+    .then(data => {
+      this.selectedTestBank = data.name;
+    });
+}
 };
 
   </script>
