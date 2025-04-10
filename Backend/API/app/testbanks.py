@@ -207,6 +207,30 @@ def get_questions_in_testbank(testbank_id):
         qid = q['id']
         qtype = q['type']
 
+        # 🔗 If the question has an attachment, generate signed URL
+        if q.get('attachment_id'):
+            cur.execute("""
+                SELECT name, filepath FROM Attachments WHERE attachments_id = %s;
+            """, (q['attachment_id'],))
+            attachment = cur.fetchone()
+            if attachment:
+                try:
+                    supabase = Config.get_supabase_client()
+                    signed = supabase.storage.from_(Config.ATTACHMENT_BUCKET).create_signed_url(
+                        path=attachment[1],
+                        expires_in=14400  # 4 hour expiration
+                    )
+                    q['attachment'] = {
+                        "name": attachment[0],
+                        "url": signed['signedURL']
+                    }
+                except Exception as e:
+                    q['attachment'] = {
+                        "name": attachment[0],
+                        "url": None,
+                        "error": f"Could not generate signed URL: {str(e)}"
+                    }
+
         if qtype == 'Multiple Choice':
             cur.execute("""
                 SELECT option_id, option_text, is_correct
@@ -397,12 +421,14 @@ def add_questions_to_testbank_publihser(testbank_id):
     cursor = conn.cursor()
 
     # Check ownership
-    cursor.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
+    cursor.execute("SELECT owner_id, is_published FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
     result = cursor.fetchone()
     if not result:
         return jsonify({"error": "Testbank not found"}), 404
     if result[0] != user_id:
         return jsonify({"error": "You do not own this testbank"}), 403
+    if result[1]:  # is_published is True
+        return jsonify({"error": "Cannot add questions to a published testbank"}), 403
 
     for qid in question_ids:
         try:
@@ -458,6 +484,30 @@ def get_questions_in_testbank_publihser(testbank_id):
         qid = q['id']
         qtype = q['type']
 
+        # 🔗 If the question has an attachment, generate signed URL
+        if q.get('attachment_id'):
+            cur.execute("""
+                SELECT name, filepath FROM Attachments WHERE attachments_id = %s;
+            """, (q['attachment_id'],))
+            attachment = cur.fetchone()
+            if attachment:
+                try:
+                    supabase = Config.get_supabase_client()
+                    signed = supabase.storage.from_(Config.ATTACHMENT_BUCKET).create_signed_url(
+                        path=attachment[1],
+                        expires_in=14400  # 4 hour expiration
+                    )
+                    q['attachment'] = {
+                        "name": attachment[0],
+                        "url": signed['signedURL']
+                    }
+                except Exception as e:
+                    q['attachment'] = {
+                        "name": attachment[0],
+                        "url": None,
+                        "error": f"Could not generate signed URL: {str(e)}"
+                    }
+
         if qtype == 'Multiple Choice':
             cur.execute("""
                 SELECT option_id, option_text, is_correct
@@ -487,6 +537,7 @@ def get_questions_in_testbank_publihser(testbank_id):
     cur.close()
     conn.close()
     return jsonify({"questions": questions}), 200
+
 
 @testbank_bp.route('/<int:testbank_id>/publish', methods=['POST'])
 def publish_testbank_and_questions(testbank_id):
@@ -545,13 +596,23 @@ def delete_testbank(testbank_id):
     conn = Config.get_db_connection()
     cursor = conn.cursor()
 
-    # Check ownership
-    cursor.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
+    # ✅ Check ownership and publication status
+    cursor.execute("""
+        SELECT owner_id, is_published FROM Test_bank
+        WHERE testbank_id = %s;
+    """, (testbank_id,))
     result = cursor.fetchone()
+
     if not result:
         return jsonify({"error": "Testbank not found"}), 404
-    if result[0] != user_id:
+
+    owner_id, is_published = result
+
+    if owner_id != user_id:
         return jsonify({"error": "You do not own this testbank"}), 403
+
+    if is_published:
+        return jsonify({"error": "Cannot delete a published testbank"}), 403
 
     # Delete the testbank
     cursor.execute("DELETE FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
@@ -585,8 +646,14 @@ def remove_question_from_testbank(testbank_id, question_id):
     result = cursor.fetchone()
     if not result:
         return jsonify({"error": "Testbank not found"}), 404
-    if result[0] != user_id:
+    
+    owner_id, is_published = result
+
+    if owner_id != user_id:
         return jsonify({"error": "You do not own this testbank"}), 403
+
+    if is_published:
+        return jsonify({"error": "Cannot remove questions from a published testbank"}), 403
 
     # Delete the association
     cursor.execute("""

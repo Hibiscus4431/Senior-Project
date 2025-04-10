@@ -241,4 +241,150 @@ def upload_final_pdf(test_id):
 
 
 
-################################### Puplishing Test Section ###################################
+################################### Publishing Test Section ###################################
+"""
+The Goal of this route is to publish a test by:
+1. Checking if the test exists and is owned by the user.
+2. Checking if the test is already published or not finalized.
+3. Updating the test status to 'Published'.
+4. Copying the PDF file from 'final' to 'published' in Supabase Storage.
+5. Updating the filename in the database to point to the published version.
+6. Returning a success message.
+7. Handling errors and rolling back transactions if necessary.
+"""
+@tests_bp.route('/<int:test_id>/publish', methods=['POST'])
+def publish_test(test_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    user_id = auth_data["user_id"]
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # Step 1: Confirm the test exists and is owned by this user
+        cur.execute("""
+            SELECT user_id, status, filename FROM tests WHERE tests_id = %s
+        """, (test_id,))
+        row = cur.fetchone()
+
+        if not row:
+            return jsonify({"error": "Test not found"}), 404
+
+        owner_id, status, filename = row
+
+        if str(owner_id) != str(user_id):
+            return jsonify({"error": "You do not have permission to publish this test"}), 403
+
+        if status == "Published":
+            return jsonify({"error": "Test is already published"}), 400
+
+        if status != "Final":
+            return jsonify({"error": "Only finalized tests can be published"}), 400
+
+        # Step 2: Attempt to update test status
+        cur.execute("""
+            UPDATE tests SET status = 'Published' WHERE tests_id = %s
+        """, (test_id,))
+        # Triggers will:
+        # - publish questions
+        # - block invalid transitions
+        # - ensure questions exist
+        # - update points_total
+
+        # Step 3: Handle Supabase file copy
+        if filename:
+            supabase = Config.get_supabase_client()
+
+            final_path = filename  # e.g., "final/3_20240409_Test.pdf"
+            published_path = final_path.replace("final/", "published/", 1)
+
+            try:
+                # Download original file
+                response = supabase.storage.from_("Tests").download(final_path)
+                content = response
+
+                # Upload to published/
+                supabase.storage.from_("Tests").upload(
+                    path=published_path,
+                    file=content,
+                    file_options={"content-type": "application/pdf"}
+                )
+
+                # Optional: update filename to point to published version
+                cur.execute("""
+                    UPDATE tests SET filename = %s WHERE tests_id = %s
+                """, (published_path, test_id))
+
+            except Exception as e:
+                conn.rollback()
+                return jsonify({"error": f"File copy failed: {str(e)}"}), 500
+
+        conn.commit()
+
+        return jsonify({
+            "message": "Test published successfully",
+            "test_id": test_id
+        }), 200
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": f"Something went wrong: {str(e)}"}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+"""
+The Goal of this route is to fetch all published tests by:
+1. Checking if the user is authorized.
+2. Fetching all tests with status 'Published'.
+3. Formatting the results into a list of dictionaries.
+4. Returning the list of published tests.
+5. Handling errors and closing the database connection.
+"""
+@tests_bp.route('/published', methods=['GET'])
+def get_published_tests():
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # Pull all published tests
+        cur.execute("""
+            SELECT t.tests_id, t.name, t.points_total, t.estimated_time, t.filename,
+                t.course_id, t.user_id, u.username
+            FROM tests t
+            JOIN users u ON t.user_id = u.user_id
+        WHERE t.status = 'Published'
+        """)
+        rows = cur.fetchall()
+
+        # Format results into a list of dictionaries
+        published_tests = []
+        for row in rows:
+            test_data = {
+                "test_id": row[0],
+                "name": row[1],
+                "points_total": row[2],
+                "estimated_time": row[3],
+                "filename": row[4],
+                "course_id": row[5],
+                "owner_id": str(row[6]),
+                "username": row[7]
+            }
+            published_tests.append(test_data)
+
+        return jsonify(published_tests), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch published tests: {str(e)}"}), 500
+
+    finally:
+        cur.close()
+        conn.close()
