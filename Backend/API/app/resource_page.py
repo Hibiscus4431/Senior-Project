@@ -4,7 +4,7 @@ from app.config import Config
 
 resources_bp = Blueprint('resources', __name__)
 
-# Get all questions from a course's textbook by a publisher 
+# Get all questions from a course's textbook by a publisher (Tested worked)
 @resources_bp.route('/questions', methods=['GET'])
 def get_published_questions_for_course_textbook():
     auth_data = authorize_request()
@@ -71,7 +71,7 @@ def get_published_questions_for_course_textbook():
     return jsonify({"questions": questions}), 200
 
 
-# Adding questions to the teachers arsenal 
+# Adding questions to the teachers arsenal (Tested worked)
 @resources_bp.route('/questions/copy', methods=['POST'])
 def copy_published_question_for_teacher():
     auth_data = authorize_request()
@@ -202,7 +202,7 @@ def copy_published_question_for_teacher():
     }), 201
 
 
-# Get all published questions from all users 
+# Get all published questions from all users (Tested Worked)
 @resources_bp.route('/published', methods=['GET'])
 def get_published_questions():
     auth_data = authorize_request()
