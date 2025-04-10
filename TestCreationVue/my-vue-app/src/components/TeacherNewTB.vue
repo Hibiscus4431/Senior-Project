@@ -2,13 +2,13 @@
 <template>
   <div class="teacher-newTB-container">
     <div class="center large-heading sticky">
-      <h1>Create New Test Bank</h1>
+      <h1>Create New Draft Pool</h1>
     </div>
     <div class="center large-paragraph">
       <!-- This is the page where the teacher can create a new test bank-->
       <form @submit.prevent="saveTestBank">
         <!-- create TB Name text box-->
-        <label for="bankName">Name of Test Bank:</label>
+        <label for="bankName">Name of Draft Pool:</label>
         <input type="text" id="bankName" v-model="bankName" style="height: 20px;"><br>
         <br>
 

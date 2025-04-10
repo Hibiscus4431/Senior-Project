@@ -114,7 +114,7 @@
     <div class="popup-overlay" v-show="showForm" @click.self="closeForm">
       <div class="form-popup-modal">
         <form class="form-container" @submit.prevent="handleQuestionSave">
-          <h1>New Question</h1>
+          <h1>{{ editingQuestionId ? 'Edit Question' : 'New Question' }}</h1>
 
           <label><b>Chapter Number</b></label>
           <input type="text" v-model="chapter" required />
@@ -396,9 +396,11 @@ export default {
                 return {
                   ...base,
                   pairs: (question.matches || []).map(pair => ({
+                    match_id: pair.match_id,
                     term: pair.prompt_text,
                     definition: pair.match_text
                   }))
+
                 };
               case 'Fill in the Blank':
                 return {
@@ -489,128 +491,166 @@ export default {
         alert('Failed to upload file. Please try again.');
       }
     },
-
     async handleQuestionSave() {
-      try {
-        let postData;
-        let config;
+  try {
+    let postData;
+    let config;
+    const editingQuestion = this.questions.find(q => q.id === this.editingQuestionId);
 
-        if (this.image) {
-          postData = new FormData();
+    const isEditing = !!this.editingQuestionId;
 
-          postData.append('file', this.image);  // ✅ Correct now
-          postData.append('question_text', this.question);
-          postData.append('default_points', this.points);
-          postData.append('est_time', this.time);
-          postData.append('chapter_number', this.chapter);
-          postData.append('section_number', this.section);
-          postData.append('grading_instructions', this.instructions);
-          postData.append('type', this.selectedQuestionType);
-          postData.append('source', 'manual');
-          postData.append('course_id', this.courseId);  // required for teacher questions
+    // Prepare common fields
+    const commonFields = {
+      question_text: this.question,
+      default_points: parseInt(this.points),
+      est_time: parseInt(this.time),
+      chapter_number: this.chapter,
+      section_number: this.section,
+      grading_instructions: this.instructions,
+      type: this.selectedQuestionType,
+      source: 'manual',
+      course_id: this.courseId
+    };
 
-          // Type-specific fields
-          if (this.selectedQuestionType === 'True/False') {
-            postData.append('true_false_answer', this.answer === 'True');
-          } else if (this.selectedQuestionType === 'Multiple Choice') {
-            const incorrectChoices = this.answerChoices
-              .split(',')
-              .map(c => c.trim())
-              .filter(Boolean);
+    // Prepare Multiple Choice options
+    let options = [];
+    if (this.selectedQuestionType === 'Multiple Choice') {
+      const incorrectChoices = this.answerChoices
+        .split(',')
+        .map(c => c.trim())
+        .filter(Boolean);
 
-            const options = [
-              { option_text: this.answer.trim(), is_correct: true },
-              ...incorrectChoices.map(choice => ({
-                option_text: choice,
-                is_correct: false
-              }))
-            ];
-            postData.append('options', JSON.stringify(options));
-          } else if (this.selectedQuestionType === 'Matching') {
-            postData.append('matches', JSON.stringify(
-              this.matchingPairs.map(pair => ({
-                prompt_text: pair.term,
-                match_text: pair.definition
-              }))
-            ));
-          } else if (this.selectedQuestionType === 'Fill in the Blank') {
-            postData.append('blanks', JSON.stringify([{ correct_text: this.answer }]));
-          } else if (this.selectedQuestionType === 'Short Answer') {
-            postData.append('answer', this.answer);
-          } else if (this.selectedQuestionType === 'Essay') {
-            postData.append('grading_instructions', this.instructions);
-          }
-
-          // Optional: log FormData for debugging
-          for (let [key, val] of postData.entries()) {
-            console.log(`${key}:`, val);
-          }
-
-          config = {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-              'Content-Type': 'multipart/form-data'
-            }
-          };
-
-        } else {
-          // No image = JSON fallback
-          postData = {
-            question_text: this.question,
-            default_points: parseInt(this.points),
-            est_time: parseInt(this.time),
-            chapter_number: this.chapter,
-            section_number: this.section,
-            grading_instructions: this.instructions,
-            type: this.selectedQuestionType,
-            source: 'manual',
-            course_id: this.courseId
-          };
-
-          if (this.selectedQuestionType === 'True/False') {
-            postData.true_false_answer = this.answer === 'True';
-          } else if (this.selectedQuestionType === 'Multiple Choice') {
-            const incorrectChoices = this.answerChoices
-              .split(',')
-              .map(c => c.trim())
-              .filter(Boolean);
-
-            postData.options = [
-              { option_text: this.answer.trim(), is_correct: true },
-              ...incorrectChoices.map(choice => ({ option_text: choice, is_correct: false }))
-            ];
-          } else if (this.selectedQuestionType === 'Matching') {
-            postData.matches = this.matchingPairs;
-          } else if (this.selectedQuestionType === 'Fill in the Blank') {
-            postData.blanks = [{ correct_text: this.answer }];
-          } else if (this.selectedQuestionType === 'Short Answer') {
-            postData.answer = this.answer;
-          } else if (this.selectedQuestionType === 'Essay') {
-            postData.grading_instructions = this.instructions;
-          }
-
-          config = {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-          };
-        }
-
-        await api.post('/questions', postData, config);
-        alert('Question saved successfully!');
-        this.closeForm();
-        this.resetForm();
-        this.fetchQuestions(this.selectedQuestionType);
-
-      } catch (err) {
-        let serverMsg = 'Something went wrong.';
-        if (err && err.response && err.response.data) {
-          serverMsg = err.response.data.error || err.response.data.message || serverMsg;
-        }
-        alert('Save failed: ' + serverMsg);
-        console.error('Error saving question:', err);
+      const correctAnswerText = this.answer.trim();
+      if (!correctAnswerText) {
+        alert("Correct answer cannot be empty.");
+        return;
       }
-    },
+
+      options.push({ option_text: correctAnswerText, is_correct: true });
+      incorrectChoices.forEach(choice => {
+        options.push({ option_text: choice, is_correct: false });
+      });
+
+      // ✅ Validate at least one correct answer
+      if (!options.some(opt => opt.is_correct)) {
+        alert("Multiple Choice questions must have at least one correct answer.");
+        return;
+      }
+    }
+
+    if (this.image) {
+      postData = new FormData();
+      postData.append('file', this.image);
+
+      for (const [key, val] of Object.entries(commonFields)) {
+        postData.append(key, val);
+      }
+
+      if (this.selectedQuestionType === 'True/False') {
+        postData.append('true_false_answer', this.answer === 'True');
+      } else if (this.selectedQuestionType === 'Multiple Choice') {
+        postData.append('options', JSON.stringify(options));
+
+        if (isEditing && editingQuestion) {
+          const oldOptionIds = [];
+          if (editingQuestion.correctOption && editingQuestion.correctOption.option_id) {
+            oldOptionIds.push(editingQuestion.correctOption.option_id);
+          }
+          if (editingQuestion.incorrectOptions) {
+            editingQuestion.incorrectOptions.forEach(opt => {
+              if (opt.option_id) oldOptionIds.push(opt.option_id);
+            });
+          }
+          postData.append('to_delete', JSON.stringify(oldOptionIds));
+        }
+      } else if (this.selectedQuestionType === 'Matching') {
+        postData.append('matches', JSON.stringify(this.matchingPairs.map(p => ({ prompt_text: p.term, match_text: p.definition }))));
+        if (isEditing && editingQuestion) {
+          const oldMatchIds = (editingQuestion.pairs || []).map(p => p.match_id);
+          postData.append('to_delete', JSON.stringify(oldMatchIds));
+        }
+      } else if (this.selectedQuestionType === 'Fill in the Blank') {
+        postData.append('blanks', JSON.stringify([{ correct_text: this.answer }]));
+        if (isEditing && editingQuestion) {
+          const oldBlankIds = (editingQuestion.blanks || []).map(b => b.blank_id);
+          postData.append('to_delete', JSON.stringify(oldBlankIds));
+        }
+      } else if (this.selectedQuestionType === 'Short Answer') {
+        postData.append('answer', this.answer);
+      } else if (this.selectedQuestionType === 'Essay') {
+        postData.append('grading_instructions', this.instructions);
+      }
+
+      config = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+    } else {
+      postData = { ...commonFields };
+
+      if (this.selectedQuestionType === 'True/False') {
+        postData.true_false_answer = this.answer === 'True';
+      } else if (this.selectedQuestionType === 'Multiple Choice') {
+        postData.options = options;
+
+        if (isEditing && editingQuestion) {
+          const oldOptionIds = [];
+          if (editingQuestion.correctOption && editingQuestion.correctOption.option_id) {
+            oldOptionIds.push(editingQuestion.correctOption.option_id);
+          }
+          if (editingQuestion.incorrectOptions) {
+            editingQuestion.incorrectOptions.forEach(opt => {
+              if (opt.option_id) oldOptionIds.push(opt.option_id);
+            });
+          }
+          postData.to_delete = oldOptionIds;
+        }
+      } else if (this.selectedQuestionType === 'Matching') {
+        postData.matches = this.matchingPairs.map(p => ({ prompt_text: p.term, match_text: p.definition }));
+        if (isEditing && editingQuestion) {
+          const oldMatchIds = (editingQuestion.pairs || []).map(p => p.match_id);
+          postData.to_delete = oldMatchIds;
+        }
+      } else if (this.selectedQuestionType === 'Fill in the Blank') {
+        postData.blanks = [{ correct_text: this.answer }];
+        if (isEditing && editingQuestion) {
+          const oldBlankIds = (editingQuestion.blanks || []).map(b => b.blank_id);
+          postData.to_delete = oldBlankIds;
+        }
+      } else if (this.selectedQuestionType === 'Short Answer') {
+        postData.answer = this.answer;
+      } else if (this.selectedQuestionType === 'Essay') {
+        postData.grading_instructions = this.instructions;
+      }
+
+      config = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      };
+    }
+
+    if (isEditing) {
+      await api.patch(`/questions/${this.editingQuestionId}`, postData, config);
+    } else {
+      await api.post('/questions', postData, config);
+    }
+
+    alert('Question saved successfully!');
+    this.closeForm();
+    this.resetForm();
+    this.fetchQuestions(this.selectedQuestionType);
+  } catch (err) {
+    let serverMsg = 'Something went wrong.';
+    if (err && err.response && err.response.data) {
+      serverMsg = err.response.data.error || err.response.data.message || serverMsg;
+    }
+    alert('Save failed: ' + serverMsg);
+    console.error('Error saving question:', err);
+  }
+},
 
     selectQuestionType(type) {
       this.selectedQuestionType = `Selected Question Type: ${type}`;
@@ -680,8 +720,9 @@ export default {
       } else if (question.type === 'Matching') {
         this.matchingPairs = question.pairs || [];
       }
-
+      this.showForm = true;
       document.getElementById('q_edit').style.display = 'block';
+
     },
 
 
