@@ -1,209 +1,287 @@
-/* Dropdown styling start */
-.dropbtn {
-  background-color: rgb(48, 191, 223);
-  color: black;
-  padding: 10px;
-  font-size: 20px;
+/* === Dropdown Styling === */
+.p_dropbtn {
+  background-color: var(--banner-color);
+  color: var(--text-color);
+  padding: 10px 16px;
+  font-size: 18px;
   border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.dropdown {
+.p_dropbtn:hover {
+  background-color: #ADEBB3;
+}
+
+.p_dropdown {
   position: relative;
   display: inline-block;
 }
 
-.dropdown-content {
+.p_dropdown-content {
   display: none;
   position: absolute;
-  background-color: #f1f1f1;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-  z-index: 1;
+  background-color: var(--banner-color);
+  color: var(--text-color);
+  min-width: 180px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+  z-index: 100;
 }
 
-.dropdown-content a {
-  color: black;
-  padding: 10px 15px;
+.p_dropdown-content a {
+  color: var(--text-color);
+  padding: 12px 16px;
   text-decoration: none;
   display: block;
+  font-size: 16px;
+  transition: background-color 0.2s ease;
 }
 
-.dropdown-content a:hover {
-  background-color: rgb(48, 191, 223);
+.p_dropdown-content a:hover {
+  background-color: #ADEBB3;
+  color: #222;
 }
 
-.dropdown:hover .dropdown-content {
+.p_dropdown:hover .p_dropdown-content {
   display: block;
 }
 
-.dropdown:hover .dropbtn {
-  background-color: rgb(40, 151, 176);
-}
-
-/* Dropdown styling end */
-
-/* changing style of create button */
+/* === Button Styling === */
 .p_button {
-  background-color: rgb(48, 191, 223);
+  background-color: var(--banner-color);
   border: none;
-  color: black;
-  padding: 10px 15px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 20px;
-  margin: 4px 2px;
+  color: var(--text-color);
+  padding: 10px 20px;
+  font-size: 18px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-/*page styling start*/
-/* Centered heading and background styling */
+.p_button:hover {
+  background-color: #ADEBB3; /* a slightly darker green */
+}
 
+/* === Page Styling === */
 .center {
-  color: whitesmoke;
+  color: var(--text-color);
   text-align: center;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 50%;
+  margin: 0 auto;
+  width: 60%;
 }
 
 .large-heading {
-  font-size: 40px;
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5em;
 }
 
 .large-paragraph {
-  font-size: 25px;
+  font-size: 1.3rem;
+  line-height: 1.6;
+  color: var(--text-color); /* ✅ Make sure text is dark */
 }
 
-/*page styling end*/
-
-/*popup styling start*/
-/* The popup form - hidden by default 
-    this sets the location of the popup on the screen*/
-.form-popup {
-  display: none;
-  position: center;
-  max-width: 75%;
-  margin: auto;
-  border: 3px solid #f1f1f1;
-  z-index: 9;
-}
-
-/* Add styles to the form container */
-/* this is the actual popup window*/
-.form-container {
-  max-width: 300x;
-  padding: 10px;
-  background-color: white;
-}
-
-/* Full-width input fields */
-/* styling of textboxes in the popup*/
-.form-container input[type=text],
-.form-container input[type=password] {
-  width: 90%;
-  padding: 15px;
-  margin: 5px 0 22px 0;
-  border: none;
-  background: lightgrey;
-}
-
-/* When the inputs get focus, do something */
-/* styling of when user is typing in the textbox*/
-.form-container input[type=text]:focus,
-.form-container input[type=password]:focus {
-  background-color: #ddd;
-  outline: none;
-}
-
-/* Set a style for the submit/login button */
-/* formatting for login and cancel buttons*/
-.form-container .btn {
-  background-color: #04AA6D;
-  color: white;
-  padding: 16px 20px;
-  border: none;
-  cursor: pointer;
-  width: 100%;
-  margin-bottom: 10px;
-  opacity: 0.8;
-}
-
-/* Add a red background color to the cancel button */
-/* overrides color for cancel button
-uses all other formatting*/
-.form-container .cancel {
-  background-color: red;
-}
-
-/* Add some hover effects to login and cancel buttons */
-.form-container .btn:hover,
-.open-button:hover {
-  opacity: 1;
-}
-
-/*popup styling end*/
-
-/* Enhanced styling for input text fields in main forms */
-input[type="text"] {
-  width: 300px;
-  padding: 10px 12px;
-  font-size: 18px;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  margin-left: 10px;
-  /* adds spacing between label and box */
-}
-
-/* On focus (when the user clicks to type) */
-input[type="text"]:focus {
-  border-color: rgb(48, 191, 223);
-  box-shadow: 0 0 5px rgba(48, 191, 223, 0.5);
-  outline: none;
-}
-
-.form-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 15px;
-}
-
+/* === Popup Modal Styling === */
 .popup-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 10px;
+  padding: 20px;
 }
 
 .form-popup-modal {
-  background-color: white;
-  padding: 20px 30px;
+  background-color: #fff;
+  padding: 25px 35px;
   border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.5);
-  width: 90%;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  width: 100%;
   max-width: 600px;
-
-  /* These additions enable scrolling */
   max-height: 90vh;
   overflow-y: auto;
 }
 
+/* === Form Container Styling === */
+.form-container {
+  padding: 10px;
+}
+
 .form-container label {
-  color: black; /* Make label text visible */
-  font-size: 18px;
-  display: block;
+  color: #222;
+  font-size: 16px;
   margin-bottom: 5px;
+  display: block;
+}
+
+.theme-publisher input[type="text"],
+.theme-publisher input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #ccc;
+  background-color: rgb(230, 230, 229) !important;         /* ✅ white background */
+  color: #222;                    /* ✅ visible text */
+  border-radius: 6px
+}
+
+.theme-publisher input[type="submit"] {
+  background-color:#98FF98!important;
+  color: var(--text-color);
+  border: none;
+  padding: 10px 20px;
+  font-size: 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.theme-publisher input[type="submit"]:hover {
+  background-color: #ADEBB3;
+}
+
+.theme-publisher {
+  --banner-color: #b6ffbb;
+  --text-color: #222;
+  --card-bg: #ffffff; /* ✅ Define this missing variable */
+  background-color: #fdfdfd;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 
+/* === Banner using theme vars === */
+.top-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* ✅ allows wrap on small screens */
+  gap: 20px;
+  padding: 15px 30px;
+  background-color: var(--banner-color);
+  color: var(--text-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.banner-title {
+  flex: 1 1 auto; /* ✅ allows shrink/grow */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 28px;         /* 🔍 Adjust this value as needed */
+  font-weight: 700;        /* ✅ Optional: make it bolder */
+  letter-spacing: 0.5px
+}
+
+/* === Content Wrapper === */
+.page-wrapper {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 30px;
+  text-align: center;
+  background-color: var(--card-bg);
+  border-radius: 0; /* Optional: remove rounding if full width */
+  box-shadow: none; /* Optional: remove if not needed anymore */
+}
+
+.banner-actions {
+  display: flex;
+  gap: 15px;
+  flex-shrink: 0; /* ✅ don’t let buttons get squished */
+  flex-wrap: wrap;
+}
+
+.banner-btn {
+  background-color: #98FF98;
+  color: #222;
+  padding: 8px 16px;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap; /* ✅ prevent text wrapping inside button */
+  transition: background-color 0.3s ease;
+}
+
+.banner-btn:hover {
+  background-color: #ADEBB3;
+}
+
+.button-row {
+  display: flex;
+  justify-content: center; /* centers items horizontally */
+  align-items: center;
+  gap: 15px;
+  width: 100%; /* ensures it fills the parent width */
+  margin: 20px 0;
+}
+
+
+.teacher-questions-container {
+  min-height: 100vh;
+  padding-bottom: 50px; /* Prevent content from cutting off at the bottom */
+  background-color: #43215a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  list-style-type: none;
+  padding-left: 0;
+}
+.p_question-box {
+  background: #f8f8f8;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.2s;
+  max-width: 800px;
+  min-width: 500px; /* ✅ Add this line */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+.p_question-box.selected {
+  background-color: #f8f8f8;
+  border: 5px solid #b6ffbb;
+}
+
+
+.p_question-box:hover {
+  transform: scale(1.01);
+}
+
+.p_button-group {
+  margin-top: 10px;
+}
+
+.p_button-group button {
+  margin-right: 10px;
+  padding: 6px 14px;
+  border: none;
+  background-color: #b6ffbb;
+  color: #222;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.p_button-group button:hover {
+  background-color: #ADEBB3;
+}

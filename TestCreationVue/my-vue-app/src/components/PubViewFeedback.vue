@@ -1,13 +1,15 @@
 <template>
-    <div class="pub-feedback-container">
-      <div class="center large-heading sticky">
-        <h1 id="pageTitle">Test Bank Feedback</h1>
+    <div class="theme-publisher">
+    <div class="top-banner">
+      <div class="banner-title">Create New Test Bank</div>
+
+      <div class="banner-actions">
+        <router-link to="/PubHome" class="banner-btn">Home</router-link>
+        <router-link to="/" class="banner-btn">Log Out</router-link>
       </div>
+    </div>
   
-      <div class="center large-paragraph">
-        <router-link to="PubQuestions">
-          <button class="p_button">Return to Question Page</button>
-        </router-link>
+      <div class="center large-paragraph" style="color:#222">
   
         <router-link to="PubViewTB">
           <button class="p_button">Return to Test Banks</button>

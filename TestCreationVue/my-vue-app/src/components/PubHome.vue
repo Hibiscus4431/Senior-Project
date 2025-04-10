@@ -1,18 +1,24 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/PubHome.vue -->
 <template>
-  <div class="pub-home-container">
-    <div class="center large-heading">
-      <h1>Textbook Selection</h1>
-    </div>
-    <div class="center large-paragraph">
+ <div class="theme-publisher">
+  <div class="top-banner">
+  <div class="banner-title">Textbook Selection</div>
+
+  <div class="banner-actions">
+    <router-link to="/" class="banner-btn">Log Out</router-link>
+  </div>
+</div>
+    <div class="center large-paragraph" style = "color:#222">
+      <div class="page-wrapper">
+
       Please select or add a textbook:
-      <br>
-      <br>
+
+      <div class="button-row">
       <!--selecting a course will be a drop down menu with all previous courses-->
       <!--If else that ensures there are courses to select from-->
-      <div class="dropdown" v-if="textbooks.length">
-        <button class="dropbtn">Select Textbook</button>
-        <div class="dropdown-content">
+      <div class="p_dropdown" v-if="textbooks.length">
+        <button class="p_dropbtn">Select Textbook</button>
+        <div class="p_dropdown-content">
           <router-link v-for="textbook in textbooks" :key="textbook.id"
           :to="{ path: 'PubQuestions', query: { title: textbook.title, textbook_id: textbook.id } }">
             {{ textbook.title }}
@@ -28,6 +34,8 @@
       </router-link>
       <br>
     </div>
+  </div>
+  </div>
   </div>
 </template>
 
