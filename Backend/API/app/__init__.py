@@ -9,7 +9,7 @@ from app.qti_import import qti_bp
 from app.testbanks import testbank_bp
 from app.feedback import feedback_bp
 from app.resource_page import resources_bp
-
+from app.tests import tests_bp
 
 def create_app():
     app = Flask(__name__)
@@ -32,4 +32,5 @@ def create_app():
     app.register_blueprint(testbank_bp, url_prefix="/testbanks")
     app.register_blueprint(feedback_bp, url_prefix="/feedback")
     app.register_blueprint(resources_bp, url_prefix="/resources")
+    app.register_blueprint(tests_bp, url_prefix="/tests")
     return app
