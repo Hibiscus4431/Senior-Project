@@ -403,7 +403,7 @@ html, body {
   padding: 6px 14px;
   border: none;
   background-color: #04AA6D;
-  color: white;
+  color: #222;
   border-radius: 5px;
   cursor: pointer;
 }
