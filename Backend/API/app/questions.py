@@ -345,8 +345,6 @@ def update_question(question_id):
                     "INSERT INTO QuestionOptions (question_id, option_text, is_correct) VALUES (%s, %s, %s);",
                     (question_id, option["option_text"], option["is_correct"])
                 )
-                if option["is_correct"]:
-                    correct_answer_count += 1
 
         if "to_delete" in data:
             for delete_id in data["to_delete"]:
