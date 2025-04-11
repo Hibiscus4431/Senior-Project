@@ -110,18 +110,31 @@
   </ul>
 
   <!-- Add to Test Bank Modal -->
-  <div class="popup-overlay" v-show="showAddToTBModal" @click.self="closeAddToTBModal">
+  <div class="popup-overlay" v-if="showAddToTBModal" @click.self="closeAddToTBModal">
     <div class="form-popup-modal">
-      <p style="color: red; font-weight: bold; margin-bottom: 1rem;">
-        Once the question is added to a test bank, it can no longer be edited.
+      <p style="color: red; font-weight: bold; text-align: center; margin-bottom: 1rem;">
+        Once the question is added to a draft pool, it can no longer be edited.
       </p>
-      <h2>Select Test Bank</h2>
-      <ul>
-        <li v-for="tb in testBanks" :key="tb.testbank_id">
-          <button @click="assignQuestionToTestBank(tb.testbank_id)">{{ tb.name }}</button>
-        </li>
-      </ul>
-      <button @click="closeAddToTBModal">Cancel</button>
+      <h2 style="text-align: center;">Select Draft Pool</h2>
+      <div class="form-container" style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 1rem;">
+        <button
+          v-for="tb in testBanks"
+          :key="tb.testbank_id"
+          class="t_button"
+          style="width: 100%;"
+          @click="assignQuestionToTestBank(tb.testbank_id)"
+        >
+          {{ tb.name }}
+        </button>
+        <button
+          type="button"
+          class="btn cancel"
+          style="width: 100%;"
+          @click="closeAddToTBModal"
+        >
+          Close
+        </button>
+      </div>
     </div>
   </div>
 
