@@ -52,7 +52,7 @@
         <hr>
       </div>
     </div>
-      <div id="selectedQuestionType" style = "color: #222"class="center large-paragraph">{{ selectedQuestionType }}</div>
+      <div id="selectedQuestionType" style = "color: #222" class="center large-paragraph">{{ selectedQuestionType }}</div>
 
     </div>
     <hr>
@@ -262,6 +262,7 @@ export default {
       editCourseNumber: '',
       showAddToTBModal: false,
       questionToAddToTB: null,
+      oldMCOptionIds: [] // ✅ Restored: used for tracking MC option deletions
     };
   },
   mounted() {
@@ -509,10 +510,8 @@ export default {
         let postData;
         let config;
         const editingQuestion = this.questions.find(q => q.id === this.editingQuestionId);
-
         const isEditing = !!this.editingQuestionId;
 
-        // Prepare common fields
         const commonFields = {
           question_text: this.question,
           default_points: parseInt(this.points),
@@ -525,7 +524,6 @@ export default {
           course_id: this.courseId
         };
 
-        // Prepare Multiple Choice options
         let options = [];
         if (this.selectedQuestionType === 'Multiple Choice') {
           const incorrectChoices = this.answerChoices
@@ -544,7 +542,6 @@ export default {
             options.push({ option_text: choice, is_correct: false });
           });
 
-          // ✅ Validate at least one correct answer
           if (!options.some(opt => opt.is_correct)) {
             alert("Multiple Choice questions must have at least one correct answer.");
             return;
@@ -554,44 +551,40 @@ export default {
         if (this.image) {
           postData = new FormData();
           postData.append('file', this.image);
-
           for (const [key, val] of Object.entries(commonFields)) {
             postData.append(key, val);
           }
 
-          if (this.selectedQuestionType === 'True/False') {
-            postData.append('true_false_answer', this.answer === 'True');
-          } else if (this.selectedQuestionType === 'Multiple Choice') {
-            postData.append('options', JSON.stringify(options));
-
-            if (isEditing && editingQuestion) {
-              const oldOptionIds = [];
-              if (editingQuestion.correctOption && editingQuestion.correctOption.option_id) {
-                oldOptionIds.push(editingQuestion.correctOption.option_id);
+          switch (this.selectedQuestionType) {
+            case 'True/False':
+              postData.append('true_false_answer', this.answer === 'True');
+              break;
+            case 'Multiple Choice':
+              postData.append('options', JSON.stringify(options));
+              if (isEditing && this.oldMCOptionIds.length > 0) {
+                postData.append('to_delete', JSON.stringify(this.oldMCOptionIds));
               }
-              if (editingQuestion.incorrectOptions) {
-                editingQuestion.incorrectOptions.forEach(opt => {
-                  if (opt.option_id) oldOptionIds.push(opt.option_id);
-                });
+              break;
+            case 'Matching':
+              postData.append('matches', JSON.stringify(this.matchingPairs.map(p => ({ prompt_text: p.term, match_text: p.definition }))));
+              if (isEditing && editingQuestion) {
+                const oldMatchIds = (editingQuestion.pairs || []).map(p => p.match_id);
+                postData.append('to_delete', JSON.stringify(oldMatchIds));
               }
-              postData.append('to_delete', JSON.stringify(oldOptionIds));
-            }
-          } else if (this.selectedQuestionType === 'Matching') {
-            postData.append('matches', JSON.stringify(this.matchingPairs.map(p => ({ prompt_text: p.term, match_text: p.definition }))));
-            if (isEditing && editingQuestion) {
-              const oldMatchIds = (editingQuestion.pairs || []).map(p => p.match_id);
-              postData.append('to_delete', JSON.stringify(oldMatchIds));
-            }
-          } else if (this.selectedQuestionType === 'Fill in the Blank') {
-            postData.append('blanks', JSON.stringify([{ correct_text: this.answer }]));
-            if (isEditing && editingQuestion) {
-              const oldBlankIds = (editingQuestion.blanks || []).map(b => b.blank_id);
-              postData.append('to_delete', JSON.stringify(oldBlankIds));
-            }
-          } else if (this.selectedQuestionType === 'Short Answer') {
-            postData.append('answer', this.answer);
-          } else if (this.selectedQuestionType === 'Essay') {
-            postData.append('grading_instructions', this.instructions);
+              break;
+            case 'Fill in the Blank':
+              postData.append('blanks', JSON.stringify([{ correct_text: this.answer }]));
+              if (isEditing && editingQuestion) {
+                const oldBlankIds = (editingQuestion.blanks || []).map(b => b.blank_id);
+                postData.append('to_delete', JSON.stringify(oldBlankIds));
+              }
+              break;
+            case 'Short Answer':
+              postData.append('answer', this.answer);
+              break;
+            case 'Essay':
+              postData.append('grading_instructions', this.instructions);
+              break;
           }
 
           config = {
@@ -603,39 +596,36 @@ export default {
         } else {
           postData = { ...commonFields };
 
-          if (this.selectedQuestionType === 'True/False') {
-            postData.true_false_answer = this.answer === 'True';
-          } else if (this.selectedQuestionType === 'Multiple Choice') {
-            postData.options = options;
-
-            if (isEditing && editingQuestion) {
-              const oldOptionIds = [];
-              if (editingQuestion.correctOption && editingQuestion.correctOption.option_id) {
-                oldOptionIds.push(editingQuestion.correctOption.option_id);
+          switch (this.selectedQuestionType) {
+            case 'True/False':
+              postData.true_false_answer = this.answer === 'True';
+              break;
+            case 'Multiple Choice':
+              postData.options = options;
+              if (isEditing && this.oldMCOptionIds.length > 0) {
+                postData.to_delete = this.oldMCOptionIds;
               }
-              if (editingQuestion.incorrectOptions) {
-                editingQuestion.incorrectOptions.forEach(opt => {
-                  if (opt.option_id) oldOptionIds.push(opt.option_id);
-                });
+              break;
+            case 'Matching':
+              postData.matches = this.matchingPairs.map(p => ({ prompt_text: p.term, match_text: p.definition }));
+              if (isEditing && editingQuestion) {
+                const oldMatchIds = (editingQuestion.pairs || []).map(p => p.match_id);
+                postData.to_delete = oldMatchIds;
               }
-              postData.to_delete = oldOptionIds;
-            }
-          } else if (this.selectedQuestionType === 'Matching') {
-            postData.matches = this.matchingPairs.map(p => ({ prompt_text: p.term, match_text: p.definition }));
-            if (isEditing && editingQuestion) {
-              const oldMatchIds = (editingQuestion.pairs || []).map(p => p.match_id);
-              postData.to_delete = oldMatchIds;
-            }
-          } else if (this.selectedQuestionType === 'Fill in the Blank') {
-            postData.blanks = [{ correct_text: this.answer }];
-            if (isEditing && editingQuestion) {
-              const oldBlankIds = (editingQuestion.blanks || []).map(b => b.blank_id);
-              postData.to_delete = oldBlankIds;
-            }
-          } else if (this.selectedQuestionType === 'Short Answer') {
-            postData.answer = this.answer;
-          } else if (this.selectedQuestionType === 'Essay') {
-            postData.grading_instructions = this.instructions;
+              break;
+            case 'Fill in the Blank':
+              postData.blanks = [{ correct_text: this.answer }];
+              if (isEditing && editingQuestion) {
+                const oldBlankIds = (editingQuestion.blanks || []).map(b => b.blank_id);
+                postData.to_delete = oldBlankIds;
+              }
+              break;
+            case 'Short Answer':
+              postData.answer = this.answer;
+              break;
+            case 'Essay':
+              postData.grading_instructions = this.instructions;
+              break;
           }
 
           config = {
@@ -726,20 +716,28 @@ export default {
       this.selectedQuestionType = question.type;
 
       if (question.type === 'Multiple Choice') {
-        this.answerChoices = [
-          ...(question.correctOption ? [question.correctOption.option_text] : []),
-          ...(question.incorrectOptions || []).map(o => o.option_text)
-        ].join(', ');
+        this.answer = (question.correctOption && question.correctOption.option_text) || '';
+        this.answerChoices = (question.incorrectOptions || []).map(opt => opt.option_text).join(', ');
+        this.oldMCOptionIds = [];
+        if (question.correctOption && question.correctOption.option_id) {
+          this.oldMCOptionIds.push(question.correctOption.option_id);
+        }
+        if (Array.isArray(question.incorrectOptions)) {
+          question.incorrectOptions.forEach(opt => {
+            if (opt.option_id) this.oldMCOptionIds.push(opt.option_id);
+          });
+        }
       } else if (question.type === 'Matching') {
-          // Deep clone to avoid mutating original question object
-          this.matchingPairs = (question.pairs || []).map(pair => ({
-            term: pair.term,
-            definition: pair.definition
-          }));
+        this.matchingPairs = (question.pairs || []).map(pair => ({
+          term: pair.term,
+          definition: pair.definition
+        }));
       }
       this.showForm = true;
-      document.getElementById('q_edit').style.display = 'block';
-
+      const el = document.getElementById('q_edit');
+      if (el && el.style) {
+        el.style.display = 'block';
+      }
     },
 
 
