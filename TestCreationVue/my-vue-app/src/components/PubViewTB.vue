@@ -268,34 +268,34 @@ export default {
       }
     },
     async removeQuestionFromTestBank(questionId) {
-      // 🔐 Prevent removing from a published testbank explicitly
-      if (this.published) {
-        alert("This test bank is published and cannot be modified.");
-        return;
+  if (this.published) {
+    alert("This test bank is published and cannot be modified.");
+    return;
+  }
+
+  if (!this.selectedTestBankId) {
+    alert("Test bank ID is missing. Cannot remove question.");
+    return;
+  }
+
+  if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
+
+  try {
+    // 👉 Force the DELETE to use the publisher-specific version
+    await api.delete(`/testbanks/${this.selectedTestBankId}/questions/${questionId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
       }
+    });
 
-      if (!this.selectedTestBankId) {
-        alert("Test bank ID is missing. Cannot remove question.");
-        return;
-      }
+    this.questions = this.questions.filter(q => q.id !== questionId);
+    this.selectedQuestionId = null;
 
-      if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
-
-      try {
-        await api.delete(`/testbanks/${this.selectedTestBankId}/questions/${questionId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        this.questions = this.questions.filter(q => q.id !== questionId);
-        this.selectedQuestionId = null;
-
-        alert('Question removed from test bank.');
-      } catch (err) {
-        console.error('Error removing question:', err);
-        alert('Failed to remove question from test bank.');
-      }
+    alert('Question removed from test bank.');
+  } catch (err) {
+    console.error('Error removing question:', err);
+    alert('Failed to remove question from test bank.');
+  }
     },
     async publishTestbank() {
       if (!this.selectedTestBankId) return;
