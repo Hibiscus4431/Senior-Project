@@ -1,15 +1,39 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherViewTB.vue -->
 <template>
-  <div class="teacher-viewTB-container">
-    <!-- This is the page where the teacher can see all of their test banks-->
-    <div class="center large-heading sticky">
-      <h1 id="pageTitle">Test Draft: {{ testBankName }}</h1>
+  <div class="theme-teacher">
+    <div class="top-banner">
+      <div class="banner-title">Test Draft: {{ testBankName }}</div>
+
+      <div class="t_banner-actions">
+        <router-link to="/TeacherHome" class="t_banner-btn">Home</router-link>
+        <router-link to="/" class="t_banner-btn">Log Out</router-link>
+      </div>
     </div>
-    <div class="center large-paragraph">
+    <div class="center large-paragraph" style ="color:#222">
+      <div class="button-row">
       <!-- Edit Test Bank Info Button -->
       <button class="t_button" @click="showEditForm = true">Edit Draft Pool Info</button>
 
-      <!-- Edit Test Bank Info Popup Form -->
+   
+
+
+        <router-link :to="{ path: '/TeacherQuestions', query: { courseTitle: courseTitle, courseId: courseId } }">
+          <button class="t_button">Return to Question Page</button>
+        </router-link><br>
+
+        <!-- <router-link to="TeacherNewTest">
+          <button class="t_button">Create New Test</button>
+        </router-link> -->
+
+        <button class="t_button" @click="showCreateTestWarning = true">Create New Test</button>
+        <!--  -->
+
+        <button class="t_button" @click="viewPrevious">View Previous Tests</button>
+        <br>
+        </div>
+        <hr>
+
+           <!-- Edit Test Bank Info Popup Form -->
       <!-- Modal Popup -->
       <div class="popup-overlay" v-if="showEditForm">
         <div class="form-popup-modal">
@@ -28,22 +52,6 @@
           </form>
         </div>
       </div>
-
-
-        <router-link :to="{ path: '/TeacherQuestions', query: { courseTitle: courseTitle, courseId: courseId } }">
-          <button class="t_button">Return to Question Page</button>
-        </router-link><br>
-
-        <!-- <router-link to="TeacherNewTest">
-          <button class="t_button">Create New Test</button>
-        </router-link> -->
-
-        <button class="t_button" @click="showCreateTestWarning = true">Create New Test</button>
-        <!--  -->
-
-        <button class="t_button" @click="viewPrevious">View Previous Tests</button>
-        <br>
-        <hr>
 
         <!--Test bank questions will be generated here-->
         <div v-for="(q, index) in selectedQuestions" :key="q.id"

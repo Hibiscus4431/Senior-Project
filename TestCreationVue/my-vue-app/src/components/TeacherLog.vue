@@ -1,12 +1,12 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherLog.vue -->
 
 <template>
-  <div class="teacher-log-container">
-    <div class="center large-heading">
-      <h1>Teacher Login</h1>
-    </div>
+ <div class="theme-teacher">
+  <div class="top-banner">
+  <div class="banner-title">Teacher Login</div>
+</div>
 
-    <div class="center large-paragraph">
+    <div class="center large-paragraph" style ="color: #222">
       Please enter your teacher username and password:
       <br />
       <br />
@@ -135,36 +135,4 @@ export default {
   margin-top: 10px;
 }
 
-input[type="submit"] {
-  background-color: rgb(84, 178, 150);
-  color: black;
-  font-size: 20px;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-input[type="submit"]:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-input[type="text"], input[type="password"] {
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
-.center {
-  text-align: center;
-}
-
-.large-heading {
-  font-size: 2em;
-}
-
-.large-paragraph {
-  font-size: 1.2em;
-}
 </style>

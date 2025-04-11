@@ -1,10 +1,15 @@
 <!-- filepath: c:\Users\laure\Senior-Project\TestCreationVue\my-vue-app\src\components\TeacherPubQ.vue -->
 <template>
-  <div class="teacher-PubQ-container">
-    <div class="center large-heading">
-      <h1>Testbank Selection</h1>
+  <div class="theme-teacher">
+    <div class="top-banner">
+      <div class="banner-title">Testbank Selection</div>
+
+      <div class="t_banner-actions">
+        <router-link to="/TeacherHome" class="t_banner-btn">Home</router-link>
+        <router-link to="/" class="t_banner-btn">Log Out</router-link>
+      </div>
     </div>
-    <div class="center large-paragraph">
+    <div class="center large-paragraph" style = "color:#222;">
       Please select an option to view:
       <br><br>
 

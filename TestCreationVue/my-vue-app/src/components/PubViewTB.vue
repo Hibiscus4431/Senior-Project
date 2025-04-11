@@ -116,15 +116,15 @@
             <button @click.stop="removeQuestionFromTestBank(question.id)" :disabled="published">
               {{ published ? "Published - Cannot Remove" : "Remove from Draft Pool" }}
             </button>
+          </div>
+        </li>
+      </ul>
+
+      <!--file input element -->
+      <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
+
+
     </div>
-    </li>
-    </ul>
-
-    <!--file input element -->
-    <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
-
-
-  </div>
   </div>
 </template>
 
@@ -143,7 +143,7 @@ export default {
       textbookTitle: this.$route.query.title || null,
       selectedQuestionId: null,
       published: false,
-      questions: {},
+      questions: [],
       editForm: {
         name: this.$route.query.name || '',
         chapter: this.$route.query.chapter || '',
@@ -204,14 +204,62 @@ export default {
             }
           });
 
-          this.questions = questionsRes.data.questions || [];
-          this.published = questionsRes.data.is_published || false; // ✅ This line
+          const rawQuestions = questionsRes.data.questions || [];
+          this.published = questionsRes.data.is_published || false;
+
+          // ✅ Transform each question into full display shape
+          this.questions = rawQuestions.map((q) => {
+            const base = {
+              id: q.id,
+              text: q.question_text,
+              type: q.type,
+              chapter: q.chapter_number || 'N/A',
+              section: q.section_number || 'N/A',
+              points: q.default_points || 'N/A',
+              time: q.est_time || 'N/A',
+              instructions: q.grading_instructions || 'None'
+            };
+
+            switch (q.type) {
+              case 'True/False':
+                return { ...base, answer: q.true_false_answer };
+              case 'Multiple Choice':
+                return {
+                  ...base,
+                  correctOption: q.correct_option || null,
+                  incorrectOptions: q.incorrect_options || []
+                };
+              case 'Matching':
+                return {
+                  ...base,
+                  pairs: (q.matches || []).map(pair => ({
+                    term: pair.prompt_text,
+                    definition: pair.match_text
+                  }))
+                };
+              case 'Fill in the Blank':
+                return {
+                  ...base,
+                  blanks: q.blanks || []
+                };
+              case 'Short Answer':
+                return {
+                  ...base,
+                  answer: q.answer || ''
+                };
+              case 'Essay':
+                return base;
+              default:
+                return base;
+            }
+          });
 
         } catch (error) {
           console.error('Error loading test bank questions:', error);
         }
       }
     },
+
     toggleQuestionSelection(id) {
       if (this.selectedQuestionId === id) {
         this.selectedQuestionId = null; // Deselect if already selected
