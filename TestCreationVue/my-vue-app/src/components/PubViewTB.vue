@@ -27,6 +27,9 @@
         <button class="p_button" @click="publishTestbank" :disabled="published">
           {{ published ? "Draft Pool Published" : "Publish Draft Pool" }}
         </button>
+        <button class="p_button delete" @click="deleteTestBank" :disabled="published">
+          Delete Draft Pool
+        </button>
       </div>
       <!-- Modal Popup -->
       <div class="popup-overlay" v-if="showEditForm">
@@ -111,18 +114,17 @@
           <!-- Buttons shown only if selected -->
           <div v-if="selectedQuestionId === question.id" class="p_button-group">
             <button @click.stop="removeQuestionFromTestBank(question.id)" :disabled="published">
-              Remove from Draft Pool
+              {{ published ? "Published - Cannot Remove" : "Remove from Draft Pool" }}
             </button>
-          </div>
-
-        </li>
-      </ul>
-
-      <!--file input element -->
-      <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
-
-
     </div>
+    </li>
+    </ul>
+
+    <!--file input element -->
+    <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
+
+
+  </div>
   </div>
 </template>
 
@@ -197,11 +199,14 @@ export default {
       if (this.selectedTestBankId) {
         try {
           const questionsRes = await api.get(`/testbanks/publisher/${this.selectedTestBankId}/questions`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
           });
 
           this.questions = questionsRes.data.questions || [];
-          this.published = questionsRes.data.is_published || false; // move AFTER questionsRes is defined
+          this.published = questionsRes.data.is_published || false; // ✅ This line
+
         } catch (error) {
           console.error('Error loading test bank questions:', error);
         }
@@ -215,6 +220,12 @@ export default {
       }
     },
     async removeQuestionFromTestBank(questionId) {
+      // 🔐 Prevent removing from a published testbank explicitly
+      if (this.published) {
+        alert("This test bank is published and cannot be modified.");
+        return;
+      }
+
       if (!this.selectedTestBankId) {
         alert("Test bank ID is missing. Cannot remove question.");
         return;
@@ -223,14 +234,12 @@ export default {
       if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
 
       try {
-        console.log("Deleting question", questionId, "from test bank", this.selectedTestBankId);
         await api.delete(`/testbanks/${this.selectedTestBankId}/questions/${questionId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
 
-        // Remove from local state
         this.questions = this.questions.filter(q => q.id !== questionId);
         this.selectedQuestionId = null;
 
@@ -253,6 +262,32 @@ export default {
       } catch (error) {
         console.error("Error publishing test bank:", error);
         alert("Failed to publish test bank.");
+      }
+    },
+    async deleteTestBank() {
+      if (this.published) {
+        alert("Cannot delete a published test bank.");
+        return;
+      }
+
+      if (!confirm('Are you sure you want to delete this entire draft pool? This action cannot be undone.')) return;
+
+      try {
+        await api.delete(`/testbanks/${this.selectedTestBankId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        alert('Draft pool deleted successfully.');
+        this.$router.push({
+          path: '/PubQuestions',
+          query: {
+            title: this.textbookTitle,
+            textbook_id: this.textbookId
+          }
+        });
+      } catch (err) {
+        console.error('Error deleting draft pool:', err);
+        alert('Failed to delete draft pool.');
       }
     }
   }
