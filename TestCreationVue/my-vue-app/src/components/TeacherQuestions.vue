@@ -731,7 +731,11 @@ export default {
           ...(question.incorrectOptions || []).map(o => o.option_text)
         ].join(', ');
       } else if (question.type === 'Matching') {
-        this.matchingPairs = question.pairs || [];
+          // Deep clone to avoid mutating original question object
+          this.matchingPairs = (question.pairs || []).map(pair => ({
+            term: pair.term,
+            definition: pair.definition
+          }));
       }
       this.showForm = true;
       document.getElementById('q_edit').style.display = 'block';
