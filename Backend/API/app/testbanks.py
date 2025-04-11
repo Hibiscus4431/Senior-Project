@@ -652,7 +652,8 @@ def remove_question_from_testbank(testbank_id, question_id):
     cursor = conn.cursor()
 
     # Check ownership of the testbank
-    cursor.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
+    # OLD: cursor.execute("SELECT owner_id FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
+    cursor.execute("SELECT owner_id, is_published FROM Test_bank WHERE testbank_id = %s", (testbank_id,))
     result = cursor.fetchone()
     if not result:
         return jsonify({"error": "Testbank not found"}), 404
