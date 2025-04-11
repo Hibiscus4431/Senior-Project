@@ -2,7 +2,7 @@
 <template>
   <div class="theme-publisher">
     <div class="top-banner">
-      <div class="banner-title">Test Draft: {{ selectedTestBank }}</div>
+      <div class="banner-title">Draft Pool: {{ selectedTestBank }}</div>
 
       <div class="banner-actions">
         <router-link to="/PubHome" class="banner-btn">Home</router-link>
@@ -12,18 +12,24 @@
     <div class="page-wrapper">
       <div class="button-row">
         <!-- Edit Test Bank Info Button -->
-        <button class="p_button" @click="showEditForm = true">Edit Test Bank Info</button>
-
-
+        <button class="p_button" @click="showEditForm = true">Edit Draft Pool Info</button>
 
         <router-link
           :to="{ path: '/PubQuestions', query: { title: this.textbookTitle, textbook_id: this.textbookId } }">
           <button class="p_button">Return to Question Page</button>
         </router-link>
 
-        <router-link :to="{ name: 'PubViewFeedback', params: { testbank_id: selectedTestBankId } }">
+        <router-link
+          :to="{ name: 'PubViewFeedback', params: { testbank_id: selectedTestBankId }, query: { name: selectedTestBank } }">
           <button class="p_button">View Feedback</button>
         </router-link>
+
+        <button class="p_button" @click="publishTestbank" :disabled="published">
+          {{ published ? "Draft Pool Published" : "Publish Draft Pool" }}
+        </button>
+        <button class="p_button delete" @click="deleteTestBank" :disabled="published">
+          Delete Draft Pool
+        </button>
       </div>
       <!-- Modal Popup -->
       <div class="popup-overlay" v-if="showEditForm">
@@ -42,6 +48,10 @@
             <button type="button" class="btn cancel" @click="showEditForm = false">Cancel</button>
           </form>
         </div>
+      </div>
+      <div v-if="published" class="publish-warning">
+        <strong>Note:</strong> This draft pool has been published. Question details can no longer be
+        edited or removed. The draft pool cannot be deleted or modified.
       </div>
       <hr>
       <br>
@@ -103,16 +113,18 @@
 
           <!-- Buttons shown only if selected -->
           <div v-if="selectedQuestionId === question.id" class="p_button-group">
-            <button @click.stop="removeQuestionFromTestBank(question.id)">Remove from Draft Pool</button>
-          </div>
-        </li>
-      </ul>
-
-      <!--file input element -->
-      <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
-
-
+            <button @click.stop="removeQuestionFromTestBank(question.id)" :disabled="published">
+              {{ published ? "Published - Cannot Remove" : "Remove from Draft Pool" }}
+            </button>
     </div>
+    </li>
+    </ul>
+
+    <!--file input element -->
+    <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
+
+
+  </div>
   </div>
 </template>
 
@@ -130,6 +142,7 @@ export default {
       textbookId: this.$route.query.textbook_id || null,
       textbookTitle: this.$route.query.title || null,
       selectedQuestionId: null,
+      published: false,
       questions: {},
       editForm: {
         name: this.$route.query.name || '',
@@ -186,9 +199,14 @@ export default {
       if (this.selectedTestBankId) {
         try {
           const questionsRes = await api.get(`/testbanks/publisher/${this.selectedTestBankId}/questions`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
           });
+
           this.questions = questionsRes.data.questions || [];
+          this.published = questionsRes.data.is_published || false; // ✅ This line
+
         } catch (error) {
           console.error('Error loading test bank questions:', error);
         }
@@ -202,6 +220,12 @@ export default {
       }
     },
     async removeQuestionFromTestBank(questionId) {
+      // 🔐 Prevent removing from a published testbank explicitly
+      if (this.published) {
+        alert("This test bank is published and cannot be modified.");
+        return;
+      }
+
       if (!this.selectedTestBankId) {
         alert("Test bank ID is missing. Cannot remove question.");
         return;
@@ -210,14 +234,12 @@ export default {
       if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
 
       try {
-        console.log("Deleting question", questionId, "from test bank", this.selectedTestBankId);
         await api.delete(`/testbanks/${this.selectedTestBankId}/questions/${questionId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
 
-        // Remove from local state
         this.questions = this.questions.filter(q => q.id !== questionId);
         this.selectedQuestionId = null;
 
@@ -225,6 +247,47 @@ export default {
       } catch (err) {
         console.error('Error removing question:', err);
         alert('Failed to remove question from test bank.');
+      }
+    },
+    async publishTestbank() {
+      if (!this.selectedTestBankId) return;
+
+      try {
+        const response = await api.post(`/testbanks/${this.selectedTestBankId}/publish`, {}, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        this.published = true;
+        alert("Test bank published successfully. Questions are now locked.");
+      } catch (error) {
+        console.error("Error publishing test bank:", error);
+        alert("Failed to publish test bank.");
+      }
+    },
+    async deleteTestBank() {
+      if (this.published) {
+        alert("Cannot delete a published test bank.");
+        return;
+      }
+
+      if (!confirm('Are you sure you want to delete this entire draft pool? This action cannot be undone.')) return;
+
+      try {
+        await api.delete(`/testbanks/${this.selectedTestBankId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        alert('Draft pool deleted successfully.');
+        this.$router.push({
+          path: '/PubQuestions',
+          query: {
+            title: this.textbookTitle,
+            textbook_id: this.textbookId
+          }
+        });
+      } catch (err) {
+        console.error('Error deleting draft pool:', err);
+        alert('Failed to delete draft pool.');
       }
     }
   }
