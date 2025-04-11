@@ -111,12 +111,18 @@
     <div class="popup-overlay" v-show="showAddToTBModal" @click.self="closeAddToTBModal">
       <div class="form-popup-modal">
         <h2>Select draft pool to add question to:</h2>
-        <ul>
-          <li v-for="tb in testBanks" :key="tb.testbank_id">
-            <button @click="assignQuestionToTestBank(tb.testbank_id)">{{ tb.name }}</button>
-          </li>
-        </ul>
-        <button @click="closeAddToTBModal">Cancel</button>
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <div v-for="tb in testBanks" :key="tb.testbank_id" style="margin-bottom: 10px; width: 100%;">
+            <button class="t_button" style="width: 100%;" @click="assignQuestionToTestBank(tb.testbank_id)">
+              {{ tb.name }}
+            </button>
+          </div>
+          <div class="form-container" style="width: 100%;">
+            <button type="button" class="btn cancel" style="width: 100%;" @click="closeAddToTBModal">
+              Close
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
