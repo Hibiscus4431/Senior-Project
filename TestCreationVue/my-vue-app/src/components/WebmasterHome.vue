@@ -17,28 +17,35 @@
   </template>
   
   <script>
+  import api from '@/api';
+  
   export default {
     name: 'WebmasterHome',
     methods: {
       async downloadData(type) {
         try {
-            const response = await fetch(`${process.env.VUE_APP_API_URL}/download/${type}`, {
-                method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
+            const response = await fetch(`${process.env.VUE_APP_API_URL}/download/users`, {
+  method: 'GET',
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem('token')}`
+  }
+});
+
   
           if (!response.ok) {
-            throw new Error('Failed to download data.');
+            throw new Error(`Failed to download ${type}`);
           }
   
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
+  
           const a = document.createElement('a');
           a.href = url;
-          a.download = `${type}_data.csv`;
+          a.download = `${type === 'all' ? 'all_data.txt' : `${type}.csv`}`;
+          document.body.appendChild(a);
           a.click();
+          document.body.removeChild(a);
+  
           window.URL.revokeObjectURL(url);
         } catch (error) {
           console.error('Download error:', error);
@@ -48,6 +55,7 @@
     }
   };
   </script>
+  
   
   <style scoped>
   @import '../assets/webmaster_styles.css';

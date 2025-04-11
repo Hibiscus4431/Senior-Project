@@ -4,19 +4,15 @@ from app.config import Config
 import csv
 import io
 
-# Create the download blueprint
 download_bp = Blueprint('downloads', __name__)
 
-# Helper: fetch table rows as CSV
-def fetch_table_as_csv(query):
+def fetch_table_csv(query, params=None):
     conn = Config.get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute(query)
-    headers = [desc[0] for desc in cursor.description]
-    rows = cursor.fetchall()
-
-    cursor.close()
+    cur = conn.cursor()
+    cur.execute(query, params or [])
+    headers = [desc[0] for desc in cur.description]
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
 
     output = io.StringIO()
@@ -26,55 +22,50 @@ def fetch_table_as_csv(query):
 
     return output.getvalue()
 
-# Route to download specific table as CSV
 @download_bp.route('/<string:data_type>', methods=['GET'])
 def download_table(data_type):
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
         return jsonify(auth_data[0]), auth_data[1]
 
-    # Map valid types to SQL queries
-    table_queries = {
-        "users": "SELECT * FROM users",
-        "textbooks": "SELECT * FROM textbooks",
-        "courses": "SELECT * FROM courses",
-        "questions": "SELECT * FROM questions",
-        "tests": "SELECT * FROM tests"
+    table_map = {
+        "users": "SELECT * FROM Users",
+        "textbooks": "SELECT * FROM Textbook",
+        "courses": "SELECT * FROM Courses",
+        "questions": "SELECT * FROM Questions",
+        "tests": "SELECT * FROM Tests"
     }
 
     if data_type == "all":
-        return download_all_tables()
+        return download_all_tables(table_map)
 
-    if data_type not in table_queries:
-        return jsonify({"error": "Invalid table requested"}), 400
+    if data_type not in table_map:
+        return jsonify({"error": "Invalid download type"}), 400
 
     try:
-        csv_data = fetch_table_as_csv(table_queries[data_type])
+        csv_data = fetch_table_csv(table_map[data_type])
         return Response(
             csv_data,
             mimetype='text/csv',
             headers={"Content-Disposition": f"attachment; filename={data_type}.csv"}
         )
     except Exception as e:
-        print(f"Download failed for {data_type}: {e}")
-        return jsonify({"error": "Failed to download data"}), 500
+        print(f"Download error for {data_type}:", e)
+        return jsonify({"error": "Failed to fetch data"}), 500
 
-# Special: Combine all tables into one .txt-style CSV dump
-def download_all_tables():
-    combined_output = io.StringIO()
-    tables = ["users", "textbooks", "courses", "questions", "tests"]
+def download_all_tables(table_map):
+    output = io.StringIO()
 
-    try:
-        for table in tables:
-            combined_output.write(f"=== {table.upper()} ===\n")
-            csv_data = fetch_table_as_csv(f"SELECT * FROM {table}")
-            combined_output.write(csv_data + "\n\n")
+    for name, query in table_map.items():
+        output.write(f"=== {name.upper()} ===\n")
+        try:
+            csv_section = fetch_table_csv(query)
+            output.write(csv_section + "\n\n")
+        except Exception as e:
+            output.write(f"Failed to load {name}: {str(e)}\n\n")
 
-        return Response(
-            combined_output.getvalue(),
-            mimetype='text/plain',
-            headers={"Content-Disposition": "attachment; filename=all_data.txt"}
-        )
-    except Exception as e:
-        print(f"Download-all failed: {e}")
-        return jsonify({"error": "Failed to download all data"}), 500
+    return Response(
+        output.getvalue(),
+        mimetype='text/plain',
+        headers={"Content-Disposition": "attachment; filename=all_data.txt"}
+    )
