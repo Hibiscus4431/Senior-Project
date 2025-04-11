@@ -63,26 +63,28 @@
         Add a cover page
       </label>
       <label><strong>Select Template:</strong></label>
-<div class="button-group">
+      <div class="button-group">
   <button
     type="button"
-    :class="{ active: testOptions.template === 'All Questions' }"
-    @click="testOptions.template = 'All Questions'">
+    :class="{ active: testOptions.selectedTemplate === 'All Questions' }"
+    @click="testOptions.selectedTemplate = 'All Questions'">
     All Questions
   </button>
   <button
     type="button"
-    :class="{ active: testOptions.template === 'Multiple Choice' }"
-    @click="testOptions.template = 'Multiple Choice'">
+    :class="{ active: testOptions.selectedTemplate === 'Multiple Choice' }"
+    @click="testOptions.selectedTemplate = 'Multiple Choice'">
     Multiple Choice
   </button>
   <button
     type="button"
-    :class="{ active: testOptions.template === 'Short Answer/Essay' }"
-    @click="testOptions.template = 'Short Answer/Essay'">
+    :class="{ active: testOptions.selectedTemplate === 'Short Answer/Essay' }"
+    @click="testOptions.selectedTemplate = 'Short Answer/Essay'">
     Short Answer/Essay
   </button>
 </div>
+
+
 
 
       <label><strong>Embedded Graphic:</strong></label>
@@ -301,25 +303,25 @@ export default {
     },
 
     goToCreateTest() {
-    const payload = {
-      testName: this.testOptions.testName,
-      selectedTemplate: this.testOptions.template,
-      uploadedImage: this.testOptions.graphicFileName || '',
-      coverPage: this.testOptions.coverPage || false,
-      timeAllowed: this.testOptions.timeAllowed || ''
-    };
+  const payload = {
+    testName: this.testOptions.testName,
+    selectedTemplate: this.testOptions.selectedTemplate, // 👈 updated to match
+    uploadedImage: this.testOptions.graphicFileName || '',
+    coverPage: this.testOptions.coverPage || false,
+    timeAllowed: this.testOptions.timeAllowed || ''
+  };
 
-    localStorage.setItem('testOptions', JSON.stringify(payload));
+  localStorage.setItem('testOptions', JSON.stringify(payload));
 
-    this.$router.push({
-      path: '/TeacherTemplate',
-      query: {
-        courseId: this.courseId,
-        courseTitle: this.courseTitle,
-        testBankId: this.testBankId,
-        testBankName: this.testBankName
-      }
-    });
+  this.$router.push({
+    path: '/TeacherTemplate',
+    query: {
+      courseId: this.courseId,
+      courseTitle: this.courseTitle,
+      testBankId: this.testBankId,
+      testBankName: this.testBankName
+    }
+  });
 }
 
   } 

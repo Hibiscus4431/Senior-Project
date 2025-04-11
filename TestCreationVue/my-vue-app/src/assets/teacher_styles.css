@@ -422,6 +422,12 @@ uses all other formatting*/
   background-color: #b985ec;
 }
 
+.button-group button.active {
+  background-color: #9d6cd3 !important; /* A darker purple for selected state */
+  color: white;
+}
+
+
 /* Can go in teacher_styles.css or inline in <style scoped> */
 .popup-overlay {
   position: fixed;

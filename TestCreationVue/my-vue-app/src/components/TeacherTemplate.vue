@@ -9,7 +9,7 @@
     </div>
 
     <div class="center button-row">
-      <button class="t_button" @click="publishTest">Publish Test Draft</button>
+      <button class="t_button" @click="publishTest">Publish Final Test</button>
 
       <button class="t_button" @click="exportToWord">Export Test</button>
 
@@ -115,8 +115,48 @@ export default {
     console.error('Error loading test template data:', error);
   }
 },
-  methods: {
-    filterQuestionsByTemplate(questions, template) {
+methods: {
+  publishTest() {
+    this.confirmAction = 'publish';
+    this.showConfirmPopup = true;
+  },
+  exportToWord() {
+    this.confirmAction = 'export';
+    this.showConfirmPopup = true;
+  },
+  handleConfirm() {
+    this.showConfirmPopup = false;
+    if (this.confirmAction === 'export') {
+      const content = document.getElementById('contentToExport').innerHTML;
+      const converted = htmlDocx.asBlob(content);
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(converted);
+      const fileName = this.testOptions.testName
+        ? this.testOptions.testName.replace(/\s+/g, '_') + '.docx'
+        : 'TestTemplate.docx';
+      link.download = fileName;
+      link.click();
+    }
+    this.confirmAction = '';
+  },
+  cancelConfirm() {
+    this.showConfirmPopup = false;
+    this.confirmAction = '';
+  },
+  navigateBack() {
+    this.showNavigateWarning = false;
+    localStorage.removeItem('testOptions');
+    this.$router.push({
+      path: '/TeacherViewTB/' + this.testBankId,
+      query: {
+        courseId: this.courseId,
+        courseTitle: this.courseTitle,
+        testBankName: this.testBankName,
+        testBankId: this.testBankId
+      }
+    });
+  },
+  filterQuestionsByTemplate(questions, template) {
     if (template === 'All Questions') return questions;
 
     if (template === 'Multiple Choice') {
@@ -133,7 +173,6 @@ export default {
 
     return [];
   },
-
   populateQuestionsIntoTemplate(filtered) {
     const content = document.getElementById('contentToExport');
     content.innerHTML = ''; // clear any existing
@@ -150,48 +189,8 @@ export default {
       content.insertAdjacentHTML('beforeend', qHTML);
     });
   }
-},
-
-
-    publishTest() {
-      this.confirmAction = 'publish';
-      this.showConfirmPopup = true;
-    },
-    exportToWord() {
-      this.confirmAction = 'export';
-      this.showConfirmPopup = true;
-    },
-    handleConfirm() {
-      this.showConfirmPopup = false;
-      if (this.confirmAction === 'export') {
-        const content = document.getElementById('contentToExport').innerHTML;
-        const converted = htmlDocx.asBlob(content);
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(converted);
-        const fileName = this.testOptions.testName
-          ? this.testOptions.testName.replace(/\s+/g, '_') + '.docx'
-          : 'TestTemplate.docx';
-        link.download = fileName;
-        link.click();
-      }
-      this.confirmAction = '';
-    },
-    cancelConfirm() {
-      this.showConfirmPopup = false;
-      this.confirmAction = '';
-    },
-    navigateBack() {
-      this.showNavigateWarning = false;
-      this.$router.push({
-        path: '/TeacherViewTB/' + this.testBankId,
-        query: {
-          courseId: this.courseId,
-          courseTitle: this.courseTitle,
-          testBankName: this.testBankName
-        }
-      });
-    }
-};
+}
+}
 </script>
 
 <style scoped>
