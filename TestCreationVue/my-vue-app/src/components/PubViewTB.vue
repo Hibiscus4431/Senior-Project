@@ -116,15 +116,15 @@
             <button @click.stop="removeQuestionFromTestBank(question.id)" :disabled="published">
               {{ published ? "Published - Cannot Remove" : "Remove from Draft Pool" }}
             </button>
+          </div>
+        </li>
+      </ul>
+
+      <!--file input element -->
+      <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
+
+
     </div>
-    </li>
-    </ul>
-
-    <!--file input element -->
-    <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
-
-
-  </div>
   </div>
 </template>
 
@@ -143,7 +143,7 @@ export default {
       textbookTitle: this.$route.query.title || null,
       selectedQuestionId: null,
       published: false,
-      questions: {},
+      questions: [],
       editForm: {
         name: this.$route.query.name || '',
         chapter: this.$route.query.chapter || '',
@@ -204,14 +204,62 @@ export default {
             }
           });
 
-          this.questions = questionsRes.data.questions || [];
-          this.published = questionsRes.data.is_published || false; // ✅ This line
+          const rawQuestions = questionsRes.data.questions || [];
+          this.published = questionsRes.data.is_published || false;
+
+          // ✅ Transform each question into full display shape
+          this.questions = rawQuestions.map((q) => {
+            const base = {
+              id: q.id,
+              text: q.question_text,
+              type: q.type,
+              chapter: q.chapter_number || 'N/A',
+              section: q.section_number || 'N/A',
+              points: q.default_points || 'N/A',
+              time: q.est_time || 'N/A',
+              instructions: q.grading_instructions || 'None'
+            };
+
+            switch (q.type) {
+              case 'True/False':
+                return { ...base, answer: q.true_false_answer };
+              case 'Multiple Choice':
+                return {
+                  ...base,
+                  correctOption: q.correct_option || null,
+                  incorrectOptions: q.incorrect_options || []
+                };
+              case 'Matching':
+                return {
+                  ...base,
+                  pairs: (q.matches || []).map(pair => ({
+                    term: pair.prompt_text,
+                    definition: pair.match_text
+                  }))
+                };
+              case 'Fill in the Blank':
+                return {
+                  ...base,
+                  blanks: q.blanks || []
+                };
+              case 'Short Answer':
+                return {
+                  ...base,
+                  answer: q.answer || ''
+                };
+              case 'Essay':
+                return base;
+              default:
+                return base;
+            }
+          });
 
         } catch (error) {
           console.error('Error loading test bank questions:', error);
         }
       }
     },
+
     toggleQuestionSelection(id) {
       if (this.selectedQuestionId === id) {
         this.selectedQuestionId = null; // Deselect if already selected
@@ -220,34 +268,34 @@ export default {
       }
     },
     async removeQuestionFromTestBank(questionId) {
-      // 🔐 Prevent removing from a published testbank explicitly
-      if (this.published) {
-        alert("This test bank is published and cannot be modified.");
-        return;
+  if (this.published) {
+    alert("This test bank is published and cannot be modified.");
+    return;
+  }
+
+  if (!this.selectedTestBankId) {
+    alert("Test bank ID is missing. Cannot remove question.");
+    return;
+  }
+
+  if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
+
+  try {
+    // 👉 Force the DELETE to use the publisher-specific version
+    await api.delete(`/testbanks/${this.selectedTestBankId}/questions/${questionId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
       }
+    });
 
-      if (!this.selectedTestBankId) {
-        alert("Test bank ID is missing. Cannot remove question.");
-        return;
-      }
+    this.questions = this.questions.filter(q => q.id !== questionId);
+    this.selectedQuestionId = null;
 
-      if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
-
-      try {
-        await api.delete(`/testbanks/${this.selectedTestBankId}/questions/${questionId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        this.questions = this.questions.filter(q => q.id !== questionId);
-        this.selectedQuestionId = null;
-
-        alert('Question removed from test bank.');
-      } catch (err) {
-        console.error('Error removing question:', err);
-        alert('Failed to remove question from test bank.');
-      }
+    alert('Question removed from test bank.');
+  } catch (err) {
+    console.error('Error removing question:', err);
+    alert('Failed to remove question from test bank.');
+  }
     },
     async publishTestbank() {
       if (!this.selectedTestBankId) return;

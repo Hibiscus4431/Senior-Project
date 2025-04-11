@@ -1,10 +1,15 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherNewTB.vue -->
 <template>
-  <div class="teacher-newTB-container">
-    <div class="center large-heading sticky">
-      <h1>Create New Draft Pool</h1>
+  <div class="theme-teacher">
+    <div class="top-banner">
+      <div class="banner-title">Create New Draft Pool</div>
+
+      <div class="t_banner-actions">
+        <router-link to="/TeacherHome" class="t_banner-btn">Home</router-link>
+        <router-link to="/" class="t_banner-btn">Log Out</router-link>
+      </div>
     </div>
-    <div class="center large-paragraph">
+    <div class="center large-paragraph" style="color:#222">
       <!-- This is the page where the teacher can create a new test bank-->
       <form @submit.prevent="saveTestBank">
         <!-- create TB Name text box-->

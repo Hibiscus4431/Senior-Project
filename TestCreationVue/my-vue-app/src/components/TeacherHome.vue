@@ -1,30 +1,37 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherHome.vue -->
 <template>
-  <div class="teacher-home-container">
-    <div class="center large-heading">
-      <h1>Course Selection</h1>
+  <div class="theme-teacher">
+    <div class="top-banner">
+      <div class="banner-title">Course Selection</div>
+
+      <div class="t_banner-actions">
+        <router-link to="/" class="t_banner-btn">Log Out</router-link>
+      </div>
     </div>
-    <div class="center large-paragraph">
-      Please select or create a course:
-      <br>
-      <br>
-      <!-- Conditionally render the dropdown or the no courses message -->
-      <div class="dropdown" v-if="courses.length">
-        <button class="dropbtn">Select Course</button>
-        <div class="dropdown-content">
-          <!-- Display all course titles in the dropdown -->
-          <a v-for="course in courses" :key="course.id" @click="selectCourse(course)">
-            {{ course.title }}
-          </a>
+    <div class="center large-paragraph" style="color:#222">
+      <div class="page-wrapper">
+        Please select or create a course:
+
+        <div class="button-row">
+          <!-- Conditionally render the dropdown or the no courses message -->
+          <div class="t_dropdown" v-if="courses.length">
+            <button class="t_dropbtn">Select Course</button>
+            <div class="t_dropdown-content">
+              <!-- Display all course titles in the dropdown -->
+              <a v-for="course in courses" :key="course.id" @click="selectCourse(course)">
+                {{ course.title }}
+              </a>
+            </div>
+          </div>
+          <div v-else>
+            No courses available.
+          </div>
+          <!-- Button to create a new course will always be shown -->
+          <router-link to="TeacherNewClass">
+            <button class="t_button">Create New Course</button>
+          </router-link>
         </div>
       </div>
-      <div v-else>
-        No courses available.
-      </div>
-      <!-- Button to create a new course will always be shown -->
-      <router-link to="TeacherNewClass">
-        <button class="t_button">Create New Course</button>
-      </router-link>
     </div>
     <br>
   </div>

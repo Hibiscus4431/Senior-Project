@@ -1,49 +1,61 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherQuestions.vue -->
 <template>
-  <div class="teacher-questions-container">
-    <div class="center large-heading sticky">
-      <h1>{{ courseTitle }}</h1>
-    </div>
-    <div class="center large-paragraph">
+  <div class="theme-teacher">
+    <div class="top-banner">
+      <div class="banner-title">{{ courseTitle }}</div>
 
-      <div class="dropdown">
-        <button class="dropbtn">
-          {{ selectedTestBank ? selectedTestBank.name : 'Select Draft Pool' }}
-        </button>
-        <div class="dropdown-content">
-          <a v-for="tb in testBanks" :key="tb.testbank_id" href="#" @click.prevent="selectTestBank(tb)">
-            {{ tb.name }}
-          </a>
-        </div>
+      <div class="t_banner-actions">
+        <router-link to="/TeacherHome" class="t_banner-btn">Home</router-link>
+        <router-link to="/" class="t_banner-btn">Log Out</router-link>
       </div>
-      <router-link :to="{ path: '/TeacherNewTB', query: { courseId: courseId } }">
-        <button class="t_button">New Draft Pool</button>
-      </router-link>
-      <button class="t_button" @click="importTest">Import Test</button>
-
-      <div class="dropdown">
-        <button class="dropbtn">Question Type</button>
-        <div class="dropdown-content">
-          <a href="#" @click="selectQuestionType('True/False')">True/False</a>
-          <a href="#" @click="selectQuestionType('Multiple Choice')">Multiple Choice</a>
-          <a href="#" @click="selectQuestionType('Matching')">Matching</a>
-          <a href="#" @click="selectQuestionType('Fill in the Blank')">Fill in the Blank</a>
-          <a href="#" @click="selectQuestionType('Short Answer')">Short Answer</a>
-          <a href="#" @click="selectQuestionType('Essay')">Essay</a>
-
-        </div>
-      </div>
-
-      <!--button to edit course info-->
-      <button class="t_button" @click="showCourseEditPopup = true">Edit Course Info</button>
-
-      <button class="t_button" @click="edit">New Question</button>
-      <router-link to="/TeacherPubQ">
-        <button class="t_button">Community Resources</button>
-      </router-link>
-      <div id="selectedQuestionType" class="center large-paragraph">{{ selectedQuestionType }}</div>
-      <hr>
     </div>
+
+    <div class="page-wrapper">
+      <div class ="button-row-wrapper">
+      <div class="button-row">
+        <div class="t_dropdown">
+          <button class="t_dropbtn">
+            {{ selectedTestBank ? selectedTestBank.name : 'Select Draft Pool' }}
+          </button>
+          <div class="t_dropdown-content">
+            <a v-for="tb in testBanks" :key="tb.testbank_id" href="#" @click.prevent="selectTestBank(tb)">
+              {{ tb.name }}
+            </a>
+          </div>
+        </div>
+        <router-link :to="{ path: '/TeacherNewTB', query: { courseId: courseId } }">
+          <button class="t_button">New Draft Pool</button>
+        </router-link>
+        <button class="t_button" @click="importTest">Import Test</button>
+
+        <div class="t_dropdown">
+          <button class="t_dropbtn">Question Type</button>
+          <div class="t_dropdown-content">
+            <a href="#" @click="selectQuestionType('True/False')">True/False</a>
+            <a href="#" @click="selectQuestionType('Multiple Choice')">Multiple Choice</a>
+            <a href="#" @click="selectQuestionType('Matching')">Matching</a>
+            <a href="#" @click="selectQuestionType('Fill in the Blank')">Fill in the Blank</a>
+            <a href="#" @click="selectQuestionType('Short Answer')">Short Answer</a>
+            <a href="#" @click="selectQuestionType('Essay')">Essay</a>
+
+          </div>
+        </div>
+
+        <!--button to edit course info-->
+        <button class="t_button" @click="showCourseEditPopup = true">Edit Course Info</button>
+
+        <button class="t_button" @click="edit">New Question</button>
+        <router-link to="/TeacherPubQ">
+          <button class="t_button">Community Resources</button>
+        </router-link>
+        
+        <hr>
+      </div>
+    </div>
+      <div id="selectedQuestionType" style = "color: #222" class="center large-paragraph">{{ selectedQuestionType }}</div>
+
+    </div>
+    <hr>
 
     <ul>
       <div v-for="(question, index) in questions" :key="index"
@@ -99,12 +111,18 @@
     <div class="popup-overlay" v-show="showAddToTBModal" @click.self="closeAddToTBModal">
       <div class="form-popup-modal">
         <h2>Select draft pool to add question to:</h2>
-        <ul>
-          <li v-for="tb in testBanks" :key="tb.testbank_id">
-            <button @click="assignQuestionToTestBank(tb.testbank_id)">{{ tb.name }}</button>
-          </li>
-        </ul>
-        <button @click="closeAddToTBModal">Cancel</button>
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <div v-for="tb in testBanks" :key="tb.testbank_id" style="margin-bottom: 10px; width: 100%;">
+            <button class="t_button" style="width: 100%;" @click="assignQuestionToTestBank(tb.testbank_id)">
+              {{ tb.name }}
+            </button>
+          </div>
+          <div class="form-container" style="width: 100%;">
+            <button type="button" class="btn cancel" style="width: 100%;" @click="closeAddToTBModal">
+              Close
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -214,6 +232,7 @@
       </div>
     </div>
   </div>
+
 </template>
 
 <script>
@@ -249,6 +268,7 @@ export default {
       editCourseNumber: '',
       showAddToTBModal: false,
       questionToAddToTB: null,
+      oldMCOptionIds: [] // ✅ Restored: used for tracking MC option deletions
     };
   },
   mounted() {
@@ -492,165 +512,154 @@ export default {
       }
     },
     async handleQuestionSave() {
-  try {
-    let postData;
-    let config;
-    const editingQuestion = this.questions.find(q => q.id === this.editingQuestionId);
+      try {
+        let postData;
+        let config;
+        const editingQuestion = this.questions.find(q => q.id === this.editingQuestionId);
+        const isEditing = !!this.editingQuestionId;
 
-    const isEditing = !!this.editingQuestionId;
+        const commonFields = {
+          question_text: this.question,
+          default_points: parseInt(this.points),
+          est_time: parseInt(this.time),
+          chapter_number: this.chapter,
+          section_number: this.section,
+          grading_instructions: this.instructions,
+          type: this.selectedQuestionType,
+          source: 'manual',
+          course_id: this.courseId
+        };
 
-    // Prepare common fields
-    const commonFields = {
-      question_text: this.question,
-      default_points: parseInt(this.points),
-      est_time: parseInt(this.time),
-      chapter_number: this.chapter,
-      section_number: this.section,
-      grading_instructions: this.instructions,
-      type: this.selectedQuestionType,
-      source: 'manual',
-      course_id: this.courseId
-    };
+        let options = [];
+        if (this.selectedQuestionType === 'Multiple Choice') {
+          const incorrectChoices = this.answerChoices
+            .split(',')
+            .map(c => c.trim())
+            .filter(Boolean);
 
-    // Prepare Multiple Choice options
-    let options = [];
-    if (this.selectedQuestionType === 'Multiple Choice') {
-      const incorrectChoices = this.answerChoices
-        .split(',')
-        .map(c => c.trim())
-        .filter(Boolean);
-
-      const correctAnswerText = this.answer.trim();
-      if (!correctAnswerText) {
-        alert("Correct answer cannot be empty.");
-        return;
-      }
-
-      options.push({ option_text: correctAnswerText, is_correct: true });
-      incorrectChoices.forEach(choice => {
-        options.push({ option_text: choice, is_correct: false });
-      });
-
-      // ✅ Validate at least one correct answer
-      if (!options.some(opt => opt.is_correct)) {
-        alert("Multiple Choice questions must have at least one correct answer.");
-        return;
-      }
-    }
-
-    if (this.image) {
-      postData = new FormData();
-      postData.append('file', this.image);
-
-      for (const [key, val] of Object.entries(commonFields)) {
-        postData.append(key, val);
-      }
-
-      if (this.selectedQuestionType === 'True/False') {
-        postData.append('true_false_answer', this.answer === 'True');
-      } else if (this.selectedQuestionType === 'Multiple Choice') {
-        postData.append('options', JSON.stringify(options));
-
-        if (isEditing && editingQuestion) {
-          const oldOptionIds = [];
-          if (editingQuestion.correctOption && editingQuestion.correctOption.option_id) {
-            oldOptionIds.push(editingQuestion.correctOption.option_id);
+          const correctAnswerText = this.answer.trim();
+          if (!correctAnswerText) {
+            alert("Correct answer cannot be empty.");
+            return;
           }
-          if (editingQuestion.incorrectOptions) {
-            editingQuestion.incorrectOptions.forEach(opt => {
-              if (opt.option_id) oldOptionIds.push(opt.option_id);
-            });
+
+          options.push({ option_text: correctAnswerText, is_correct: true });
+          incorrectChoices.forEach(choice => {
+            options.push({ option_text: choice, is_correct: false });
+          });
+
+          if (!options.some(opt => opt.is_correct)) {
+            alert("Multiple Choice questions must have at least one correct answer.");
+            return;
           }
-          postData.append('to_delete', JSON.stringify(oldOptionIds));
         }
-      } else if (this.selectedQuestionType === 'Matching') {
-        postData.append('matches', JSON.stringify(this.matchingPairs.map(p => ({ prompt_text: p.term, match_text: p.definition }))));
-        if (isEditing && editingQuestion) {
-          const oldMatchIds = (editingQuestion.pairs || []).map(p => p.match_id);
-          postData.append('to_delete', JSON.stringify(oldMatchIds));
+
+        if (this.image) {
+          postData = new FormData();
+          postData.append('file', this.image);
+          for (const [key, val] of Object.entries(commonFields)) {
+            postData.append(key, val);
+          }
+
+          switch (this.selectedQuestionType) {
+            case 'True/False':
+              postData.append('true_false_answer', this.answer === 'True');
+              break;
+            case 'Multiple Choice':
+              postData.append('options', JSON.stringify(options));
+              if (isEditing && this.oldMCOptionIds.length > 0) {
+                postData.append('to_delete', JSON.stringify(this.oldMCOptionIds));
+              }
+              break;
+            case 'Matching':
+              postData.append('matches', JSON.stringify(this.matchingPairs.map(p => ({ prompt_text: p.term, match_text: p.definition }))));
+              if (isEditing && editingQuestion) {
+                const oldMatchIds = (editingQuestion.pairs || []).map(p => p.match_id);
+                postData.append('to_delete', JSON.stringify(oldMatchIds));
+              }
+              break;
+            case 'Fill in the Blank':
+              postData.append('blanks', JSON.stringify([{ correct_text: this.answer }]));
+              if (isEditing && editingQuestion) {
+                const oldBlankIds = (editingQuestion.blanks || []).map(b => b.blank_id);
+                postData.append('to_delete', JSON.stringify(oldBlankIds));
+              }
+              break;
+            case 'Short Answer':
+              postData.append('answer', this.answer);
+              break;
+            case 'Essay':
+              postData.append('grading_instructions', this.instructions);
+              break;
+          }
+
+          config = {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          };
+        } else {
+          postData = { ...commonFields };
+
+          switch (this.selectedQuestionType) {
+            case 'True/False':
+              postData.true_false_answer = this.answer === 'True';
+              break;
+            case 'Multiple Choice':
+              postData.options = options;
+              if (isEditing && this.oldMCOptionIds.length > 0) {
+                postData.to_delete = this.oldMCOptionIds;
+              }
+              break;
+            case 'Matching':
+              postData.matches = this.matchingPairs.map(p => ({ prompt_text: p.term, match_text: p.definition }));
+              if (isEditing && editingQuestion) {
+                const oldMatchIds = (editingQuestion.pairs || []).map(p => p.match_id);
+                postData.to_delete = oldMatchIds;
+              }
+              break;
+            case 'Fill in the Blank':
+              postData.blanks = [{ correct_text: this.answer }];
+              if (isEditing && editingQuestion) {
+                const oldBlankIds = (editingQuestion.blanks || []).map(b => b.blank_id);
+                postData.to_delete = oldBlankIds;
+              }
+              break;
+            case 'Short Answer':
+              postData.answer = this.answer;
+              break;
+            case 'Essay':
+              postData.grading_instructions = this.instructions;
+              break;
+          }
+
+          config = {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          };
         }
-      } else if (this.selectedQuestionType === 'Fill in the Blank') {
-        postData.append('blanks', JSON.stringify([{ correct_text: this.answer }]));
-        if (isEditing && editingQuestion) {
-          const oldBlankIds = (editingQuestion.blanks || []).map(b => b.blank_id);
-          postData.append('to_delete', JSON.stringify(oldBlankIds));
+
+        if (isEditing) {
+          await api.patch(`/questions/${this.editingQuestionId}`, postData, config);
+        } else {
+          await api.post('/questions', postData, config);
         }
-      } else if (this.selectedQuestionType === 'Short Answer') {
-        postData.append('answer', this.answer);
-      } else if (this.selectedQuestionType === 'Essay') {
-        postData.append('grading_instructions', this.instructions);
+
+        alert('Question saved successfully!');
+        this.closeForm();
+        this.resetForm();
+        this.fetchQuestions(this.selectedQuestionType);
+      } catch (err) {
+        let serverMsg = 'Something went wrong.';
+        if (err && err.response && err.response.data) {
+          serverMsg = err.response.data.error || err.response.data.message || serverMsg;
+        }
+        alert('Save failed: ' + serverMsg);
+        console.error('Error saving question:', err);
       }
-
-      config = {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      };
-    } else {
-      postData = { ...commonFields };
-
-      if (this.selectedQuestionType === 'True/False') {
-        postData.true_false_answer = this.answer === 'True';
-      } else if (this.selectedQuestionType === 'Multiple Choice') {
-        postData.options = options;
-
-        if (isEditing && editingQuestion) {
-          const oldOptionIds = [];
-          if (editingQuestion.correctOption && editingQuestion.correctOption.option_id) {
-            oldOptionIds.push(editingQuestion.correctOption.option_id);
-          }
-          if (editingQuestion.incorrectOptions) {
-            editingQuestion.incorrectOptions.forEach(opt => {
-              if (opt.option_id) oldOptionIds.push(opt.option_id);
-            });
-          }
-          postData.to_delete = oldOptionIds;
-        }
-      } else if (this.selectedQuestionType === 'Matching') {
-        postData.matches = this.matchingPairs.map(p => ({ prompt_text: p.term, match_text: p.definition }));
-        if (isEditing && editingQuestion) {
-          const oldMatchIds = (editingQuestion.pairs || []).map(p => p.match_id);
-          postData.to_delete = oldMatchIds;
-        }
-      } else if (this.selectedQuestionType === 'Fill in the Blank') {
-        postData.blanks = [{ correct_text: this.answer }];
-        if (isEditing && editingQuestion) {
-          const oldBlankIds = (editingQuestion.blanks || []).map(b => b.blank_id);
-          postData.to_delete = oldBlankIds;
-        }
-      } else if (this.selectedQuestionType === 'Short Answer') {
-        postData.answer = this.answer;
-      } else if (this.selectedQuestionType === 'Essay') {
-        postData.grading_instructions = this.instructions;
-      }
-
-      config = {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      };
-    }
-
-    if (isEditing) {
-      await api.patch(`/questions/${this.editingQuestionId}`, postData, config);
-    } else {
-      await api.post('/questions', postData, config);
-    }
-
-    alert('Question saved successfully!');
-    this.closeForm();
-    this.resetForm();
-    this.fetchQuestions(this.selectedQuestionType);
-  } catch (err) {
-    let serverMsg = 'Something went wrong.';
-    if (err && err.response && err.response.data) {
-      serverMsg = err.response.data.error || err.response.data.message || serverMsg;
-    }
-    alert('Save failed: ' + serverMsg);
-    console.error('Error saving question:', err);
-  }
-},
+    },
 
     selectQuestionType(type) {
       this.selectedQuestionType = `Selected Question Type: ${type}`;
@@ -713,20 +722,28 @@ export default {
       this.selectedQuestionType = question.type;
 
       if (question.type === 'Multiple Choice') {
-        this.answerChoices = [
-          ...(question.correctOption ? [question.correctOption.option_text] : []),
-          ...(question.incorrectOptions || []).map(o => o.option_text)
-        ].join(', ');
+        this.answer = (question.correctOption && question.correctOption.option_text) || '';
+        this.answerChoices = (question.incorrectOptions || []).map(opt => opt.option_text).join(', ');
+        this.oldMCOptionIds = [];
+        if (question.correctOption && question.correctOption.option_id) {
+          this.oldMCOptionIds.push(question.correctOption.option_id);
+        }
+        if (Array.isArray(question.incorrectOptions)) {
+          question.incorrectOptions.forEach(opt => {
+            if (opt.option_id) this.oldMCOptionIds.push(opt.option_id);
+          });
+        }
       } else if (question.type === 'Matching') {
-          // Deep clone to avoid mutating original question object
-          this.matchingPairs = (question.pairs || []).map(pair => ({
-            term: pair.term,
-            definition: pair.definition
-          }));
+        this.matchingPairs = (question.pairs || []).map(pair => ({
+          term: pair.term,
+          definition: pair.definition
+        }));
       }
       this.showForm = true;
-      document.getElementById('q_edit').style.display = 'block';
-
+      const el = document.getElementById('q_edit');
+      if (el && el.style) {
+        el.style.display = 'block';
+      }
     },
 
 

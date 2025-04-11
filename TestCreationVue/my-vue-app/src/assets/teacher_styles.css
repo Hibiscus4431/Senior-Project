@@ -1,19 +1,21 @@
 /* Dropdown styling start */
-.dropbtn {
-
-  background-color: rgb(84, 178, 150);
-  color: black;
-  padding: 10px;
-  font-size: 20px;
+.t_dropbtn {
+  background-color: var(--banner-color);
+  color: var(--text-color);
+  padding: 10px 16px;
+  font-size: 18px;
   border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.dropdown {
+.t_dropdown {
   position: relative;
   display: inline-block;
 }
 
-.dropdown-content {
+.t_dropdown-content {
   display: none;
   position: absolute;
   background-color: #f1f1f1;
@@ -22,51 +24,49 @@
   z-index: 1;
 }
 
-.dropdown-content a {
-  color: black;
-  padding: 10px 15px;
+.t_dropdown-content a {
+  color: var(--text-color);
+  padding: 12px 16px;
   text-decoration: none;
   display: block;
-  font-size: 20px;
+  font-size: 16px;
+  transition: background-color 0.2s ease;
 }
 
-.dropdown-content a:hover {
-  background-color: rgb(60, 125, 106);
+.t_dropdown-content a:hover {
+  background-color: #b985ec;
+  color: #222;
 }
 
-.dropdown:hover .dropdown-content {
+.t_dropdown:hover .t_dropdown-content {
   display: block;
 }
 
-.dropdown:hover .dropbtn {
-  background-color: rgb(60, 125, 106);
+.t_dropdown:hover .t_dropbtn {
+  background-color: #b985ec;
 }
 
 /* Dropdown styling end */
 
 /* changing style of create button */
 .t_button {
-  background-color: rgb(84, 178, 150);
+  background-color: var(--banner-color);
   border: none;
-  color: black;
-  padding: 10px 15px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 20px;
-  margin: 4px 2px;
+  color: var(--text-color);
+  padding: 10px 20px;
+  font-size: 18px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 /*page styling start*/
 /* Centered heading and background styling */
 .center {
-  color: whitesmoke;
+  color: var(--text-color);
   text-align: center;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 50%;
+  margin: 0 auto;
+  width: 60%;
 }
 
 .large-heading {
@@ -75,6 +75,7 @@
 
 .large-paragraph {
   font-size: 25px;
+  color: #222;
 }
 
 
@@ -107,8 +108,8 @@
 
 /* Full-width input fields */
 /* styling of textboxes in the popup*/
-.form-container input[type=text],
-.form-container input[type=password] {
+.theme-teacher input[type=text],
+.theme-teacher input[type=password] {
   width: 90%;
   padding: 15px;
   margin: 5px 0 22px 0;
@@ -118,8 +119,8 @@
 
 /* When the inputs get focus, do something */
 /* styling of when user is typing in the textbox*/
-.form-container input[type=text]:focus,
-.form-container input[type=password]:focus {
+.theme-teacher input[type=text]:focus,
+.theme-teacher input[type=password]:focus {
   background-color: #ddd;
   outline: none;
 }
@@ -136,6 +137,22 @@
   margin-bottom: 10px;
   opacity: 0.8;
 }
+
+.theme-teacher input[type="submit"] {
+  background-color: #cda9f1 !important;
+  color: var(--text-color);
+  border: none;
+  padding: 10px 20px;
+  font-size: 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.theme-teacher input[type="submit"]:hover {
+  background-color: #b985ec;
+}
+
 
 /* Add a red background color to the cancel button */
 /* overrides color for cancel button
@@ -379,7 +396,7 @@ uses all other formatting*/
 
 .question-box.selected {
   background-color: #f8f8f8;
-  border: 5px solid rgb(10, 134, 63);
+  border: 5px solid #ddc5f5;
 }
 
 
@@ -395,14 +412,14 @@ uses all other formatting*/
   margin-right: 10px;
   padding: 6px 14px;
   border: none;
-  background-color: #04AA6D;
+  background-color: #cda9f1;
   color: #222;
   border-radius: 5px;
   cursor: pointer;
 }
 
 .button-group button:hover {
-  background-color: #038c5a;
+  background-color: #b985ec;
 }
 
 /* Can go in teacher_styles.css or inline in <style scoped> */
@@ -418,6 +435,7 @@ uses all other formatting*/
   align-items: center;
   z-index: 999;
 }
+
 .form-popup-modal {
   background: white;
   padding: 2rem;
@@ -425,47 +443,105 @@ uses all other formatting*/
   width: 500px;
   max-height: 90%;
   overflow-y: auto;
-  font-family: Arial, sans-serif; /* matches the rest */
-  font-size: 20px; /* matches .large-paragraph */
-  color: black;
 }
 
-.form-container label,
-.form-container input,
-.form-container button,
-.form-container strong {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
+.theme-teacher {
+  --banner-color: #ddc5f5;
+  --text-color: #222;
+  --card-bg: #ffffff; /* ✅ Define this missing variable */
+  background-color: #fdfdfd;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 
-/* these classes are for teacherViewTB the create test popup button */
-.template-options button {
-  margin: 5px 10px 5px 0;
+/* === Banner using theme vars === */
+.top-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* ✅ allows wrap on small screens */
+  gap: 20px;
+  padding: 15px 30px;
+  background-color: var(--banner-color);
+  color: var(--text-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.banner-title {
+  flex: 1 1 auto; /* ✅ allows shrink/grow */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 28px;         /* 🔍 Adjust this value as needed */
+  font-weight: 700;        /* ✅ Optional: make it bolder */
+  letter-spacing: 0.5px
+}
+
+/* === Content Wrapper === */
+.page-wrapper {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 30px;
+  text-align: center;
+  background-color: var(--card-bg);
+  border-radius: 0; /* Optional: remove rounding if full width */
+  box-shadow: none; /* Optional: remove if not needed anymore */
+}
+
+.t_banner-actions {
+  display: flex;
+  gap: 15px;
+  flex-shrink: 0; /* ✅ don’t let buttons get squished */
+  flex-wrap: wrap;
+}
+
+.t_banner-btn {
+  background-color: #cda9f1;
+  color: #222;
   padding: 8px 16px;
+  font-size: 16px;
+  font-weight: 500;
   border: none;
   border-radius: 5px;
-  background-color: #ccc;
+  text-decoration: none;
   cursor: pointer;
+  white-space: nowrap; /* ✅ prevent text wrapping inside button */
+  transition: background-color 0.3s ease;
 }
 
-.template-options button.selected {
-  background-color: #4CAF50;
-  color: white;
-}
-.btn {
-  margin-top: 5px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
+.t_banner-btn:hover {
+  background-color: #b985ec;
 }
 
-.btn.cancel {
-  background-color: #f44336;
+.button-row {
+  display: flex;
+  justify-content: center; /* centers items horizontally */
+  align-items: center;
+  text-align: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  width: 100%; /* ensures it fills the parent width */
+  margin: 20px 0;
 }
 
-/*end create test popup button styling*/
+.button-row-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/*checkbox styling for test creation*/
+.checkbox-label {
+  font-size: 16px;
+  font-weight: normal;
+  margin: 10px 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

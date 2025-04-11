@@ -1,27 +1,32 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherNewClass.vue -->
 <template>
-  <div class="teacher-newClass-container">
-    <div class="center large-heading">
-      <h1>Create New Class</h1>
-    </div>
-    <div class="center large-paragraph">
+  <div class="theme-teacher">
+  <div class="top-banner">
+  <div class="banner-title">Create New Class</div>
+
+  <div class="t_banner-actions">
+    <router-link to="/TeacherHome" class="t_banner-btn">Home</router-link>
+    <router-link to="/" class="t_banner-btn">Log Out</router-link>
+  </div>
+</div>
+    <div class="center large-paragraph" style = "color:#222">
       <!-- form that redirects after clicking save -->
       <form @submit.prevent="saveCourse">
         <label for="courseTitle">Course Title:</label>
-        <input type="text" id="courseTitle" v-model="courseTitle" style="height:20px"><br><br>
+        <input type="text" id="courseTitle" v-model="courseTitle" style="height:20px"><br>
 
         <label for="courseNumber">Course Number:</label>
-        <input type="text" id="courseNumber" v-model="courseNumber" style="height:20px"><br><br>
+        <input type="text" id="courseNumber" v-model="courseNumber" style="height:20px"><br>
 
         <label for="textbookTitle">Textbook Title:</label>
-        <select id="textbookTitle" v-model="selectedTextbookId" style="height:30px; width:200px" required>
+        <select id="textbookTitle" v-model="selectedTextbookId" style="height:50px; width:200px" required>
           <option v-for="textbook in textbooks" :key="textbook.id" :value="textbook.id">
             {{ textbook.title }}
           </option>
         </select>
         <div v-if="!textbooks.length" style="color: red; margin-top: 10px;">
           No textbooks available.
-        </div><br><br>
+        </div><br>
 
         <div class="center large-heading">
           <input type="submit" value="Save">
@@ -119,18 +124,37 @@ export default {
 <style scoped>
 @import '../assets/teacher_styles.css';
 
-.teacher-newClass-container {
-  background-color: #43215a;
-  font-family: Arial, sans-serif;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-color: #e9dbf7; /* Light green, feel free to change */
+  border: 2px solid #cda9f1;
+  color: #222;
+  padding: 10px 14px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+  width: 250px;
 }
 
-input[type="submit"] {
-  background-color: rgb(84, 178, 150);
-  color: black;
-  font-size: 20px;
-  padding: 10px 20px;
+select:focus {
+  outline: none;
+  border-color: #cda9f1;
 }
+
+select:hover {
+  border-color: #b985ec;
+}
+
+/* Optional: style the label to match */
+label {
+  font-weight: bold;
+  font-size: 20px;
+  margin-bottom: 8px;
+  display: block;
+}
+
 </style>
