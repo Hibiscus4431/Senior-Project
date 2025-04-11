@@ -7,7 +7,7 @@ from datetime import datetime
 tests_bp = Blueprint('tests', __name__)
 
 
-######### Finaliing Test Section ##########
+##################################### Finaliing Test Section ##########
 """
 The Goal of this route is to finalize a test by:
 1. Checking if the test bank exists.
