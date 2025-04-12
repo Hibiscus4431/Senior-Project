@@ -10,7 +10,7 @@ from app.testbanks import testbank_bp
 from app.feedback import feedback_bp
 from app.resource_page import resources_bp
 from app.tests import tests_bp
-from app.downloads import download_bp
+from app.downloads import downloads_bp
 
 
 def create_app():
@@ -35,5 +35,5 @@ def create_app():
     app.register_blueprint(feedback_bp, url_prefix="/feedback")
     app.register_blueprint(resources_bp, url_prefix="/resources")
     app.register_blueprint(tests_bp, url_prefix="/tests")
-    app.register_blueprint(download_bp, url_prefix="/download")
+    app.register_blueprint(downloads_bp, url_prefix="/download")
     return app
