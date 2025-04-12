@@ -110,18 +110,31 @@
   </ul>
 
   <!-- Add to Test Bank Modal -->
-  <div class="popup-overlay" v-show="showAddToTBModal" @click.self="closeAddToTBModal">
+  <div class="popup-overlay" v-if="showAddToTBModal" @click.self="closeAddToTBModal">
     <div class="form-popup-modal">
-      <p style="color: red; font-weight: bold; margin-bottom: 1rem;">
-        Once the question is added to a test bank, it can no longer be edited.
+      <p style="color: red; font-weight: bold; text-align: center; margin-bottom: 1rem;">
+        Once the question is added to a draft pool, it can no longer be edited.
       </p>
-      <h2>Select Test Bank</h2>
-      <ul>
-        <li v-for="tb in testBanks" :key="tb.testbank_id">
-          <button @click="assignQuestionToTestBank(tb.testbank_id)">{{ tb.name }}</button>
-        </li>
-      </ul>
-      <button @click="closeAddToTBModal">Cancel</button>
+      <h2 style="text-align: center;">Select Draft Pool</h2>
+      <div class="form-container" style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 1rem;">
+        <button
+          v-for="tb in testBanks"
+          :key="tb.testbank_id"
+          class="t_button"
+          style="width: 100%;"
+          @click="assignQuestionToTestBank(tb.testbank_id)"
+        >
+          {{ tb.name }}
+        </button>
+        <button
+          type="button"
+          class="btn cancel"
+          style="width: 100%;"
+          @click="closeAddToTBModal"
+        >
+          Close
+        </button>
+      </div>
     </div>
   </div>
 
@@ -245,7 +258,9 @@ export default {
         points: '',
         time: '',
         instructions: '',
-        imageFile: null
+        imageFile: null,
+        editingQuestionId: null,
+        oldMCOptionIds: []
       }
     };
   },
@@ -254,6 +269,8 @@ export default {
       try {
         let postData;
         let config;
+        const isEditing = !!this.editingQuestionId;
+        const editingQuestion = this.questions.find(q => q.id === this.editingQuestionId);
 
         if (this.questionData.imageFile) {
           postData = new FormData();
@@ -337,11 +354,18 @@ export default {
               { option_text: this.questionData.answer.trim(), is_correct: true },
               ...incorrectChoices.map(choice => ({ option_text: choice, is_correct: false }))
             ];
+            if (isEditing && this.oldMCOptionIds.length > 0) {
+              postData.to_delete = this.oldMCOptionIds;
+            }
           } else if (this.selectedQuestionType === 'Matching') {
             postData.matches = this.matchingPairs.map(pair => ({
               prompt_text: pair.term,
               match_text: pair.definition
             }));
+            if (isEditing && editingQuestion) {
+              const oldMatchIds = (editingQuestion.pairs || []).map(p => p.match_id);
+              postData.to_delete = oldMatchIds;
+            }
           } else if (this.selectedQuestionType === 'Fill in the Blank') {
             postData.blanks = [{ correct_text: this.questionData.answer }];
           } else if (this.selectedQuestionType === 'Short Answer') {
@@ -357,7 +381,11 @@ export default {
           };
         }
 
-        await api.post('/questions', postData, config);
+        if (isEditing) {
+          await api.patch(`/questions/${this.editingQuestionId}`, postData, config);
+        } else {
+          await api.post('/questions', postData, config);
+        }
         alert('Question saved successfully!');
         this.closeForm();
         this.resetForm();
@@ -507,6 +535,8 @@ export default {
       this.selectedQuestionType = '';
       this.matchingPairs = [];
       this.imagePreview = '';
+      this.editingQuestionId = null;
+      this.oldMCOptionIds = [];
     },
 
     editQuestion(question) {
@@ -521,12 +551,21 @@ export default {
       this.selectedQuestionType = question.type;
 
       if (question.type === 'Multiple Choice') {
-        this.questionData.answerChoices = [
-          ...(question.correctOption ? [question.correctOption.option_text] : []),
-          ...(question.incorrectOptions || []).map(o => o.option_text)
-        ].join(', ');
+        this.questionData.answer = (question.correctOption && question.correctOption.option_text) || '';        this.questionData.answerChoices = question.incorrectOptions.map(opt => opt.option_text).join(', ');
+        this.oldMCOptionIds = [];
+        if (question.correctOption && question.correctOption.option_id) {
+          this.oldMCOptionIds.push(question.correctOption.option_id);
+        }
+        if (Array.isArray(question.incorrectOptions)) {
+          question.incorrectOptions.forEach(opt => {
+            if (opt.option_id) this.oldMCOptionIds.push(opt.option_id);
+          });
+        }
       } else if (question.type === 'Matching') {
-        this.matchingPairs = question.pairs || [];
+        this.matchingPairs = question.pairs.map(pair => ({
+          term: pair.term,
+          definition: pair.definition
+        }));
       }
 
       this.showForm = true;
