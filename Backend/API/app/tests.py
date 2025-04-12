@@ -6,134 +6,8 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 tests_bp = Blueprint('tests', __name__)
 
-###################################### Draft Test Section ##################################
-@tests_bp.route('/draft-questions', methods=['GET'])
-def get_draft_questions():
-    auth_data = authorize_request()
-    if isinstance(auth_data, tuple):
-        return jsonify(auth_data[0]), auth_data[1]
 
-    test_bank_id = request.args.get('test_bank_id')
-    type_filter = request.args.get('type', 'All Questions')
-
-    if not test_bank_id:
-        return jsonify({"error": "Missing test_bank_id"}), 400
-
-    conn = Config.get_db_connection()
-    cur = conn.cursor()
-
-    try:
-        # Step 1: Fetch filtered questions from test bank
-        if type_filter == "Multiple Choice":
-            cur.execute("""
-                SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.source,
-                       q.is_published, q.attachment_id
-                FROM test_bank_questions tbq
-                JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s AND q.type = 'Multiple Choice'
-            """, (test_bank_id,))
-        elif type_filter == "Short Answer/Essay":
-            cur.execute("""
-                SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.source,
-                       q.is_published, q.attachment_id
-                FROM test_bank_questions tbq
-                JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s AND q.type IN ('Essay', 'Short Answer')
-            """, (test_bank_id,))
-        else:  # all questions
-            cur.execute("""
-                SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.source,
-                       q.is_published, q.attachment_id
-                FROM test_bank_questions tbq
-                JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s
-            """, (test_bank_id,))
-
-        questions = [
-            dict(zip([desc[0] for desc in cur.description], row))
-            for row in cur.fetchall()
-        ]
-
-        # Step 2: Enrich by type
-        supabase = Config.get_supabase_client()
-
-        for q in questions:
-            qid = q['id']
-            qtype = q['type']
-
-            # Attachment (if present)
-            if q.get('attachment_id'):
-                cur.execute("""
-                    SELECT name, filepath FROM attachments WHERE attachments_id = %s;
-                """, (q['attachment_id'],))
-                attachment = cur.fetchone()
-                if attachment:
-                    try:
-                        signed = supabase.storage.from_(Config.ATTACHMENT_BUCKET).create_signed_url(
-                            path=attachment[1],
-                            expires_in=14400  # 4 hours
-                        )
-                        q['attachment'] = {
-                            "name": attachment[0],
-                            "url": signed['signedURL']
-                        }
-                    except Exception as e:
-                        q['attachment'] = {
-                            "name": attachment[0],
-                            "url": None,
-                            "error": f"Could not generate signed URL: {str(e)}"
-                        }
-
-            # Multiple Choice
-            if qtype == 'Multiple Choice':
-                cur.execute("""
-                    SELECT option_id, option_text, is_correct
-                    FROM questionoptions
-                    WHERE question_id = %s;
-                """, (qid,))
-                options = [
-                    dict(zip([desc[0] for desc in cur.description], row))
-                    for row in cur.fetchall()
-                ]
-
-                q['correct_option'] = next((opt for opt in options if opt['is_correct']), None)
-                q['incorrect_options'] = [opt for opt in options if not opt['is_correct']]
-
-            # Matching
-            elif qtype == 'Matching':
-                cur.execute("""
-                    SELECT match_id, prompt_text, match_text
-                    FROM questionmatches
-                    WHERE question_id = %s;
-                """, (qid,))
-                q['matches'] = [
-                    dict(zip([desc[0] for desc in cur.description], row))
-                    for row in cur.fetchall()
-                ]
-
-            # Fill in the Blank
-            elif qtype == 'Fill in the Blank':
-                cur.execute("""
-                    SELECT blank_id, correct_text
-                    FROM questionfillblanks
-                    WHERE question_id = %s;
-                """, (qid,))
-                q['blanks'] = [
-                    dict(zip([desc[0] for desc in cur.description], row))
-                    for row in cur.fetchall()
-                ]
-
-        return jsonify({"questions": questions}), 200
-
-    except Exception as e:
-        return jsonify({"error": f"Failed to fetch draft questions: {str(e)}"}), 500
-
-    finally:
-        cur.close()
-        conn.close()
-
-
-##################################### Finaliing Test Section ################################
+######### Finaliing Test Section ##########
 """
 The Goal of this route is to finalize a test by:
 1. Checking if the test bank exists.
@@ -146,7 +20,7 @@ The Goal of this route is to finalize a test by:
 8. Handling errors and rolling back transactions if necessary.
 (This route still keeps all question not published so they can be edited)
 """
-@tests_bp.route('/finalize', methods=['POST'])
+@tests_bp.route('/finalize', methods=['POST']) #Tested Worked 
 def finalize_test():
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -159,7 +33,6 @@ def finalize_test():
     test_instructions = data.get("test_instructions")
     template_id = data.get("template_id")  # can be None
     course_id = data.get("course_id")
-    type_filter = data.get("type", "All Questions")  # new: type filter (optional)
 
     if not test_bank_id or not name or not course_id:
         return jsonify({"error": "Missing required fields: test_bank_id, name, or course_id"}), 400
@@ -173,33 +46,17 @@ def finalize_test():
         if cursor.fetchone() is None:
             return jsonify({"error": "Test bank not found"}), 404
 
-        # Step 2: Fetch questions based on type filter
-        if type_filter == "Multiple Choice":
-            cursor.execute("""
-                SELECT q.id, COALESCE(q.default_points, 0)
-                FROM test_bank_questions tbq
-                JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s AND q.type = 'Multiple Choice'
-            """, (test_bank_id,))
-        elif type_filter == "Short Answer/Essay":
-            cursor.execute("""
-                SELECT q.id, COALESCE(q.default_points, 0)
-                FROM test_bank_questions tbq
-                JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s AND q.type IN ('Essay', 'Short Answer')
-            """, (test_bank_id,))
-        else:  # default to all
-            cursor.execute("""
-                SELECT q.id, COALESCE(q.default_points, 0)
-                FROM test_bank_questions tbq
-                JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s
-            """, (test_bank_id,))
-        
-        questions = cursor.fetchall()
+        # Step 2: Fetch questions with default points
+        cursor.execute("""
+            SELECT q.id, COALESCE(q.default_points, 0)
+            FROM test_bank_questions tbq
+            JOIN questions q ON tbq.question_id = q.id
+            WHERE tbq.test_bank_id = %s
+        """, (test_bank_id,))
+        questions = cursor.fetchall()  # list of (question_id, default_points)
 
         if not questions:
-            return jsonify({"error": "No questions found for selected type"}), 400
+            return jsonify({"error": "No questions found in test bank"}), 400
 
         # Step 3: Insert new test
         cursor.execute("""
@@ -211,18 +68,18 @@ def finalize_test():
         ))
         test_id = cursor.fetchone()[0]
 
-        # Step 4: Insert questions into test_metadata
+        # Step 4: Insert questions into test_metadata with point values
         for question_id, default_points in questions:
             cursor.execute("""
                 INSERT INTO test_metadata (test_id, question_id, points)
                 VALUES (%s, %s, %s)
             """, (test_id, question_id, default_points))
 
-        # Step 5: Update total points in the test
+        # Step 5: Update points_total in the tests table
         cursor.execute("""
             UPDATE tests
             SET points_total = (
-                SELECT SUM(points) FROM test_metadata WHERE test_id = %s
+            SELECT SUM(points) FROM test_metadata WHERE test_id = %s
             )
             WHERE tests_id = %s
         """, (test_id, test_id))
@@ -383,63 +240,6 @@ def upload_final_pdf(test_id):
     }), 201
 
 
-@tests_bp.route('/tests/final', methods=['GET'])
-def get_final_tests_for_user():
-    auth_data = authorize_request()
-    if isinstance(auth_data, tuple):
-        return jsonify(auth_data[0]), auth_data[1]
-
-    user_id = auth_data['user_id']
-
-    conn = Config.get_db_connection()
-    cur = conn.cursor()
-
-    try:
-        cur.execute("""
-            SELECT tests_id, name, course_id, template_id, points_total,
-                   estimated_time, filename, test_instrucutions
-            FROM tests
-            WHERE status = 'Final' AND user_id = %s
-        """, (user_id,))
-        rows = cur.fetchall()
-
-        supabase = Config.get_supabase_client()
-        tests = []
-
-        for row in rows:
-            file_path = row[6]
-            signed_url = None
-            if file_path:
-                try:
-                    signed = supabase.storage.from_('Tests').create_signed_url(
-                        path=file_path,
-                        expires_in=3600
-                    )
-                    signed_url = signed['signedURL']
-                except:
-                    signed_url = None
-
-            tests.append({
-                "test_id": row[0],
-                "name": row[1],
-                "course_id": row[2],
-                "template_id": row[3],
-                "points_total": row[4],
-                "estimated_time": row[5],
-                "filename": file_path,
-                "download_url": signed_url,
-                "instructions": row[7]
-            })
-
-        return jsonify({"final_tests": tests}), 200
-
-    except Exception as e:
-        return jsonify({"error": f"Failed to fetch final tests: {str(e)}"}), 500
-
-    finally:
-        cur.close()
-        conn.close()
-
 
 ################################### Publishing Test Section ###################################
 """
@@ -588,4 +388,3 @@ def get_published_tests():
     finally:
         cur.close()
         conn.close()
-
