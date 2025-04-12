@@ -382,7 +382,15 @@ def upload_final_pdf(test_id):
         "file_path": supabase_path
     }), 201
 
-
+"""
+The Goal of this route is to fetch all finalized tests by:
+1. Checking if the user is authorized.
+2. Fetching all tests with status 'Final'.
+3. Formatting the results into a list of dictionaries.
+4. Returning the list of finalized tests.
+5. Handling errors and closing the database connection.
+(As the function states the tests are for the user, it will only return the tests that belong to the user.)
+"""
 @tests_bp.route('/tests/final', methods=['GET'])
 def get_final_tests_for_user():
     auth_data = authorize_request()
@@ -413,7 +421,7 @@ def get_final_tests_for_user():
                 try:
                     signed = supabase.storage.from_('Tests').create_signed_url(
                         path=file_path,
-                        expires_in=3600
+                        expires_in=3600 # 1hr
                     )
                     signed_url = signed['signedURL']
                 except:
