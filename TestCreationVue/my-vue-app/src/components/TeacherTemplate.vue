@@ -303,6 +303,13 @@ export default {
         spacing: { after: 200 },
       });
 
+      // Create a paragraph that forces a page break
+      const pageBreak = new Paragraph({
+        children: [],
+        pageBreakBefore: true,
+      });
+
+
       // --- COVER PAGE ---
       if (this.testOptions.coverPage) {
         children.push(
@@ -323,11 +330,7 @@ export default {
           }),
           new Paragraph({}) // page break spacer
         );
-        // Create a paragraph that forces a page break
-        const pageBreak = new Paragraph({
-          children: [],
-          pageBreakBefore: true,
-        });
+
         children.push(pageBreak);
       }
 
@@ -416,16 +419,42 @@ export default {
       });
 
       // --- KEY PAGE ---
-      children.push(
-        new Paragraph({}), // page break
-        new Paragraph({
-          text: `${this.testOptions.testName} - Test Key`,
-          heading: HeadingLevel.HEADING_1,
-          spacing: { after: 300 },
-        })
-      );
+      children.push(pageBreak);
+
+      let testKeyCount = 0;
+
+      // Initial Test Key heading
+      children.push(new Paragraph({
+        children: [
+          new TextRun({
+            text: `${this.testOptions.testName} - Test Key`,
+            bold: true,
+            size: 32,
+            color: "FF0000",
+          })
+        ],
+        spacing: { after: 300 }
+      }));
 
       this.questions.forEach((q, index) => {
+        // Add a new heading every ~20 answers
+        if (testKeyCount > 0 && testKeyCount % 20 === 0) {
+          children.push(
+            pageBreak,
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `${this.testOptions.testName} - Test Key`,
+                  bold: true,
+                  size: 32,
+                  color: "FF0000",
+                })
+              ],
+              spacing: { after: 300 }
+            })
+          );
+        }
+
         let answerText = "";
         if (q.type === "Multiple Choice") {
           const options = this.shuffleOptions(q);
@@ -452,7 +481,10 @@ export default {
             spacing: { after: 200 },
           })
         );
+
+        testKeyCount++;
       });
+
 
       // --- RESOURCE PAGE (if image uploaded) ---
       if (this.testOptions.uploadedImage) {
