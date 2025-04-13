@@ -20,6 +20,9 @@
       If selected, a cover page and any uploaded graphic will be added automatically to the exported document.
     </p>
 
+    <p class="export-note">
+      <strong>Total Test Time:</strong> {{ totalEstimatedTime }} minutes
+    </p>
     <hr />
 
     <div class="question-list-container">
@@ -160,8 +163,16 @@ export default {
       }
     }
   },
+  computed: {
+    //Function to calculate total test time based on questions
+    totalEstimatedTime() {
+      return this.questions.reduce((sum, q) => sum + (q.est_time || 0), 0);
+    }
+  },
 
   methods: {
+
+
     //function to go back to draft pool
     goBackTB() {
       this.$router.push({
@@ -180,7 +191,7 @@ export default {
         const response = await api.get(`/tests/draft-questions`, {
           params: {
             test_bank_id: this.testBankId,
-            type: "All Questions"
+            type: this.testOptions.selectedTemplate || "All Questions"
           },
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`

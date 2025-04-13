@@ -30,7 +30,7 @@ def get_draft_questions():
                        q.is_published, q.attachment_id
                 FROM test_bank_questions tbq
                 JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s AND q.type = 'Multiple Choice'
+                WHERE tbq.test_bank_id = %s AND q.type IN ('Multiple Choice', 'Matching', 'True/False', 'Fill in the Blank')
             """, (test_bank_id,))
         elif type_filter == "Short Answer/Essay":
             cur.execute("""
