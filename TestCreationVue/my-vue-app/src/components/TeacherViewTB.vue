@@ -80,8 +80,10 @@
 
             <label><strong>Embedded Graphic:</strong></label>
             <input type="file" accept="image/*" @change="handleGraphicUpload" />
-            <div v-if="testOptions.graphicFileName" style="margin-top: 5px;">
-              Selected: {{ testOptions.graphicFileName }}
+            <div v-if="testOptions.graphicPreview" style="margin-top: 10px;">
+              <p><strong>Preview:</strong></p>
+              <img :src="testOptions.graphicPreview" alt="Uploaded Graphic Preview"
+                style="max-width: 100%; max-height: 200px; border: 1px solid #ccc;" />
             </div>
 
 
@@ -183,7 +185,7 @@ export default {
         selectedTemplate: '',
         graphicFile: null,
         graphicFileName: '',
-        timeAllowed: ''
+        graphicPreview: ''
       }
     };
   },
@@ -290,13 +292,26 @@ export default {
       }
 
     },
+    handleGraphicUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.testOptions.graphicFile = file;
+        this.testOptions.graphicFileName = file.name;
+        this.testOptions.graphicPreview = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    },
 
     goToCreateTest() {
       const payload = {
         testName: this.testOptions.testName,
-        selectedTemplate: this.testOptions.selectedTemplate, // 👈 updated to match
+        selectedTemplate: this.testOptions.selectedTemplate,
         uploadedImage: this.testOptions.graphicFileName || '',
         coverPage: this.testOptions.coverPage || false,
+        graphicPreview: this.testOptions.graphicPreview || ''
       };
 
       localStorage.setItem('testOptions', JSON.stringify(payload));
@@ -311,6 +326,7 @@ export default {
         }
       });
     }
+
 
   }
 };
