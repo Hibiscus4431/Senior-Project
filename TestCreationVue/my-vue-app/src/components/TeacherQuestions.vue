@@ -11,48 +11,51 @@
     </div>
 
     <div class="page-wrapper">
-      <div class ="button-row-wrapper">
-      <div class="button-row">
-        <div class="t_dropdown">
-          <button class="t_dropbtn">
-            {{ selectedTestBank ? selectedTestBank.name : 'Select Draft Pool' }}
-          </button>
-          <div class="t_dropdown-content">
-            <a v-for="tb in testBanks" :key="tb.testbank_id" href="#" @click.prevent="selectTestBank(tb)">
-              {{ tb.name }}
-            </a>
+      <div class="button-row-wrapper">
+        <div class="button-row">
+          <div class="t_dropdown">
+            <button class="t_dropbtn">
+              {{ selectedTestBank ? selectedTestBank.name : 'Select Draft Pool' }}
+            </button>
+            <div class="t_dropdown-content">
+              <a v-for="tb in testBanks" :key="tb.testbank_id" href="#" @click.prevent="selectTestBank(tb)">
+                {{ tb.name }}
+              </a>
+            </div>
           </div>
-        </div>
-        <router-link :to="{ path: '/TeacherNewTB', query: { courseId: courseId } }">
-          <button class="t_button">New Draft Pool</button>
-        </router-link>
-        <button class="t_button" @click="importTest">Import Test</button>
+          <router-link :to="{ path: '/TeacherNewTB', query: { courseId: courseId } }">
+            <button class="t_button">New Draft Pool</button>
+          </router-link>
+          <button class="t_button" @click="importTest">Import Test</button>
 
-        <div class="t_dropdown">
-          <button class="t_dropbtn">Question Type</button>
-          <div class="t_dropdown-content">
-            <a href="#" @click="selectQuestionType('True/False')">True/False</a>
-            <a href="#" @click="selectQuestionType('Multiple Choice')">Multiple Choice</a>
-            <a href="#" @click="selectQuestionType('Matching')">Matching</a>
-            <a href="#" @click="selectQuestionType('Fill in the Blank')">Fill in the Blank</a>
-            <a href="#" @click="selectQuestionType('Short Answer')">Short Answer</a>
-            <a href="#" @click="selectQuestionType('Essay')">Essay</a>
+          <div class="t_dropdown">
+            <button class="t_dropbtn">Question Type</button>
+            <div class="t_dropdown-content">
+              <a href="#" @click="selectQuestionType('True/False')">True/False</a>
+              <a href="#" @click="selectQuestionType('Multiple Choice')">Multiple Choice</a>
+              <a href="#" @click="selectQuestionType('Matching')">Matching</a>
+              <a href="#" @click="selectQuestionType('Fill in the Blank')">Fill in the Blank</a>
+              <a href="#" @click="selectQuestionType('Short Answer')">Short Answer</a>
+              <a href="#" @click="selectQuestionType('Essay')">Essay</a>
 
+            </div>
           </div>
+
+          <!--button to edit course info-->
+          <button class="t_button" @click="showCourseEditPopup = true">Edit Course Info</button>
+
+          <button class="t_button" @click="edit">New Question</button>
+          <router-link :to="{
+            path: '/TeacherPubQ',
+            query: { textbook_id: textbookId }
+          }">
+            <button class="t_button">Community Resources</button>
+          </router-link>
+
+          <hr>
         </div>
-
-        <!--button to edit course info-->
-        <button class="t_button" @click="showCourseEditPopup = true">Edit Course Info</button>
-
-        <button class="t_button" @click="edit">New Question</button>
-        <router-link to="/TeacherPubQ">
-          <button class="t_button">Community Resources</button>
-        </router-link>
-        
-        <hr>
       </div>
-    </div>
-      <div id="selectedQuestionType" style = "color: #222" class="center large-paragraph">{{ selectedQuestionType }}</div>
+      <div id="selectedQuestionType" style="color: #222" class="center large-paragraph">{{ selectedQuestionType }}</div>
 
     </div>
     <hr>
@@ -244,6 +247,7 @@ export default {
     return {
       courseTitle: this.$route.query.courseTitle || 'Untitled Course',
       courseId: this.$route.query.courseId || null,
+      textbookId: this.$route.query.textbook_id,
       chapter: '',
       section: '',
       question: '',
@@ -776,11 +780,4 @@ export default {
 <style scoped>
 @import '../assets/teacher_styles.css';
 
-.teacher-questions-container {
-  background-color: #43215a;
-  font-family: Arial, sans-serif;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
 </style>

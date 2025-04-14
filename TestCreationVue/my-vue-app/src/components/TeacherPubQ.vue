@@ -1,27 +1,34 @@
-<!-- filepath: c:\Users\laure\Senior-Project\TestCreationVue\my-vue-app\src\components\TeacherPubQ.vue -->
 <template>
   <div class="theme-teacher">
     <div class="top-banner">
       <div class="banner-title">Testbank Selection</div>
-
       <div class="t_banner-actions">
         <router-link to="/TeacherHome" class="t_banner-btn">Home</router-link>
         <router-link to="/" class="t_banner-btn">Log Out</router-link>
       </div>
     </div>
-    <div class="center large-paragraph" style = "color:#222;">
+
+    <div class="center large-paragraph" style="color:#222;">
       Please select an option to view:
-      <br><br>
+      <div class="button-row">
+        <button class="t_button" @click="viewPublishedTests">Published Tests</button>
+        <button class="t_button" @click="fetchFeedback">Publisher Feedback</button>
+      </div>
 
-      <button class="t_button" @click="viewPublishedTests">Published Tests</button>
-      <br><br>
-      <button class="t_button" @click="viewPublisherQuestions">Publisher Testbank Questions</button>
+      <div v-if="viewing === 'publisher'" class="center large-paragraph" style="color:#222;">
+        <h3>Questions from Published Testbanks</h3>
+        <ul>
+          <li v-for="(q, index) in publisherQuestions" :key="index">
+            <strong>Question {{ index + 1 }}:</strong> {{ q.question_text }}<br>
+            <em>Type:</em> {{ q.type }}<br>
+            <em>Chapter:</em> {{ q.chapter_number }}, Section: {{ q.section_number }}
+          </li>
+        </ul>
+      </div>
+
     </div>
-
-    
   </div>
 </template>
-
 
 <script>
 import api from '@/api';
@@ -30,50 +37,51 @@ export default {
   name: 'TeacherPubQ',
   data() {
     return {
-      publishedTests: [],
-      viewing: '', // 'published' or 'publisher'
+      textbookId: '',
+      viewing: '',
+      publisherQuestions: []
     };
   },
+  mounted() {
+    this.textbookId = this.$route.query.textbook_id;
+    console.log("Viewing feedback for textbook ID:", this.textbookId);
+  },
   methods: {
-    async viewPublishedTests() {
-      // REPLACE THIS
-      //
-      // this.viewing = 'published';
-      // console.log('Published questions view triggered');
-      // console.log('viewing =', this.viewing);
-      // try {
-      //   const response = await api.get('/get_tests', {
-      //     headers: {
-      //       Authorization: `Bearer ${localStorage.getItem('token')}`
-      //     }
-      //   });
-      //   this.publishedTests = response.data.tests || [];
-      // } catch (error) {
-      //   console.error('Error fetching published tests:', error);
-      //   alert('Failed to load published tests.');
-      // }
-    },
+    async fetchFeedback() {
+      this.viewing = 'publisher';
+      this.publisherQuestions = [];
 
-    viewPublisherQuestions() {
-      // REPLACE THIS
-      //
-      // this.viewing = 'publisher';
-      // console.log('viewing =', this.viewing);
-      // // Add fetch call here when your publisher questions endpoint is ready
-      // console.log('Publisher questions view triggered');
+      try {
+        // Step 1: Get published testbanks
+        const bankRes = await api.get(`/testbanks/published?textbook_id=${this.textbookId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        const testbanks = bankRes.data.testbanks || [];
+
+        // Step 2: For each testbank, get its questions
+        for (const tb of testbanks) {
+          const qRes = await api.get(`/testbanks/${tb.testbank_id}/questions`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+
+          const questions = qRes.data.questions || [];
+          this.publisherQuestions.push(...questions);
+        }
+
+      } catch (error) {
+        console.error('Failed to load questions from published testbanks:', error);
+        alert('Failed to load questions.');
+      }
     }
   }
 };
 </script>
 
-
 <style scoped>
 @import '../assets/teacher_styles.css';
-.teacher-PubQ-container {
-  background-color: #43215a;
-  font-family: Arial, sans-serif;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
 </style>

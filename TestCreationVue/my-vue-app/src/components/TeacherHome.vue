@@ -68,7 +68,8 @@ export default {
         if (Array.isArray(response.data)) {
           this.courses = response.data.map(course => ({
             id: course.course_id,
-            title: course.course_name
+            title: course.course_name,
+            textbook_id: course.textbook_id
           }));
         } else {
           this.error = 'Failed to fetch course data.';
@@ -91,7 +92,8 @@ export default {
         name: 'TeacherQuestions',
         query: {
           courseId: course.id,
-          courseTitle: course.title
+          courseTitle: course.title,
+          textbook_id: course.textbook_id
         }
       });
     }
