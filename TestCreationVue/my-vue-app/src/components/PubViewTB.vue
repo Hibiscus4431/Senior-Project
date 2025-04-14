@@ -20,7 +20,7 @@
         </router-link>
 
         <router-link
-          :to="{ name: 'PubViewFeedback', params: { testbank_id: selectedTestBankId }, query: { name: selectedTestBank } }">
+          :to="{ name: 'PubViewFeedback', query: { testbank_id: selectedTestBankId, title: selectedTestBank } }">
           <button class="p_button">View Feedback</button>
         </router-link>
 
@@ -268,34 +268,34 @@ export default {
       }
     },
     async removeQuestionFromTestBank(questionId) {
-  if (this.published) {
-    alert("This test bank is published and cannot be modified.");
-    return;
-  }
-
-  if (!this.selectedTestBankId) {
-    alert("Test bank ID is missing. Cannot remove question.");
-    return;
-  }
-
-  if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
-
-  try {
-    // 👉 Force the DELETE to use the publisher-specific version
-    await api.delete(`/testbanks/${this.selectedTestBankId}/questions/${questionId}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
+      if (this.published) {
+        alert("This test bank is published and cannot be modified.");
+        return;
       }
-    });
 
-    this.questions = this.questions.filter(q => q.id !== questionId);
-    this.selectedQuestionId = null;
+      if (!this.selectedTestBankId) {
+        alert("Test bank ID is missing. Cannot remove question.");
+        return;
+      }
 
-    alert('Question removed from test bank.');
-  } catch (err) {
-    console.error('Error removing question:', err);
-    alert('Failed to remove question from test bank.');
-  }
+      if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
+
+      try {
+        // 👉 Force the DELETE to use the publisher-specific version
+        await api.delete(`/testbanks/${this.selectedTestBankId}/questions/${questionId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        this.questions = this.questions.filter(q => q.id !== questionId);
+        this.selectedQuestionId = null;
+
+        alert('Question removed from test bank.');
+      } catch (err) {
+        console.error('Error removing question:', err);
+        alert('Failed to remove question from test bank.');
+      }
     },
     async publishTestbank() {
       if (!this.selectedTestBankId) return;

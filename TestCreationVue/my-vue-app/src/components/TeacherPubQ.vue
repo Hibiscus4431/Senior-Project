@@ -294,6 +294,8 @@ export default {
 
         const publishedTests = (testList.data || []).filter(t => t.course_id == this.courseId);
 
+        console.log("Published tests fetched:", publishedTests);
+
         for (const test of publishedTests) {
           const res = await api.get(`/resources/tests/${test.test_id}/questions`, {
             headers: {
