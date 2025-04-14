@@ -391,6 +391,8 @@ uses all other formatting*/
   min-width: 500px; /* ✅ Add this line */
   margin-left: auto;
   margin-right: auto;
+  font-size: 18px;
+  text-align: left;
 }
 
 

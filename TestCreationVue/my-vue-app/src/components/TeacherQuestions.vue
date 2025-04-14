@@ -11,7 +11,6 @@
     </div>
 
     <div class="page-wrapper">
-      <div class="button-row-wrapper">
         <div class="button-row">
           <div class="t_dropdown">
             <button class="t_dropbtn">
@@ -47,7 +46,7 @@
           <button class="t_button" @click="edit">New Question</button>
           <router-link :to="{
             path: '/TeacherPubQ',
-            query: { textbook_id: textbookId }
+            query: { course_id: courseId }
           }">
             <button class="t_button">Community Resources</button>
           </router-link>
@@ -234,7 +233,6 @@
         </form>
       </div>
     </div>
-  </div>
 
 </template>
 
@@ -779,5 +777,4 @@ export default {
 
 <style scoped>
 @import '../assets/teacher_styles.css';
-
 </style>

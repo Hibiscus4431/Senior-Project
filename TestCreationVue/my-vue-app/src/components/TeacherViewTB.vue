@@ -10,16 +10,14 @@
       </div>
     </div>
     <div class="center large-paragraph" style="color:#222">
+      <router-link :to="{ path: '/TeacherQuestions', query: { courseTitle: courseTitle, courseId: courseId } }">
+          <button class="t_button">Return to Question Page</button>
+        </router-link><br>
       <div class="button-row">
         <!-- Edit Test Bank Info Button -->
         <button class="t_button" @click="showEditForm = true">Edit Draft Pool Info</button>
 
 
-
-
-        <router-link :to="{ path: '/TeacherQuestions', query: { courseTitle: courseTitle, courseId: courseId } }">
-          <button class="t_button">Return to Question Page</button>
-        </router-link><br>
 
 
         <button class="t_button" @click="showCreateTestWarning = true">Create New Test</button>
@@ -28,6 +26,7 @@
         <button class="t_button" @click="viewPrevious">View Previous Tests</button>
         <br>
       </div>
+
       <hr>
 
       <!-- Edit Test Bank Info Popup Form -->

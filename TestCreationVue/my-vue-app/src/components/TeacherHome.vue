@@ -104,11 +104,4 @@ export default {
 <style scoped>
 @import '../assets/teacher_styles.css';
 
-.teacher-home-container {
-  background-color: #43215a;
-  font-family: Arial, sans-serif;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
 </style>
