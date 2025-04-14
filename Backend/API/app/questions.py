@@ -315,8 +315,8 @@ def update_question(question_id):
     # ✅ Type-specific updates
 
     ## Short Answer
-    if question_type == "Short Answer" and "answer" in data:
-        cur.execute("UPDATE Questions SET short_answer = %s WHERE id = %s;", (data["answer"], question_id))
+    if question_type == "Short Answer" and "instructions" in data:
+        cur.execute("UPDATE Questions SET grading_instructions = %s WHERE id = %s;", (data["instructions"], question_id))
 
     ## Essay
     if question_type == "Essay" and "instructions" in data:
@@ -448,6 +448,8 @@ def delete_question(question_id):
     cur.close()
 
     return jsonify({"message": "Question deleted successfully."}), 200
+
+
 
 @question_bp.route('/<int:question_id>/copy_to_course', methods=['POST'])
 def copy_question_to_course(question_id):

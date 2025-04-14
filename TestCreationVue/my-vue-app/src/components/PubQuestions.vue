@@ -63,6 +63,12 @@
       <span><strong>Points:</strong> {{ question.points }}</span><br>
       <span><strong>Estimated Time:</strong> {{ question.time }} minutes</span><br>
 
+      <!-- ✅ New Image Section -->
+      <div v-if="question.image_url" style="margin-top: 10px;">
+        <strong>Attached Image:</strong><br />
+        <img :src="question.image_url" alt="Attached Image" style="max-width: 100%; margin-top: 5px;" />
+      </div>
+
       <div v-if="question.type === 'True/False'">
         <strong>Answer:</strong> {{ question.answer ? 'True' : 'False' }}
       </div>
@@ -91,13 +97,13 @@
         </ul>
       </div>
 
-      <div v-if="question.type === 'Short Answer'">
+      <!-- <div v-if="question.type === 'Short Answer'">
         <strong>Answer:</strong> {{ question.answer || 'Not provided' }}
-      </div>
+      </div> -->
 
-      <div v-if="question.type === 'Essay'">
+      <!-- <div v-if="question.type === 'Essay'">
         <strong>Essay Instructions:</strong> {{ question.instructions || 'None' }}
-      </div>
+      </div> -->
 
       <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span>
 
@@ -142,7 +148,7 @@
   <div class="popup-overlay" v-show="showForm" @click.self="closeForm">
     <div class="form-popup-modal">
       <form class="form-container" @submit.prevent="handleQuestionSave">
-        <h1>New Question</h1>
+        <h1>{{ editingQuestionId ? 'Edit Question' : 'New Question' }}</h1>
 
         <label><b>Chapter Number</b></label>
         <input type="text" v-model="questionData.chapter" required />
@@ -152,15 +158,22 @@
 
         <label><b>Question Type</b><br /></label>
 
-        <select v-model="selectedQuestionType" required>
-          <option disabled value="">Select a type</option>
-          <option>True/False</option>
-          <option>Multiple Choice</option>
-          <option>Matching</option>
-          <option>Fill in the Blank</option>
-          <option>Short Answer</option>
-          <option>Essay</option>
-        </select>
+        <!-- Show a disabled select in view-only mode when editing -->
+        <div v-if="editingQuestionId">
+          <input type="text" :value="selectedQuestionType" disabled class="readonly-input" />
+        </div>
+        <!-- Allow selecting type only if creating -->
+        <div v-else>
+          <select v-model="selectedQuestionType" required>
+            <option disabled value="">Select a type</option>
+            <option>True/False</option>
+            <option>Multiple Choice</option>
+            <option>Matching</option>
+            <option>Fill in the Blank</option>
+            <option>Short Answer</option>
+            <option>Essay</option>
+          </select>
+        </div>
 
         <br /><br />
         <label><b>Question Text</b></label>
@@ -197,10 +210,10 @@
           <input type="text" v-model="questionData.answer" />
         </div>
 
-        <div v-if="selectedQuestionType === 'Short Answer'">
+        <!-- <div v-if="selectedQuestionType === 'Short Answer'">
           <label><b>Answer</b></label>
           <input type="text" v-model="questionData.answer" />
-        </div>
+        </div> -->
 
         <div v-if="selectedQuestionType === 'Essay'">
         </div>
@@ -215,9 +228,17 @@
         <label><b>Grading Instructions</b></label>
         <input type="text" v-model="questionData.instructions" required />
 
-        <label><b>Upload Image</b></label>
-        <input type="file" @change="handleImageUpload" accept="image/*" />
-        <img v-if="imagePreview" :src="imagePreview" alt="Preview" style="max-width: 100%;" />
+        <label><b>Attached Image</b></label>
+        <!-- Show existing image when editing -->
+        <div v-if="editingQuestionId && imagePreview">
+          <img :src="imagePreview" alt="Attached" style="max-width: 100%;" />
+        </div>
+
+        <!-- Only allow upload when creating -->
+        <div v-else>
+          <input type="file" @change="handleImageUpload" accept="image/*" />
+          <img v-if="imagePreview" :src="imagePreview" alt="Preview" style="max-width: 100%;" />
+        </div>
         <br /><br />
 
         <button type="submit" class="btn">Save</button>
@@ -248,6 +269,8 @@ export default {
       questionToAddToTB: null,
       matchingPairs: [],
       imagePreview: '',
+      editingQuestionId: null,
+      oldMCOptionIds: [],
       questionData: {
         chapter: '',
         section: '',
@@ -258,9 +281,7 @@ export default {
         points: '',
         time: '',
         instructions: '',
-        imageFile: null,
-        editingQuestionId: null,
-        oldMCOptionIds: []
+        imageFile: null
       }
     };
   },
@@ -429,14 +450,15 @@ export default {
               instructions: question.grading_instructions || '',
               time: question.est_time,
               chapter: question.chapter_number,
-              section: question.section_number
+              section: question.section_number,
+              image_url: question.attachment && question.attachment.url ? question.attachment.url : '' // ✅ Fixed
             };
             switch (question.type) {
               case 'True/False': return { ...base, answer: question.true_false_answer };
               case 'Multiple Choice': return { ...base, correctOption: question.correct_option || null, incorrectOptions: question.incorrect_options || [] };
               case 'Matching': return { ...base, pairs: (question.matches || []).map(pair => ({ term: pair.prompt_text, definition: pair.match_text })) };
               case 'Fill in the Blank': return { ...base, blanks: question.blanks || [] };
-              case 'Short Answer': return { ...base, answer: question.answer || '' };
+              case 'Short Answer': return base; // { ...base, answer: question.answer || '' };
               case 'Essay': return base;
               default: return base;
             }
@@ -469,7 +491,12 @@ export default {
         this.closeAddToTBModal();
       } catch (error) {
         console.error('Failed to add question to testbank:', error);
-        alert('Failed to add question.');
+        // alert('Failed to add question.');
+        let errMsg = 'Failed to add question.';
+        if (error.response && error.response.data && error.response.data.error) {
+          errMsg = error.response.data.error;
+        }
+        alert(errMsg);
       }
     },
 
@@ -536,7 +563,11 @@ export default {
       this.matchingPairs = [];
       this.imagePreview = '';
       this.editingQuestionId = null;
-      this.oldMCOptionIds = [];
+      this.oldMCOptionIds = []; // ✅ reset here
+
+      // ✅ Clear the file input manually
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
     },
 
     editQuestion(question) {
@@ -549,6 +580,9 @@ export default {
       this.questionData.instructions = question.instructions;
       this.questionData.answer = question.answer || '';
       this.selectedQuestionType = question.type;
+
+      // 👇 Show existing image if editing
+      this.imagePreview = question.image_url || '';
 
       if (question.type === 'Multiple Choice') {
         this.questionData.answer = (question.correctOption && question.correctOption.option_text) || '';        this.questionData.answerChoices = question.incorrectOptions.map(opt => opt.option_text).join(', ');

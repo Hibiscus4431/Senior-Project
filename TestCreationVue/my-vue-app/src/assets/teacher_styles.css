@@ -551,3 +551,84 @@ uses all other formatting*/
   align-items: center;
   gap: 10px;
 }
+
+/*styling for generating a test on teacher template page*/
+
+.export-note {
+  text-align: center;
+  font-size: 15px;
+  color: #444;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.green-text {
+  color: green;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.drag-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.drag-handle {
+  cursor: grab;
+  font-size: 20px;
+  user-select: none;
+  color: #888;
+}
+.correct-answer {
+  color: green;
+  font-weight: bold;
+}
+/*matching block styling for test creation*/
+.matching-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.matching-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 10px;
+}
+
+
+.matching-prompts, .matching-answers {
+  width: 48%;
+}
+
+.matching-prompts ul,
+.matching-answers ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.matching-prompts li,
+.matching-answers li {
+  padding: 4px 0;
+  font-size: 16px;
+}
+
+/*styling for short,essay and t/f in test draft*/
+.correct-answer-display {
+  color: green;
+  font-style: italic;
+  font-size: 0.95em;
+  margin-top: 8px;
+}
+
+.question-type-label {
+  font-size: 0.85em;
+  color: #555;
+  text-align: right;
+  margin-top: 10px;
+}
+/*end of test draft question styling*/
+
