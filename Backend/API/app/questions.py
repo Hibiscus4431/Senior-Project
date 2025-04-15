@@ -421,54 +421,68 @@ def delete_question(question_id):
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
         return jsonify(auth_data[0]), auth_data[1]
-    user_id = auth_data['user_id']
 
+    user_id = auth_data['user_id']
     conn = Config.get_db_connection()
     cur = conn.cursor()
 
-    # Ensure question exists and is owned by the user
+    # Check if question exists, is unpublished, and owned by the user
     cur.execute("SELECT owner_id, is_published, attachment_id FROM Questions WHERE id = %s;", (question_id,))
     question = cur.fetchone()
     if not question:
+        cur.close()
+        conn.close()
         return jsonify({"error": "Question not found."}), 404
     if question[1]:  # is_published == True
+        cur.close()
+        conn.close()
         return jsonify({"error": "Published questions cannot be deleted."}), 403
     if question[0] != user_id:
+        cur.close()
+        conn.close()
         return jsonify({"error": "Unauthorized."}), 403
 
     attachment_id = question[2]
 
-    # Delete related options, blanks, and matches
+    # Delete sub-type question data
     cur.execute("DELETE FROM QuestionOptions WHERE question_id = %s;", (question_id,))
     cur.execute("DELETE FROM QuestionFillBlanks WHERE question_id = %s;", (question_id,))
-    cur.execute("DELETE FROM QuestionMatches WHERE question_id = %s;", (question_id,))  
+    cur.execute("DELETE FROM QuestionMatches WHERE question_id = %s;", (question_id,))
 
-    # Handle attachment cleanup
+    # Delete attachment metadata (before main question delete)
     if attachment_id:
-        # Get the file path before deleting
-        cur.execute("SELECT filepath FROM Attachments WHERE attachments_id = %s;", (attachment_id,))
+        # Get file path
+        cur.execute("SELECT filepath, name FROM Attachments WHERE attachments_id = %s;", (attachment_id,))
         result = cur.fetchone()
+
         if result:
             file_path = result[0]
             try:
                 supabase = Config.get_supabase_client()
                 supabase.storage.from_(Config.ATTACHMENT_BUCKET).remove([file_path])
+                print(f"✅ Deleted file from Supabase: {file_path}")
             except Exception as e:
-                print(f"⚠️ Failed to remove file from Supabase: {str(e)}")
+                print(f"⚠️ Failed to delete file from Supabase: {str(e)}")
 
-        # Delete metadata and attachment record
-        cur.execute("DELETE FROM Attachments_MetaData WHERE reference_id = %s AND reference_type = 'question';", (question_id,))
-        cur.execute("DELETE FROM Attachments WHERE attachments_id = %s;", (attachment_id,))
+        # Delete metadata reference
+        cur.execute("""
+            DELETE FROM Attachments_MetaData 
+            WHERE reference_id = %s AND reference_type = 'question';
+        """, (question_id,))
 
-    # Delete the main question 
+    # Delete the question (removes FK reference to attachment_id)
     cur.execute("DELETE FROM Questions WHERE id = %s;", (question_id,))
+
+    # Now safely delete from Attachments table
+    if attachment_id:
+        cur.execute("DELETE FROM Attachments WHERE attachments_id = %s;", (attachment_id,))
+        print("🧹 Deleted from Attachments table:", cur.rowcount)
 
     conn.commit()
     cur.close()
     conn.close()
 
     return jsonify({"message": "Question and any linked attachment deleted successfully."}), 200
-
 
 
 @question_bp.route('/<int:question_id>/copy_to_course', methods=['POST'])
