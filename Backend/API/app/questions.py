@@ -427,27 +427,47 @@ def delete_question(question_id):
     cur = conn.cursor()
 
     # Ensure question exists and is owned by the user
-    cur.execute("SELECT owner_id, is_published FROM Questions WHERE id = %s;", (question_id,))
+    cur.execute("SELECT owner_id, is_published, attachment_id FROM Questions WHERE id = %s;", (question_id,))
     question = cur.fetchone()
     if not question:
         return jsonify({"error": "Question not found."}), 404
-    if question[1]: # is_published == True
+    if question[1]:  # is_published == True
         return jsonify({"error": "Published questions cannot be deleted."}), 403
     if question[0] != user_id:
         return jsonify({"error": "Unauthorized."}), 403
-    
+
+    attachment_id = question[2]
+
     # Delete related options, blanks, and matches
     cur.execute("DELETE FROM QuestionOptions WHERE question_id = %s;", (question_id,))
     cur.execute("DELETE FROM QuestionFillBlanks WHERE question_id = %s;", (question_id,))
     cur.execute("DELETE FROM QuestionMatches WHERE question_id = %s;", (question_id,))  
 
+    # Handle attachment cleanup
+    if attachment_id:
+        # Get the file path before deleting
+        cur.execute("SELECT filepath FROM Attachments WHERE attachments_id = %s;", (attachment_id,))
+        result = cur.fetchone()
+        if result:
+            file_path = result[0]
+            try:
+                supabase = Config.get_supabase_client()
+                supabase.storage.from_(Config.ATTACHMENT_BUCKET).remove([file_path])
+            except Exception as e:
+                print(f"⚠️ Failed to remove file from Supabase: {str(e)}")
+
+        # Delete metadata and attachment record
+        cur.execute("DELETE FROM Attachments_MetaData WHERE reference_id = %s AND reference_type = 'question';", (question_id,))
+        cur.execute("DELETE FROM Attachments WHERE attachments_id = %s;", (attachment_id,))
+
     # Delete the main question 
-    cur.execute("Delete FROM Questions WHERE id = %s;", (question_id,))
+    cur.execute("DELETE FROM Questions WHERE id = %s;", (question_id,))
 
     conn.commit()
     cur.close()
+    conn.close()
 
-    return jsonify({"message": "Question deleted successfully."}), 200
+    return jsonify({"message": "Question and any linked attachment deleted successfully."}), 200
 
 
 
