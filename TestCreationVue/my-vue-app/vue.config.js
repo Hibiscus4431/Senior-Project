@@ -7,4 +7,7 @@ module.exports = {
     // Additional webpack configuration can go here
   },
   // Other Vue CLI configurations can be added as needed
+  publicPath: process.env.NODE_ENV === 'production'
+  ? '/Senior-Project/'
+  : '/'
 };
