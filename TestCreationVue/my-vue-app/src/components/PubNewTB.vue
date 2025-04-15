@@ -4,8 +4,8 @@
       <div class="banner-title">Create New Test Bank</div>
 
       <div class="banner-actions">
-        <router-link to="/PubHome" class="banner-btn">Home</router-link>
-        <router-link to="/" class="banner-btn">Log Out</router-link>
+        <router-link to="/PubHome" class="p_banner-btn">Home</router-link>
+        <router-link to="/" class="p_banner-btn">Log Out</router-link>
       </div>
     </div>
     <div class="center large-paragraph" style="color:#222">

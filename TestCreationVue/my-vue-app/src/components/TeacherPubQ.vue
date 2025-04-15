@@ -83,7 +83,7 @@
           No published tests available for this course.
         </div>
         <div v-else></div>
-          <div v-for="tb in fullTestbanks" :key="tb.testbank_id" class="published-bank">
+        <div v-for="tb in fullTestbanks" :key="tb.testbank_id" class="published-bank">
           <h3>{{ tb.name }} (Chapter {{ tb.chapter_number }}, Section {{ tb.section_number }})</h3>
           <div v-for="(q, index) in tb.questions" :key="q.id"
             :class="['question-box', { selected: selectedQuestionId === q.id }]" @click="toggleQuestionSelection(q.id)">
@@ -107,40 +107,40 @@
                 </li>
               </ul>
             </div>
-         
 
 
-          <div v-if="q.type === 'Matching'">
-            <strong>Pairs:</strong>
-            <ul>
-              <li v-for="(pair, i) in q.matches" :key="i">
-                {{ pair.prompt_text }} - {{ pair.match_text }}
-              </li>
-            </ul>
-          </div>
 
-          <div v-if="q.type === 'Fill in the Blank'">
-            <strong>Correct Answers:</strong>
-            <ul>
-              <li v-for="(blank, i) in q.blanks" :key="i">{{ blank.correct_text }}</li>
-            </ul>
-          </div>
+            <div v-if="q.type === 'Matching'">
+              <strong>Pairs:</strong>
+              <ul>
+                <li v-for="(pair, i) in q.matches" :key="i">
+                  {{ pair.prompt_text }} - {{ pair.match_text }}
+                </li>
+              </ul>
+            </div>
 
-          <div v-if="q.type === 'Short Answer'">
-            <strong>Answer:</strong> {{ q.answer || 'Not provided' }}
-          </div>
+            <div v-if="q.type === 'Fill in the Blank'">
+              <strong>Correct Answers:</strong>
+              <ul>
+                <li v-for="(blank, i) in q.blanks" :key="i">{{ blank.correct_text }}</li>
+              </ul>
+            </div>
 
-          <div v-if="q.type === 'Essay'">
-            <strong>Essay Instructions:</strong> {{ q.grading_instructions || 'None' }}
-          </div>
+            <div v-if="q.type === 'Short Answer'">
+              <strong>Answer:</strong> {{ q.answer || 'Not provided' }}
+            </div>
 
-          <div><strong>Grading Instructions:</strong> {{ q.grading_instructions || 'None' }}</div>
+            <div v-if="q.type === 'Essay'">
+              <strong>Essay Instructions:</strong> {{ q.grading_instructions || 'None' }}
+            </div>
 
-          <!-- ✅ Buttons only visible when box is selected -->
-          <div v-if="selectedQuestionId === q.id" class="button-group">
-            <button @click.stop="openFeedbackForm(q.id)">Leave Feedback</button>
-            <button @click.stop="openTestBankModal(q.id)">Add to Draft Pool</button>
-          </div>
+            <div><strong>Grading Instructions:</strong> {{ q.grading_instructions || 'None' }}</div>
+
+            <!-- ✅ Buttons only visible when box is selected -->
+            <div v-if="selectedQuestionId === q.id" class="button-group">
+              <button @click.stop="openFeedbackForm(q.id)">Leave Feedback</button>
+              <button @click.stop="openTestBankModal(q.id)">Add to Draft Pool</button>
+            </div>
           </div>
         </div>
 
@@ -285,6 +285,12 @@ export default {
       this.viewing = 'published-tests';
       this.fullTestbanks = [];
 
+      const textbookId = this.$route.query.textbook_id;
+      if (!textbookId) {
+        console.error("Missing textbook_id in route.");
+        return;
+      }
+
       try {
         const testList = await api.get(`/tests/published`, {
           headers: {
@@ -292,9 +298,7 @@ export default {
           }
         });
 
-        const publishedTests = (testList.data || []).filter(t => t.course_id == this.courseId);
-
-        console.log("Published tests fetched:", publishedTests);
+        const publishedTests = (testList.data || []).filter(t => t.textbook_id == textbookId);
 
         for (const test of publishedTests) {
           const res = await api.get(`/resources/tests/${test.test_id}/questions`, {
@@ -318,6 +322,7 @@ export default {
         alert("Could not load published test questions.");
       }
     }
+
 
 
   }

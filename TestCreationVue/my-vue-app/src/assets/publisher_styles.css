@@ -205,7 +205,7 @@
   flex-wrap: wrap;
 }
 
-.banner-btn {
+.p_banner-btn {
   background-color: #98FF98;
   color: #222;
   padding: 8px 16px;
@@ -219,7 +219,7 @@
   transition: background-color 0.3s ease;
 }
 
-.banner-btn:hover {
+.p_banner-btn:hover {
   background-color: #ADEBB3;
 }
 

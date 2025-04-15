@@ -14,7 +14,7 @@
     cursor: pointer;
 }
 
-.p_button:hover {
+.button:hover {
   background-color: #7db4d9; /* a slightly darker green */
 }
 

@@ -5,7 +5,7 @@
   <div class="banner-title">Textbook Selection</div>
 
   <div class="banner-actions">
-    <router-link to="/" class="banner-btn">Log Out</router-link>
+    <router-link to="/" class="p_banner-btn">Log Out</router-link>
   </div>
 </div>
     <div class="center large-paragraph" style = "color:#222">
