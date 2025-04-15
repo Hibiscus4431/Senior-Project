@@ -1,10 +1,14 @@
 <template>
-  <div class="webmaster-home-container">
-    <div class="center large-heading">
-      <h1>Database Downloads</h1>
-    </div>
+  <div class="theme-webmaster">
+  <div class="top-banner">
+  <div class="banner-title">Database Downloads</div>
 
-    <div class="center large-paragraph">
+  <div class="banner-actions">
+    <router-link to="/" class="banner-btn">Log Out</router-link>
+  </div>
+  </div>
+
+    <div class="center large-paragraph" style="color: #222;">
       <p>Select a dataset to download:</p>
       <p>Note: Download All will download each file separately for readability.</p>
       <button class="button" @click="downloadData('users')">Download Users</button>
@@ -74,28 +78,4 @@ export default {
 <style scoped>
 @import '../assets/webmaster_styles.css';
 
-.webmaster-home-container {
-  background-color: #082e75;
-  font-family: Arial, sans-serif;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 50px;
-}
-
-.button {
-  margin: 10px;
-  padding: 12px 24px;
-  font-size: 16px;
-  background-color: #00bcd4;
-  border: none;
-  color: white;
-  cursor: pointer;
-  border-radius: 6px;
-}
-
-.button:hover {
-  background-color: #0192a0;
-}
 </style>

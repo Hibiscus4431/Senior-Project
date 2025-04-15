@@ -1,11 +1,11 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/WebmasterLog.vue -->
 <template>
-  <div class="webmaster-log-container">
-    <div class="center large-heading">
-      <h1>Webmaster Login</h1>
-    </div>
+ <div class="theme-webmaster">
+  <div class="top-banner">
+  <div class="banner-title">Webmaster Login</div>
+  </div>
 
-    <div class="center large-paragraph">
+    <div class="center large-paragraph" style="color: #222;">
       Please enter your webmaster username and password:
       <br />
       <br />

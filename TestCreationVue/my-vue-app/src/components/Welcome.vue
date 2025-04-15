@@ -1,11 +1,12 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/Welcome.vue -->
 <template>
-    <div class="Welcome-container">
-        <div>
-            <h1 class="center large-heading"> Welcome to Test Creation Manager</h1>
-            <div class="center large-paragraph"> Select the role you are logging in as:</div>
-            <br>
-            <br>
+
+        <div class="theme-welcome">
+            <div class="top-banner">
+                <div class="banner-title">Welcome to Print-A-Test</div>
+            </div>
+            <div class="center large-paragraph" style="color:#222"> 
+                Select the role you are logging in as:</div>
             <div class="button-container">
                 <router-link to="/TeacherLog">
                     <button class="button">Teacher</button>
@@ -23,8 +24,8 @@
                     <button class="button">Webmaster</button>
                 </router-link>
             </div>
+
         </div>
-    </div>
 </template>
 
 <script>
@@ -35,9 +36,9 @@ export default {
 
 <style scoped>
 .button {
-    background-color: rgb(150, 29, 18);
+    background-color: var(--banner-color);
     border: none;
-    color: white;
+    color: #222;
     padding: 10px 15px;
     text-align: center;
     text-decoration: none;
@@ -53,9 +54,11 @@ export default {
     justify-content: center;
     margin: 10px 0;
 }
+.button:hover {
+  background-color: #cf685f;
+}
 
 .center {
-    color: white;
     text-align: center;
     display: block;
     margin-left: auto;
@@ -71,13 +74,30 @@ export default {
     font-size: 30px;
 }
 
-.Welcome-container {
-    background-color: #2a2b2b !important;
-    font-family: Arial, sans-serif;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+.theme-welcome {
+    --banner-color: #d2746b;
+    --text-color: #222;
+    --card-bg: #ffffff;
+    /* ✅ Define this missing variable */
+    background-color: #fdfdfd;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
+.top-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    /* ✅ allows wrap on small screens */
+    gap: 20px;
+    padding: 15px 30px;
+    background-color: var(--banner-color);
+    color: var(--text-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 999;
 }
 
 /* Larger submit button */
