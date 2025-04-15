@@ -46,7 +46,7 @@
 </div>
 
 <!-- Optional display of selected type -->
-<div id="selectedQuestionType"style = "color: #222;" class="center large-paragraph">
+<div id="selectedQuestionType" style = "color: #222;" class="center large-paragraph">
   {{ selectedQuestionType }}
 </div>
 

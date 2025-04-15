@@ -100,7 +100,7 @@
 /* Add styles to the form container */
 /* this is the actual popup window*/
 .form-container {
-  max-width: 300x;
+  max-width: 300px;
   padding: 10px;
   background-color: white;
   box-sizing: border-box; /* Ensure padding is included in the width */

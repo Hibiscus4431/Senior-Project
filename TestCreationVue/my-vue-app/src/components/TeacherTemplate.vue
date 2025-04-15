@@ -8,7 +8,7 @@
       </div>
     </div>
 
-    <div class="center button-row">
+    <div class="button-row">
       <button class="t_button" @click="publishTest">Publish Final Test</button>
       <button class="t_button" @click="showBackWarning = true">Back to Draft Pool</button>
       <button class="t_button" @click="exportToWord">Export Test to Document</button>
@@ -166,11 +166,16 @@ export default {
       },
       testBankId: this.$route.query.testBankId,
       showBackWarning: false,
+      hasUnsavedChanges: true
     };
   },
 
   mounted() {
     this.fetchQuestions();
+    window.addEventListener('beforeunload', this.confirmExit);
+  },
+  beforeDestroy() {
+    window.removeEventListener('beforeunload', this.confirmExit);
   },
 
   //this looks for the order of questions changing and updates storage
@@ -193,6 +198,12 @@ export default {
   },
 
   methods: {
+    confirmExit(e) {
+    if (this.hasUnsavedChanges) {
+      e.preventDefault();
+      e.returnValue = ''; // For modern browsers to trigger prompt
+    }
+  },
 
     confirmBack() {
       this.showBackWarning = false;

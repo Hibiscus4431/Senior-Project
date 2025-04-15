@@ -53,14 +53,13 @@
         }">
           <button class="t_button">Community Resources</button>
         </router-link>
-
-        <hr>
+        <div id="selectedQuestionType" style="color: #222" class="center large-paragraph">{{ selectedQuestionType }}
+        </div>
       </div>
-    </div>
-    <div id="selectedQuestionType" style="color: #222" class="center large-paragraph">{{ selectedQuestionType }}</div>
 
-  </div>
-  <hr>
+      <hr>
+    </div>
+
 
   <ul>
     <div v-for="(question, index) in questions" :key="index"
@@ -253,6 +252,7 @@
         <button type="button" class="btn cancel" @click="showCourseEditPopup = false">Cancel</button>
       </form>
     </div>
+  </div>
   </div>
 
 </template>
