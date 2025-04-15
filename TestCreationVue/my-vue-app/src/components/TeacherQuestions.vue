@@ -81,9 +81,9 @@
             }}</li>
           </ul>
         </div>
-        <div v-if="question.type === 'Short Answer'">
+        <!-- <div v-if="question.type === 'Short Answer'">
           <strong>Answer:</strong> {{ question.answer || 'Not provided' }}
-        </div>
+        </div> -->
         <div v-if="question.type === 'Fill in the Blank'">
           <strong>Correct Answer(s):</strong>
           <ul>
@@ -96,7 +96,9 @@
             <li v-for="(pair, i) in question.pairs" :key="i">{{ pair.term }} - {{ pair.definition }}</li>
           </ul>
         </div>
-        <div v-if="question.type === 'Essay'"><strong>Essay Instructions:</strong> {{ question.instructions || 'None' }}
+        <div v-if="question.image_url">
+          <p><strong>Attached Image:</strong></p>
+          <img :src="question.image_url" alt="Question Attachment:" style="max-width: 100%; max-height: 400px; margin-bottom: 10px;" />
         </div>
         <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
 
@@ -143,15 +145,20 @@
           <input type="text" v-model="section" required />
 
           <label><b>Question Type</b><br /></label>
-          <select v-model="selectedQuestionType" required>
-            <option disabled value="">Select a type</option>
-            <option>True/False</option>
-            <option>Multiple Choice</option>
-            <option>Matching</option>
-            <option>Fill in the Blank</option>
-            <option>Short Answer</option>
-            <option>Essay</option>
-          </select>
+          <div v-if="!editingQuestionId">
+            <select v-model="selectedQuestionType" required>
+              <option disabled value="">Select a type</option>
+              <option>True/False</option>
+              <option>Multiple Choice</option>
+              <option>Matching</option>
+              <option>Fill in the Blank</option>
+              <option>Short Answer</option>
+              <option>Essay</option>
+            </select>
+          </div>
+          <div v-else>
+            <input type="text" :value="selectedQuestionType" disabled />
+          </div>
 
           <br /><br />
           <label><b>Question Text</b></label>
@@ -187,10 +194,10 @@
             <input type="text" v-model="answer" />
           </div>
 
-          <div v-if="selectedQuestionType === 'Short Answer'">
+          <!-- <div v-if="selectedQuestionType === 'Short Answer'">
             <label><b>Answer</b></label>
             <input type="text" v-model="answer" />
-          </div>
+          </div> -->
 
           <div v-if="selectedQuestionType === 'Essay'"></div>
 
@@ -204,11 +211,20 @@
           <label><b>Grading Instructions</b></label>
           <input type="text" v-model="instructions" required />
 
-          <label><b>Upload Image</b></label>
-          <input type="file" @change="handleImageUpload" accept="image/*" />
-          <img v-if="imagePreview" :src="imagePreview" alt="Preview" style="max-width: 100%;" />
-          <br /><br />
+          <!-- Show Upload Only When Creating -->
+          <div v-if="!editingQuestionId">
+            <label><b>Upload Image</b></label>
+            <input type="file" @change="handleImageUpload" accept="image/*" />
+            <img v-if="imagePreview" :src="imagePreview" alt="Preview" style="max-width: 100%;" />
+          </div>
 
+          <!-- Show Existing Image on Edit -->
+          <div v-if="editingQuestionId && imagePreview">
+            <p><strong>Attached Image:</strong></p>
+            <img :src="imagePreview" alt="Attached Image" style="max-width: 100%; max-height: 300px; margin-bottom: 10px;" />
+          </div>
+
+          <br /><br />
           <button type="submit" class="btn">Save</button>
           <button type="button" class="btn cancel" @click="closeForm">Close</button>
         </form>
@@ -396,7 +412,8 @@ export default {
               instructions: question.grading_instructions || '',
               time: question.est_time,
               chapter: question.chapter_number,
-              section: question.section_number
+              section: question.section_number,
+              image_url: question.attachment && question.attachment.url ? question.attachment.url : '' // ✅ Fixed
             };
 
             // Extend based on type
@@ -668,6 +685,7 @@ export default {
       this.fetchQuestions(type);
     },
     edit() {
+      this.resetForm(); // Clear old data
       this.showForm = true;
     },
     closeForm() {
@@ -741,6 +759,8 @@ export default {
           definition: pair.definition
         }));
       }
+      this.imagePreview = question.image_url || '';
+      this.image = null; // block file re-upload on edit
       this.showForm = true;
       const el = document.getElementById('q_edit');
       if (el && el.style) {
