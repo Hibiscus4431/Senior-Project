@@ -153,72 +153,73 @@ def finalize_test():
         return jsonify(auth_data[0]), auth_data[1]
 
     data = request.get_json()
-    test_bank_id = data.get("test_bank_id")
+    test_bank_id = data.get("test_bank_id")  # optional
     name = data.get("name")
     estimated_time = data.get("estimated_time")
     test_instructions = data.get("test_instructions")
-    template_id = data.get("template_id")  # can be None
     course_id = data.get("course_id")
-    type_filter = data.get("type", "All Questions")  # new: type filter (optional)
+    type_filter = data.get("type", "All Questions")
+    question_ids = data.get("question_ids", [])  # optional
 
-    if not test_bank_id or not name or not course_id:
-        return jsonify({"error": "Missing required fields: test_bank_id, name, or course_id"}), 400
+    if not name or not course_id:
+        return jsonify({"error": "Missing required fields: name or course_id"}), 400
 
     conn = Config.get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # Step 1: Confirm test bank exists
-        cursor.execute("SELECT testbank_id FROM test_bank WHERE testbank_id = %s", (test_bank_id,))
-        if cursor.fetchone() is None:
-            return jsonify({"error": "Test bank not found"}), 404
+        questions = []
 
-        # Step 2: Fetch questions based on type filter
-        if type_filter == "Multiple Choice":
-            cursor.execute("""
-                SELECT q.id, COALESCE(q.default_points, 0)
-                FROM test_bank_questions tbq
-                JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s AND q.type = 'Multiple Choice'
-            """, (test_bank_id,))
-        elif type_filter == "Short Answer/Essay":
-            cursor.execute("""
-                SELECT q.id, COALESCE(q.default_points, 0)
-                FROM test_bank_questions tbq
-                JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s AND q.type IN ('Essay', 'Short Answer')
-            """, (test_bank_id,))
-        else:  # default to all
+        # Step 1: Fetch questions based on logic
+        if type_filter == "All Questions" and test_bank_id:
+            # Validate test bank exists
+            cursor.execute("SELECT testbank_id FROM test_bank WHERE testbank_id = %s", (test_bank_id,))
+            if cursor.fetchone() is None:
+                return jsonify({"error": "Test bank not found"}), 404
+
+            # Pull all questions from test_bank_questions
             cursor.execute("""
                 SELECT q.id, COALESCE(q.default_points, 0)
                 FROM test_bank_questions tbq
                 JOIN questions q ON tbq.question_id = q.id
                 WHERE tbq.test_bank_id = %s
             """, (test_bank_id,))
-        
-        questions = cursor.fetchall()
+            questions = cursor.fetchall()
+
+        else:
+            if not question_ids:
+                return jsonify({"error": "No question_ids provided for this template type"}), 400
+
+            # Validate question IDs exist
+            cursor.execute("""
+                SELECT id, COALESCE(default_points, 0)
+                FROM questions
+                WHERE id = ANY(%s)
+            """, (question_ids,))
+            questions = cursor.fetchall()
 
         if not questions:
-            return jsonify({"error": "No questions found for selected type"}), 400
+            return jsonify({"error": "No questions found"}), 400
 
-        # Step 3: Insert new test
+        # Step 2: Insert into tests (template_id set to NULL)
         cursor.execute("""
             INSERT INTO tests (name, course_id, template_id, user_id, status, estimated_time, test_instrucutions)
-            VALUES (%s, %s, %s, %s, 'Final', %s, %s)
+            VALUES (%s, %s, NULL, %s, 'Final', %s, %s)
             RETURNING tests_id;
         """, (
-            name, course_id, template_id, auth_data["user_id"], estimated_time, test_instructions
+            name, course_id, auth_data["user_id"],
+            estimated_time, test_instructions
         ))
         test_id = cursor.fetchone()[0]
 
-        # Step 4: Insert questions into test_metadata
-        for question_id, default_points in questions:
+        # Step 3: Add questions to test_metadata
+        for question_id, points in questions:
             cursor.execute("""
                 INSERT INTO test_metadata (test_id, question_id, points)
                 VALUES (%s, %s, %s)
-            """, (test_id, question_id, default_points))
+            """, (test_id, question_id, points))
 
-        # Step 5: Update total points in the test
+        # Step 4: Update total points
         cursor.execute("""
             UPDATE tests
             SET points_total = (
@@ -228,7 +229,6 @@ def finalize_test():
         """, (test_id, test_id))
 
         conn.commit()
-
         return jsonify({
             "message": "Test finalized successfully",
             "test_id": test_id,
@@ -443,6 +443,117 @@ def get_final_tests_for_user():
 
     except Exception as e:
         return jsonify({"error": f"Failed to fetch final tests: {str(e)}"}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+##################################### Upload Answer Key Section ################################
+"""
+The Goal of this route is to upload an answer key for a test by:
+1. Checking if the test exists and is owned by the user.
+2. Checking if the file is present in the request.
+3. Uploading the file to Supabase Storage.
+4. Inserting the file metadata into the database.
+5. Returning the answer_key_id and file_path.
+6. Handling errors and rolling back transactions if necessary.
+"""
+@tests_bp.route('/tests/<int:test_id>/upload_answer_key', methods=['POST'])
+def upload_answer_key(test_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    user_id = auth_data['user_id']
+
+    if 'file' not in request.files:
+        return jsonify({"error": "Missing answer key file"}), 400
+
+    file = request.files['file']
+    original_filename = secure_filename(file.filename)
+    file_bytes = file.read()
+    timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+    unique_filename = f"answerkey_{test_id}_{timestamp}_{original_filename}"
+    supabase_path = f"answer_keys/{unique_filename}"
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # Upload to Supabase
+        supabase = Config.get_supabase_client()
+        supabase.storage.from_('Tests').upload(
+            path=supabase_path,
+            file=file_bytes,
+            file_options={"content-type": file.content_type}
+        )
+
+        # Insert into DB
+        cur.execute("""
+            INSERT INTO answer_key (test_id, file_path)
+            VALUES (%s, %s)
+            RETURNING answer_key_id;
+        """, (test_id, supabase_path))
+
+        answer_key_id = cur.fetchone()[0]
+        conn.commit()
+
+        return jsonify({
+            "message": "Answer key uploaded successfully",
+            "answer_key_id": answer_key_id,
+            "file_path": supabase_path
+        }), 201
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": f"Failed to upload answer key: {str(e)}"}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+"""
+The Goal of this route is to fetch the answer key for a test by:
+1. Checking if the test exists and is owned by the user.
+2. Fetching the file path from the database.
+3. Generating a signed URL for the file in Supabase Storage.
+4. Returning the signed URL and filename.
+5. Handling errors and closing the database connection.
+"""
+@tests_bp.route('/tests/<int:test_id>/answer_key', methods=['GET'])
+def get_answer_key(test_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            SELECT file_path FROM answer_key WHERE test_id = %s;
+        """, (test_id,))
+        row = cur.fetchone()
+
+        if not row or not row[0]:
+            return jsonify({"error": "Answer key not found for this test."}), 404
+
+        file_path = row[0]
+        supabase = Config.get_supabase_client()
+        signed = supabase.storage.from_('Tests').create_signed_url(
+            path=file_path,
+            expires_in=3600
+        )
+
+        return jsonify({
+            "file_url": signed['signedURL'],
+            "filename": file_path,
+            "expires_in": 3600
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to retrieve answer key: {str(e)}"}), 500
 
     finally:
         cur.close()

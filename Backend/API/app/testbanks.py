@@ -93,7 +93,7 @@ def get_teacher_testbanks_by_course():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT testbank_id, name, course_id
+        SELECT testbank_id, name, course_id, chapter_number, section_number
         FROM Test_bank
         WHERE owner_id = %s AND course_id = %s
         ORDER BY name;
@@ -104,7 +104,10 @@ def get_teacher_testbanks_by_course():
         {
             "testbank_id": row[0],
             "name": row[1],
-            "course_id": row[2]
+            "course_id": row[2],
+            "chapter_number": row[3],
+            "section_number": row[4],
+            "is_published": row[5]
         } for row in rows
     ]
 
@@ -400,7 +403,8 @@ def get_publisher_testbanks_by_textbook():
         "name": row[1],
         "textbook_id": row[2],
         "chapter_number": row[3],
-        "section_number": row[4]
+        "section_number": row[4],
+        "is_publihsed": row[5]
         } for row in rows
     ]
 
