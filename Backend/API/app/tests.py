@@ -26,7 +26,7 @@ def get_draft_questions():
         # Step 1: Fetch filtered questions from test bank
         if type_filter == "Multiple Choice":
             cur.execute("""
-                SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.source,
+                SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.est_time, q.source,
                        q.is_published, q.attachment_id
                 FROM test_bank_questions tbq
                 JOIN questions q ON tbq.question_id = q.id
@@ -34,7 +34,7 @@ def get_draft_questions():
             """, (test_bank_id,))
         elif type_filter == "Short Answer/Essay":
             cur.execute("""
-                SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.source,
+                SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.est_time, q.source,
                        q.is_published, q.attachment_id
                 FROM test_bank_questions tbq
                 JOIN questions q ON tbq.question_id = q.id
@@ -42,7 +42,7 @@ def get_draft_questions():
             """, (test_bank_id,))
         else:  # all questions
             cur.execute("""
-                SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.source,
+                SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.est_time, q.source,
                        q.is_published, q.attachment_id
                 FROM test_bank_questions tbq
                 JOIN questions q ON tbq.question_id = q.id

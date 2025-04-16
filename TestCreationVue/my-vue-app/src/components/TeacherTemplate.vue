@@ -24,7 +24,7 @@
       <strong>Total Test Time:</strong> {{ totalEstimatedTime }} minutes
     </p>
     <p class="export-note">
-      <strong>Total Points:</strong> {{ this.questions.length }} points
+      <strong>Total Points:</strong> {{ totalPoints }} points
     </p>
     <hr />
 
@@ -194,16 +194,22 @@ export default {
         const time = parseInt(q.est_time, 10);
         return sum + (isNaN(time) ? 0 : time);
       }, 0);
+    },
+    totalPoints() {
+      return this.questions.reduce((sum, q) => {
+        const pts = parseFloat(q.default_points);
+        return sum + (isNaN(pts) ? 0 : pts);
+      }, 0);
     }
   },
 
   methods: {
     confirmExit(e) {
-    if (this.hasUnsavedChanges) {
-      e.preventDefault();
-      e.returnValue = ''; // For modern browsers to trigger prompt
-    }
-  },
+      if (this.hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = ''; // For modern browsers to trigger prompt
+      }
+    },
 
     confirmBack() {
       this.showBackWarning = false;
