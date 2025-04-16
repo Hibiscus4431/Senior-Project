@@ -153,72 +153,73 @@ def finalize_test():
         return jsonify(auth_data[0]), auth_data[1]
 
     data = request.get_json()
-    test_bank_id = data.get("test_bank_id")
+    test_bank_id = data.get("test_bank_id")  # optional
     name = data.get("name")
     estimated_time = data.get("estimated_time")
     test_instructions = data.get("test_instructions")
-    template_id = data.get("template_id")  # can be None
     course_id = data.get("course_id")
-    type_filter = data.get("type", "All Questions")  # new: type filter (optional)
+    type_filter = data.get("type", "All Questions")
+    question_ids = data.get("question_ids", [])  # optional
 
-    if not test_bank_id or not name or not course_id:
-        return jsonify({"error": "Missing required fields: test_bank_id, name, or course_id"}), 400
+    if not name or not course_id:
+        return jsonify({"error": "Missing required fields: name or course_id"}), 400
 
     conn = Config.get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # Step 1: Confirm test bank exists
-        cursor.execute("SELECT testbank_id FROM test_bank WHERE testbank_id = %s", (test_bank_id,))
-        if cursor.fetchone() is None:
-            return jsonify({"error": "Test bank not found"}), 404
+        questions = []
 
-        # Step 2: Fetch questions based on type filter
-        if type_filter == "Multiple Choice":
-            cursor.execute("""
-                SELECT q.id, COALESCE(q.default_points, 0)
-                FROM test_bank_questions tbq
-                JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s AND q.type = 'Multiple Choice'
-            """, (test_bank_id,))
-        elif type_filter == "Short Answer/Essay":
-            cursor.execute("""
-                SELECT q.id, COALESCE(q.default_points, 0)
-                FROM test_bank_questions tbq
-                JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s AND q.type IN ('Essay', 'Short Answer')
-            """, (test_bank_id,))
-        else:  # default to all
+        # Step 1: Fetch questions based on logic
+        if type_filter == "All Questions" and test_bank_id:
+            # Validate test bank exists
+            cursor.execute("SELECT testbank_id FROM test_bank WHERE testbank_id = %s", (test_bank_id,))
+            if cursor.fetchone() is None:
+                return jsonify({"error": "Test bank not found"}), 404
+
+            # Pull all questions from test_bank_questions
             cursor.execute("""
                 SELECT q.id, COALESCE(q.default_points, 0)
                 FROM test_bank_questions tbq
                 JOIN questions q ON tbq.question_id = q.id
                 WHERE tbq.test_bank_id = %s
             """, (test_bank_id,))
-        
-        questions = cursor.fetchall()
+            questions = cursor.fetchall()
+
+        else:
+            if not question_ids:
+                return jsonify({"error": "No question_ids provided for this template type"}), 400
+
+            # Validate question IDs exist
+            cursor.execute("""
+                SELECT id, COALESCE(default_points, 0)
+                FROM questions
+                WHERE id = ANY(%s)
+            """, (question_ids,))
+            questions = cursor.fetchall()
 
         if not questions:
-            return jsonify({"error": "No questions found for selected type"}), 400
+            return jsonify({"error": "No questions found"}), 400
 
-        # Step 3: Insert new test
+        # Step 2: Insert into tests (template_id set to NULL)
         cursor.execute("""
             INSERT INTO tests (name, course_id, template_id, user_id, status, estimated_time, test_instrucutions)
-            VALUES (%s, %s, %s, %s, 'Final', %s, %s)
+            VALUES (%s, %s, NULL, %s, 'Final', %s, %s)
             RETURNING tests_id;
         """, (
-            name, course_id, template_id, auth_data["user_id"], estimated_time, test_instructions
+            name, course_id, auth_data["user_id"],
+            estimated_time, test_instructions
         ))
         test_id = cursor.fetchone()[0]
 
-        # Step 4: Insert questions into test_metadata
-        for question_id, default_points in questions:
+        # Step 3: Add questions to test_metadata
+        for question_id, points in questions:
             cursor.execute("""
                 INSERT INTO test_metadata (test_id, question_id, points)
                 VALUES (%s, %s, %s)
-            """, (test_id, question_id, default_points))
+            """, (test_id, question_id, points))
 
-        # Step 5: Update total points in the test
+        # Step 4: Update total points
         cursor.execute("""
             UPDATE tests
             SET points_total = (
@@ -228,7 +229,6 @@ def finalize_test():
         """, (test_id, test_id))
 
         conn.commit()
-
         return jsonify({
             "message": "Test finalized successfully",
             "test_id": test_id,
