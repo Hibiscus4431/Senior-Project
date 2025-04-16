@@ -159,6 +159,7 @@ export default {
   },
 
   mounted() {
+    this.checkPublishedStatus();
     this.loadQuestions();
   },
 
@@ -205,8 +206,7 @@ export default {
           });
 
           const rawQuestions = questionsRes.data.questions || [];
-          this.published = questionsRes.data.is_published || false;
-
+          
           // ✅ Transform each question into full display shape
           this.questions = rawQuestions.map((q) => {
             const base = {
@@ -337,7 +337,23 @@ export default {
         console.error('Error deleting draft pool:', err);
         alert('Failed to delete draft pool.');
       }
+    },
+    async checkPublishedStatus() {
+  try {
+    const res = await api.get(`/testbanks/${this.selectedTestBankId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+
+    if ('is_published' in res.data) {
+      this.published = res.data.is_published;
+    } else {
+      console.warn("No is_published in response:", res.data);
     }
+  } catch (err) {
+    console.error("Failed to fetch published status:", err);
+  }
+}
+
   }
 };
 </script>
