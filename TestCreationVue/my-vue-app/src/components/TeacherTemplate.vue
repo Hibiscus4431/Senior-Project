@@ -9,9 +9,9 @@
     </div>
 
     <div class="button-row">
-      <button class="t_button" @click="publishTest">Publish Final Test</button>
+      <button class="t_button" @click="publishWarning = true">Publish Final Test</button>
       <button class="t_button" @click="showBackWarning = true">Back to Draft Pool</button>
-      <button class="t_button" @click="exportToWord">Export Test to Document</button>
+      <button class="t_button" @click="exportWarning = true">Export Test to Document</button>
     </div>
 
     <p class="export-note">
@@ -36,13 +36,49 @@
           <p style="text-align: center; font-size: 18px;">
             If you go back to the Draft Pool, any unsaved changes on this page may be lost.
           </p>
-          <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+          <div class="popup-button-group">
             <button class="btn" @click="confirmBack">Continue</button>
             <button class="btn cancel" @click="showBackWarning = false">Cancel</button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Publish Warning Modal -->
+    <div class="popup-overlay" v-if="publishWarning" @click.self="publishWarning = false">
+      <div class="form-popup-modal">
+        <div class="form-container">
+          <h2 style="text-align: center;">Confirm Publish</h2>
+          <p style="text-align: center; font-size: 18px;">
+            Once you publish this test, the questions on this page will no longer be editable.
+            Are you sure you want to continue?
+          </p>
+          <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+            <button class="btn" @click="confirmPublish">Yes, Publish</button>
+            <button class="btn cancel" @click="publishWarning = false">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Warning Modal -->
+    <div class="popup-overlay" v-if="exportWarning" @click.self="exportWarning = false">
+      <div class="form-popup-modal">
+        <div class="form-container">
+          <h2 style="text-align: center;">Confirm Export</h2>
+          <p style="text-align: center; font-size: 18px;">
+            Exporting will generate a Word document based on the current test setup.
+            Any unsaved changes will not be included. Continue?
+          </p>
+          <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+            <button class="btn" @click="confirmExport">Yes, Export</button>
+            <button class="btn cancel" @click="exportWarning = false">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
 
     <div class="question-list-container">
       <draggable v-model="questions" item-key="id" class="drag-list" handle=".drag-handle" @update="saveOrder">
@@ -166,7 +202,9 @@ export default {
       },
       testBankId: this.$route.query.testBankId,
       showBackWarning: false,
-      hasUnsavedChanges: true
+      hasUnsavedChanges: true,
+      publishWarning: false,
+      exportWarning: false
     };
   },
 
@@ -204,6 +242,11 @@ export default {
   },
 
   methods: {
+    confirmPublish() {
+      this.publishWarning = false;
+      this.publishTest(); // call your existing publish logic
+    },
+
     confirmExit(e) {
       if (this.hasUnsavedChanges) {
         e.preventDefault();
