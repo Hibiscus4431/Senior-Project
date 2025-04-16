@@ -173,11 +173,11 @@ export default {
       selectedQuestionId: null,
       editingQuestionData: {},
       editingQuestionId: null,
-      displayChapter: '',
-      displaySection: '',
+      displayChapter: this.$route.query.chapter || '',
+      displaySection: this.$route.query.section || '',
       courseId: this.$route.query.courseId || '',
       courseTitle: this.$route.query.courseTitle || '',
-      testBankId: this.$route.params.id || '',
+      testBankId: this.$route.query.testBankId || '',
       testBankName: this.$route.query.testBankName || '',
       editForm: {
         name: this.$route.query.testBankName || '',
@@ -281,24 +281,11 @@ export default {
     },
 
     async initialize() {
-      await this.fetchQuestions();
-      try {
-        const res = await api.get(`/testbanks/${this.testBankId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        console.log('Testbank API response:', res.data);
-
-        this.testBankName = res.data.name;
-        this.editForm.name = res.data.name;
-        this.editForm.chapter = res.data.chapter_number;
-        this.editForm.section = res.data.section_number;
-
-        this.displayChapter = res.data.chapter_number;
-        this.displaySection = res.data.section_number;
-
-      } catch (err) {
-        console.warn("Couldn't load testbank details:", err);
+      if (!this.testBankId) {
+        console.warn('No testBankId provided — cannot load questions.');
+        return;
       }
+      await this.fetchQuestions();
 
     },
     handleGraphicUpload(event) {

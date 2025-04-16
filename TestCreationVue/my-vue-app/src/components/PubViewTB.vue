@@ -27,7 +27,7 @@
         <button class="p_button" @click="publishTestbank" :disabled="published">
           {{ published ? "Draft Pool Published" : "Publish Draft Pool" }}
         </button>
-        <button class="p_button delete" @click="deleteTestBank" :disabled="published">
+        <button class="p_button delete" v-if="!published" @click="deleteTestBank">
           Delete Draft Pool
         </button>
       </div>
@@ -112,8 +112,9 @@
           <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
 
           <!-- Buttons shown only if selected -->
-          <div v-if="selectedQuestionId === question.id" class="p_button-group">
-            <button @click.stop="removeQuestionFromTestBank(question.id)" :disabled="published">
+          <div v-if="selectedQuestionId === question.id && !published" class="p_button-group">
+            <button @click.stop="removeQuestionFromTestBank(question.id)" :disabled="published"
+              :title="published ? 'Published — cannot remove question' : 'Remove from Draft Pool'">
               {{ published ? "Published - Cannot Remove" : "Remove from Draft Pool" }}
             </button>
           </div>
@@ -158,9 +159,9 @@ export default {
     }
   },
 
-  mounted() {
-    this.checkPublishedStatus();
-    this.loadQuestions();
+  async mounted() {
+    await this.checkPublishedStatus();
+    await this.loadQuestions();
   },
 
   methods: {
@@ -206,7 +207,7 @@ export default {
           });
 
           const rawQuestions = questionsRes.data.questions || [];
-          
+
           // ✅ Transform each question into full display shape
           this.questions = rawQuestions.map((q) => {
             const base = {
@@ -339,20 +340,25 @@ export default {
       }
     },
     async checkPublishedStatus() {
-  try {
-    const res = await api.get(`/testbanks/${this.selectedTestBankId}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
+      try {
+        const res = await api.get('/testbanks/publisher', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          params: { textbook_id: this.textbookId }
+        });
 
-    if ('is_published' in res.data) {
-      this.published = res.data.is_published;
-    } else {
-      console.warn("No is_published in response:", res.data);
+        const testbanks = res.data.testbanks || [];
+        const found = testbanks.find(tb => tb.testbank_id == this.selectedTestBankId);
+
+        if (found) {
+          this.published = found.is_published === true;
+        } else {
+          console.warn("Testbank not found in returned list");
+        }
+      } catch (err) {
+        console.error("Failed to fetch testbank status:", err);
+      }
     }
-  } catch (err) {
-    console.error("Failed to fetch published status:", err);
-  }
-}
+
 
   }
 };

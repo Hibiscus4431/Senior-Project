@@ -61,198 +61,198 @@
     </div>
 
 
-  <ul>
-    <div v-for="(question, index) in questions" :key="index"
-      :class="['question-box', { selected: selectedQuestionId === question.id }]"
-      @click="toggleQuestionSelection(question.id)">
-      <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
-      <span><strong>Type:</strong> {{ question.type }}</span><br>
-      <span><strong>Chapter:</strong> {{ question.chapter || 'N/A' }}</span><br>
-      <span><strong>Section:</strong> {{ question.section || 'N/A' }}</span><br>
-      <span><strong>Points:</strong> {{ question.points }}</span><br>
-      <span><strong>Estimated Time:</strong> {{ question.time }} minutes</span><br>
+    <ul>
+      <div v-for="(question, index) in questions" :key="index"
+        :class="['question-box', { selected: selectedQuestionId === question.id }]"
+        @click="toggleQuestionSelection(question.id)">
+        <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
+        <span><strong>Type:</strong> {{ question.type }}</span><br>
+        <span><strong>Chapter:</strong> {{ question.chapter || 'N/A' }}</span><br>
+        <span><strong>Section:</strong> {{ question.section || 'N/A' }}</span><br>
+        <span><strong>Points:</strong> {{ question.points }}</span><br>
+        <span><strong>Estimated Time:</strong> {{ question.time }} minutes</span><br>
 
-      <div v-if="question.type === 'True/False'"><strong>Answer:</strong> {{ question.answer ? 'True' : 'False' }}
-      </div>
-      <div v-if="question.type === 'Multiple Choice'">
-        <strong>Correct Answer:</strong> {{ question.correctOption && question.correctOption.option_text ||
-          'Not specified' }}<br>
-        <p><strong>Other Options:</strong></p>
-        <ul>
-          <li v-for="(option, i) in question.incorrectOptions" :key="i" class="incorrect-answer">{{ option.option_text
-          }}</li>
-        </ul>
-      </div>
-      <!-- <div v-if="question.type === 'Short Answer'">
+        <div v-if="question.type === 'True/False'"><strong>Answer:</strong> {{ question.answer ? 'True' : 'False' }}
+        </div>
+        <div v-if="question.type === 'Multiple Choice'">
+          <strong>Correct Answer:</strong> {{ question.correctOption && question.correctOption.option_text ||
+            'Not specified' }}<br>
+          <p><strong>Other Options:</strong></p>
+          <ul>
+            <li v-for="(option, i) in question.incorrectOptions" :key="i" class="incorrect-answer">{{ option.option_text
+            }}</li>
+          </ul>
+        </div>
+        <!-- <div v-if="question.type === 'Short Answer'">
           <strong>Answer:</strong> {{ question.answer || 'Not provided' }}
         </div> -->
-      <div v-if="question.type === 'Fill in the Blank'">
-        <strong>Correct Answer(s):</strong>
-        <ul>
-          <li v-for="(blank, i) in question.blanks" :key="i">{{ blank.correct_text }}</li>
-        </ul>
-      </div>
-      <div v-if="question.type === 'Matching'">
-        <strong>Pairs:</strong>
-        <ul>
-          <li v-for="(pair, i) in question.pairs" :key="i">{{ pair.term }} - {{ pair.definition }}</li>
-        </ul>
-      </div>
-      <div v-if="question.image_url">
-        <p><strong>Attached Image:</strong></p>
-        <img :src="question.image_url" alt="Question Attachment:"
-          style="max-width: 100%; max-height: 400px; margin-bottom: 10px;" />
-      </div>
-      <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
-
-      <div v-if="selectedQuestionId === question.id" class="button-group">
-        <button @click.stop="editQuestion(question)">Edit</button>
-        <button @click.stop="deleteQuestion(question.id)">Delete</button>
-        <button @click.stop="openAddToTestBank(question.id)">Add to Draft Pool</button>
-      </div>
-    </div>
-  </ul>
-
-
-  <!-- Add to Test Bank Modal -->
-  <div class="popup-overlay" v-show="showAddToTBModal" @click.self="closeAddToTBModal">
-    <div class="form-popup-modal">
-      <h2>Select draft pool to add question to:</h2>
-      <div style="display: flex; flex-direction: column; align-items: flex-start;">
-        <div v-for="tb in testBanks" :key="tb.testbank_id" style="margin-bottom: 10px; width: 100%;">
-          <button class="t_button" style="width: 100%;" @click="assignQuestionToTestBank(tb.testbank_id)">
-            {{ tb.name }}
-          </button>
+        <div v-if="question.type === 'Fill in the Blank'">
+          <strong>Correct Answer(s):</strong>
+          <ul>
+            <li v-for="(blank, i) in question.blanks" :key="i">{{ blank.correct_text }}</li>
+          </ul>
         </div>
-        <div class="form-container" style="width: 100%;">
-          <button type="button" class="btn cancel" style="width: 100%;" @click="closeAddToTBModal">
-            Close
-          </button>
+        <div v-if="question.type === 'Matching'">
+          <strong>Pairs:</strong>
+          <ul>
+            <li v-for="(pair, i) in question.pairs" :key="i">{{ pair.term }} - {{ pair.definition }}</li>
+          </ul>
+        </div>
+        <div v-if="question.image_url">
+          <p><strong>Attached Image:</strong></p>
+          <img :src="question.image_url" alt="Question Attachment:"
+            style="max-width: 100%; max-height: 400px; margin-bottom: 10px;" />
+        </div>
+        <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
+
+        <div v-if="selectedQuestionId === question.id" class="button-group">
+          <button @click.stop="editQuestion(question)">Edit</button>
+          <button @click.stop="deleteQuestion(question.id)">Delete</button>
+          <button @click.stop="openAddToTestBank(question.id)">Add to Draft Pool</button>
         </div>
       </div>
-    </div>
-  </div>
+    </ul>
 
-  <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
 
-  <!-- Popup Overlay -->
-  <div class="popup-overlay" v-show="showForm" @click.self="closeForm">
-    <div class="form-popup-modal">
-      <form class="form-container" @submit.prevent="handleQuestionSave">
-        <h1>{{ editingQuestionId ? 'Edit Question' : 'New Question' }}</h1>
-
-        <label><b>Chapter Number</b></label>
-        <input type="text" v-model="chapter" required />
-
-        <label><b>Section Number</b></label>
-        <input type="text" v-model="section" required />
-
-        <label><b>Question Type</b><br /></label>
-        <div v-if="!editingQuestionId">
-          <select v-model="selectedQuestionType" required>
-            <option disabled value="">Select a type</option>
-            <option>True/False</option>
-            <option>Multiple Choice</option>
-            <option>Matching</option>
-            <option>Fill in the Blank</option>
-            <option>Short Answer</option>
-            <option>Essay</option>
-          </select>
-        </div>
-        <div v-else>
-          <input type="text" :value="selectedQuestionType" disabled />
-        </div>
-
-        <br /><br />
-        <label><b>Question Text</b></label>
-        <input type="text" v-model="question" required />
-
-        <div v-if="selectedQuestionType === 'True/False'">
-          <label><b>Answer</b></label>
-          <select v-model="answer">
-            <option value="True">True</option>
-            <option value="False">False</option>
-          </select>
-        </div>
-
-        <div v-if="selectedQuestionType === 'Multiple Choice'">
-          <label><b>Correct Answer</b></label>
-          <input type="text" v-model="answer" />
-          <label><b>Incorrect Answer Choices (comma-separated)</b></label>
-          <input type="text" v-model="answerChoices" />
-        </div>
-
-        <div v-if="selectedQuestionType === 'Matching'">
-          <label><b>Matching Pairs</b></label>
-          <div v-for="(pair, index) in matchingPairs" :key="index">
-            <input type="text" v-model="pair.term" placeholder="Term" />
-            <input type="text" v-model="pair.definition" placeholder="Definition" />
-            <button type="button" @click="removePair(index)">Remove</button>
+    <!-- Add to Test Bank Modal -->
+    <div class="popup-overlay" v-show="showAddToTBModal" @click.self="closeAddToTBModal">
+      <div class="form-popup-modal">
+        <h2>Select draft pool to add question to:</h2>
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <div v-for="tb in testBanks" :key="tb.testbank_id" style="margin-bottom: 10px; width: 100%;">
+            <button class="t_button" style="width: 100%;" @click="assignQuestionToTestBank(tb.testbank_id)">
+              {{ tb.name }}
+            </button>
           </div>
-          <button type="button" @click="addPair">Add Pair</button>
+          <div class="form-container" style="width: 100%;">
+            <button type="button" class="btn cancel" style="width: 100%;" @click="closeAddToTBModal">
+              Close
+            </button>
+          </div>
         </div>
+      </div>
+    </div>
 
-        <div v-if="selectedQuestionType === 'Fill in the Blank'">
-          <label><b>Correct Answer</b></label>
-          <input type="text" v-model="answer" />
-        </div>
+    <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
 
-        <!-- <div v-if="selectedQuestionType === 'Short Answer'">
+    <!-- Popup Overlay -->
+    <div class="popup-overlay" v-show="showForm" @click.self="closeForm">
+      <div class="form-popup-modal">
+        <form class="form-container" @submit.prevent="handleQuestionSave">
+          <h1>{{ editingQuestionId ? 'Edit Question' : 'New Question' }}</h1>
+
+          <label><b>Chapter Number</b></label>
+          <input type="text" v-model="chapter" required />
+
+          <label><b>Section Number</b></label>
+          <input type="text" v-model="section" required />
+
+          <label><b>Question Type</b><br /></label>
+          <div v-if="!editingQuestionId">
+            <select v-model="selectedQuestionType" required>
+              <option disabled value="">Select a type</option>
+              <option>True/False</option>
+              <option>Multiple Choice</option>
+              <option>Matching</option>
+              <option>Fill in the Blank</option>
+              <option>Short Answer</option>
+              <option>Essay</option>
+            </select>
+          </div>
+          <div v-else>
+            <input type="text" :value="selectedQuestionType" disabled />
+          </div>
+
+          <br /><br />
+          <label><b>Question Text</b></label>
+          <input type="text" v-model="question" required />
+
+          <div v-if="selectedQuestionType === 'True/False'">
+            <label><b>Answer</b></label>
+            <select v-model="answer">
+              <option value="True">True</option>
+              <option value="False">False</option>
+            </select>
+          </div>
+
+          <div v-if="selectedQuestionType === 'Multiple Choice'">
+            <label><b>Correct Answer</b></label>
+            <input type="text" v-model="answer" />
+            <label><b>Incorrect Answer Choices (comma-separated)</b></label>
+            <input type="text" v-model="answerChoices" />
+          </div>
+
+          <div v-if="selectedQuestionType === 'Matching'">
+            <label><b>Matching Pairs</b></label>
+            <div v-for="(pair, index) in matchingPairs" :key="index">
+              <input type="text" v-model="pair.term" placeholder="Term" />
+              <input type="text" v-model="pair.definition" placeholder="Definition" />
+              <button type="button" @click="removePair(index)">Remove</button>
+            </div>
+            <button type="button" @click="addPair">Add Pair</button>
+          </div>
+
+          <div v-if="selectedQuestionType === 'Fill in the Blank'">
+            <label><b>Correct Answer</b></label>
+            <input type="text" v-model="answer" />
+          </div>
+
+          <!-- <div v-if="selectedQuestionType === 'Short Answer'">
             <label><b>Answer</b></label>
             <input type="text" v-model="answer" />
           </div> -->
 
-        <div v-if="selectedQuestionType === 'Essay'"></div>
+          <div v-if="selectedQuestionType === 'Essay'"></div>
 
-        <br />
-        <label><b>Points Worth</b></label>
-        <input type="text" v-model="points" required />
+          <br />
+          <label><b>Points Worth</b></label>
+          <input type="text" v-model="points" required />
 
-        <label><b>Estimated Time (in minutes)</b></label>
-        <input type="text" v-model="time" required />
+          <label><b>Estimated Time (in minutes)</b></label>
+          <input type="text" v-model="time" required />
 
-        <label><b>Grading Instructions</b></label>
-        <input type="text" v-model="instructions" required />
+          <label><b>Grading Instructions</b></label>
+          <input type="text" v-model="instructions" required />
 
-        <!-- Show Upload Only When Creating -->
-        <div v-if="!editingQuestionId">
-          <label><b>Upload Image</b></label>
-          <input type="file" @change="handleImageUpload" accept="image/*" />
-          <img v-if="imagePreview" :src="imagePreview" alt="Preview" style="max-width: 100%;" />
-        </div>
+          <!-- Show Upload Only When Creating -->
+          <div v-if="!editingQuestionId">
+            <label><b>Upload Image</b></label>
+            <input type="file" @change="handleImageUpload" accept="image/*" />
+            <img v-if="imagePreview" :src="imagePreview" alt="Preview" style="max-width: 100%;" />
+          </div>
 
-        <!-- Show Existing Image on Edit -->
-        <div v-if="editingQuestionId && imagePreview">
-          <p><strong>Attached Image:</strong></p>
-          <img :src="imagePreview" alt="Attached Image"
-            style="max-width: 100%; max-height: 300px; margin-bottom: 10px;" />
-        </div>
+          <!-- Show Existing Image on Edit -->
+          <div v-if="editingQuestionId && imagePreview">
+            <p><strong>Attached Image:</strong></p>
+            <img :src="imagePreview" alt="Attached Image"
+              style="max-width: 100%; max-height: 300px; margin-bottom: 10px;" />
+          </div>
 
-        <br /><br />
-        <button type="submit" class="btn">Save</button>
-        <button type="button" class="btn cancel" @click="closeForm">Close</button>
-      </form>
+          <br /><br />
+          <button type="submit" class="btn">Save</button>
+          <button type="button" class="btn cancel" @click="closeForm">Close</button>
+        </form>
+      </div>
     </div>
-  </div>
 
-  <!-- Course Edit Popup -->
-  <div class="popup-overlay" v-if="showCourseEditPopup" @click.self="showCourseEditPopup = false">
-    <div class="form-popup-modal">
-      <form class="form-container" @submit.prevent="saveCourseInfo">
-        <h1>Edit Course Info</h1>
+    <!-- Course Edit Popup -->
+    <div class="popup-overlay" v-if="showCourseEditPopup" @click.self="showCourseEditPopup = false">
+      <div class="form-popup-modal">
+        <form class="form-container" @submit.prevent="saveCourseInfo">
+          <h1>Edit Course Info</h1>
 
-        <label><b>Course Title</b></label>
-        <input type="text" v-model="editCourseTitle" required />
+          <label><b>Course Title</b></label>
+          <input type="text" v-model="editCourseTitle" required />
 
-        <label><b>Course Number</b></label>
-        <input type="text" v-model="editCourseNumber" required />
+          <label><b>Course Number</b></label>
+          <input type="text" v-model="editCourseNumber" required />
 
-        <br />
-        <button type="submit" class="btn">Save</button>
-        <button type="button" class="btn cancel" @click="showCourseEditPopup = false">Cancel</button>
-      </form>
+          <br />
+          <button type="submit" class="btn">Save</button>
+          <button type="button" class="btn cancel" @click="showCourseEditPopup = false">Cancel</button>
+        </form>
+      </div>
     </div>
-  </div>
   </div>
 
 </template>
@@ -284,7 +284,7 @@ export default {
       selectedQuestionId: null, // To store the ID of the selected question for editing
       editingQuestionId: null, // To store the ID of the question being edited
       showForm: false,
-      selectedTestbank: null,
+      selectedTestBank: null,
       testBanks: [], // Array to store testbank options
       showCourseEditPopup: false,
       editCourseTitle: this.$route.query.courseTitle || '',
@@ -385,9 +385,12 @@ export default {
         query: {
           courseId: this.courseId,
           courseTitle: this.courseTitle,
-          testBankName: tb.name
+          testBankId: tb.testbank_id,
+          testBankName: tb.name,
+          chapter: tb.chapter_number,
+          section: tb.section_number
         }
-      }); // ✅ closes $router.push properly
+      });
     },
 
     //function to fetch questions from the database based on selected question type
