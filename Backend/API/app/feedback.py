@@ -159,4 +159,72 @@ def delete_feedback(feedback_id):
         return jsonify({"message": "Feedback deleted"}), 200
     return jsonify({"error": "Feedback not found or unauthorized"}), 403
 
+# Get feedback for a specific testbank 
+@feedback_bp.route('/<int:testbank_id>/questions-with-feedback', methods=['GET'])
+def get_questions_with_feedback_by_testbank(testbank_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""
+        SELECT
+            q.id AS question_id,
+            q.question_text,
+            f.comment_field,
+            u.username,
+            u.role
+        FROM test_bank_questions tbq
+        JOIN questions q ON tbq.question_id = q.id
+        JOIN feedback f ON f.question_id = q.id
+        JOIN users u ON f.user_id = u.user_id
+        WHERE tbq.test_bank_id = %s
+        ORDER BY q.id, f.feedback_id
+    """, (testbank_id,))
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # Structure results into grouped format
+    results = {}
+    for row in rows:
+        qid = row["question_id"]
+        if qid not in results:
+            results[qid] = {
+                "question_id": qid,
+                "question_text": row["question_text"],
+                "feedback": []
+            }
+        results[qid]["feedback"].append({
+            "comment": row["comment_field"],
+            "username": row["username"],
+            "role": row["role"]
+        })
+
+    return jsonify(list(results.values())), 200
+
+# Get feedback to list only questions with feedback
+@feedback_bp.route('/questions-with-feedback', methods=['GET'])
+def get_all_questions_with_feedback():
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""
+        SELECT DISTINCT q.id, q.question_text
+        FROM questions q
+        JOIN feedback f ON f.question_id = q.id
+    """)
+
+    questions = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return jsonify([dict(q) for q in questions]), 200
 
