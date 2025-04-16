@@ -2,7 +2,11 @@
 <template>
   <div class="theme-teacher">
     <div class="top-banner">
-      <div class="banner-title">Test Draft: {{ testBankName }}</div>
+      <div class="banner-title">Test Draft: {{ testBankName }}<br>
+        <span style="font-size: 16px; color: #222;">
+          Chapter {{ displayChapter || 'N/A' }}, Section {{ displaySection || 'N/A' }}
+        </span>
+      </div>
 
       <div class="t_banner-actions">
         <router-link to="/TeacherHome" class="t_banner-btn">Home</router-link>
@@ -11,8 +15,8 @@
     </div>
     <div class="center large-paragraph" style="color:#222">
       <router-link :to="{ path: '/TeacherQuestions', query: { courseTitle: courseTitle, courseId: courseId } }">
-          <button class="t_button">Return to Question Page</button>
-        </router-link><br>
+        <button class="t_button">Return to Question Page</button>
+      </router-link><br>
       <div class="button-row">
         <!-- Edit Test Bank Info Button -->
         <button class="t_button" @click="showEditForm = true">Edit Draft Pool Info</button>
@@ -169,6 +173,8 @@ export default {
       selectedQuestionId: null,
       editingQuestionData: {},
       editingQuestionId: null,
+      displayChapter: '',
+      displaySection: '',
       courseId: this.$route.query.courseId || '',
       courseTitle: this.$route.query.courseTitle || '',
       testBankId: this.$route.params.id || '',
@@ -278,14 +284,18 @@ export default {
       await this.fetchQuestions();
       try {
         const res = await api.get(`/testbanks/${this.testBankId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
+        console.log('Testbank API response:', res.data);
+
         this.testBankName = res.data.name;
         this.editForm.name = res.data.name;
         this.editForm.chapter = res.data.chapter_number;
         this.editForm.section = res.data.section_number;
+
+        this.displayChapter = res.data.chapter_number;
+        this.displaySection = res.data.section_number;
+
       } catch (err) {
         console.warn("Couldn't load testbank details:", err);
       }

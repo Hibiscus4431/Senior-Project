@@ -70,7 +70,7 @@
 
             <!-- Feedback Section -->
             <div v-if="q.feedback && q.feedback.length" class="feedback-section">
-              <strong>Feedback from Teachers:</strong>
+              <strong>Feedback:</strong>
               <ul>
                 <li v-for="(f, i) in q.feedback" :key="i">
                   <em>{{ f.username }} ({{ f.role }})</em>: "{{ f.comment }}"
@@ -216,8 +216,17 @@ export default {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
+
         this.fullTestbanks = res.data.testbanks || [];
         console.log("Full published testbanks loaded:", this.fullTestbanks);
+
+        // ✅ Load feedback for all questions up front
+        for (const tb of this.fullTestbanks) {
+          for (const q of tb.questions) {
+            await this.loadFeedbackForQuestion(q);
+          }
+        }
+
       } catch (err) {
         console.error('Failed to load testbanks:', err);
         alert('Could not load published testbanks.');
@@ -295,9 +304,7 @@ export default {
         const question = this.fullTestbanks
           .flatMap(tb => tb.questions)
           .find(q => q.id === questionId);
-        if (question && !question.feedback) {
-          await this.loadFeedbackForQuestion(question);
-        }
+
       }
     },
     async viewPublishedTests() {
@@ -351,9 +358,6 @@ export default {
         console.error(`Failed to load feedback for question ${question.id}`, err);
       }
     }
-
-
-
 
   }
 };
