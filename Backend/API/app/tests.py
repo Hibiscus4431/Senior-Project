@@ -449,6 +449,117 @@ def get_final_tests_for_user():
         conn.close()
 
 
+##################################### Upload Answer Key Section ################################
+"""
+The Goal of this route is to upload an answer key for a test by:
+1. Checking if the test exists and is owned by the user.
+2. Checking if the file is present in the request.
+3. Uploading the file to Supabase Storage.
+4. Inserting the file metadata into the database.
+5. Returning the answer_key_id and file_path.
+6. Handling errors and rolling back transactions if necessary.
+"""
+@tests_bp.route('/tests/<int:test_id>/upload_answer_key', methods=['POST'])
+def upload_answer_key(test_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    user_id = auth_data['user_id']
+
+    if 'file' not in request.files:
+        return jsonify({"error": "Missing answer key file"}), 400
+
+    file = request.files['file']
+    original_filename = secure_filename(file.filename)
+    file_bytes = file.read()
+    timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+    unique_filename = f"answerkey_{test_id}_{timestamp}_{original_filename}"
+    supabase_path = f"answer_keys/{unique_filename}"
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # Upload to Supabase
+        supabase = Config.get_supabase_client()
+        supabase.storage.from_('Tests').upload(
+            path=supabase_path,
+            file=file_bytes,
+            file_options={"content-type": file.content_type}
+        )
+
+        # Insert into DB
+        cur.execute("""
+            INSERT INTO answer_key (test_id, file_path)
+            VALUES (%s, %s)
+            RETURNING answer_key_id;
+        """, (test_id, supabase_path))
+
+        answer_key_id = cur.fetchone()[0]
+        conn.commit()
+
+        return jsonify({
+            "message": "Answer key uploaded successfully",
+            "answer_key_id": answer_key_id,
+            "file_path": supabase_path
+        }), 201
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": f"Failed to upload answer key: {str(e)}"}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+"""
+The Goal of this route is to fetch the answer key for a test by:
+1. Checking if the test exists and is owned by the user.
+2. Fetching the file path from the database.
+3. Generating a signed URL for the file in Supabase Storage.
+4. Returning the signed URL and filename.
+5. Handling errors and closing the database connection.
+"""
+@tests_bp.route('/tests/<int:test_id>/answer_key', methods=['GET'])
+def get_answer_key(test_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            SELECT file_path FROM answer_key WHERE test_id = %s;
+        """, (test_id,))
+        row = cur.fetchone()
+
+        if not row or not row[0]:
+            return jsonify({"error": "Answer key not found for this test."}), 404
+
+        file_path = row[0]
+        supabase = Config.get_supabase_client()
+        signed = supabase.storage.from_('Tests').create_signed_url(
+            path=file_path,
+            expires_in=3600
+        )
+
+        return jsonify({
+            "file_url": signed['signedURL'],
+            "filename": file_path,
+            "expires_in": 3600
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to retrieve answer key: {str(e)}"}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+
 ################################### Publishing Test Section ###################################
 """
 The Goal of this route is to publish a test by:
