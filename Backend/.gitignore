@@ -4,3 +4,5 @@
 .DS_Store
 qti_uploads/
 qti-uploads/
+*.pyc
+__pycache__/

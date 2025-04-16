@@ -391,7 +391,7 @@ The Goal of this route is to fetch all finalized tests by:
 5. Handling errors and closing the database connection.
 (As the function states the tests are for the user, it will only return the tests that belong to the user.)
 """
-@tests_bp.route('/tests/final', methods=['GET'])
+@tests_bp.route('/final', methods=['GET'])
 def get_final_tests_for_user():
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -459,7 +459,7 @@ The Goal of this route is to upload an answer key for a test by:
 5. Returning the answer_key_id and file_path.
 6. Handling errors and rolling back transactions if necessary.
 """
-@tests_bp.route('/tests/<int:test_id>/upload_answer_key', methods=['POST'])
+@tests_bp.route('/<int:test_id>/upload_answer_key', methods=['POST'])
 def upload_answer_key(test_id):
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -521,7 +521,7 @@ The Goal of this route is to fetch the answer key for a test by:
 4. Returning the signed URL and filename.
 5. Handling errors and closing the database connection.
 """
-@tests_bp.route('/tests/<int:test_id>/answer_key', methods=['GET'])
+@tests_bp.route('/<int:test_id>/answer_key', methods=['GET'])
 def get_answer_key(test_id):
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
