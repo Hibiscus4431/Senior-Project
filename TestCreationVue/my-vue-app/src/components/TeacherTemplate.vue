@@ -242,6 +242,114 @@ export default {
   },
 
   methods: {
+    //methods for exporting, publishing, and going back to the draft pool
+    // finalize the document export
+    blobToFile(blob, filename) {
+      return new File([blob], filename, {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      });
+    },
+
+    //finalize test key before export
+    async uploadAnswerKey(testId, keyFile) {
+      const formData = new FormData();
+      formData.append('file', keyFile);
+
+      try {
+        const response = await api.post(`/tests/${testId}/upload_answer_key`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        console.log("✅ Answer key uploaded:", response.data);
+      } catch (err) {
+        console.error("❌ Failed to upload answer key:", err);
+        alert("The answer key could not be saved to the backend.");
+      }
+    },
+
+    //publish the test
+    async publishTest() {
+      try {
+        // Step 1: Finalize the test first
+        const finalizedMeta = await this.finalizeTestBeforeExport();
+        const testId = finalizedMeta.testId;
+
+        // Step 2: Generate the test and key Word documents
+        const { Packer } = await import("docx");
+        const [testBlob, keyBlob] = await this.generateTestAndKeyDocs(); // helper method below
+        const testFile = this.blobToFile(testBlob, `${this.testOptions.testName}.docx`);
+        const keyFile = this.blobToFile(keyBlob, `${this.testOptions.testName}.key.docx`);
+
+        // Step 3: Upload the test file
+        const testForm = new FormData();
+        testForm.append('file', testFile);
+        await api.post(`/tests/${testId}/upload_pdf`, testForm, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        // Step 4: Upload the answer key
+        await this.uploadAnswerKey(testId, keyFile);
+
+        // Step 5: Call publish route
+        await api.post(`/tests/${testId}/publish`, {}, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        alert("✅ Test and key successfully published!");
+      } catch (err) {
+        console.error("❌ Failed to publish test:", err);
+        alert("An error occurred during publishing. Please try again.");
+      }
+    },
+
+
+    async finalizeTestBeforeExport() {
+      try {
+        const response = await api.post('/tests/finalize', {
+          test_bank_id: this.testBankId,
+          name: this.testOptions.testName,
+          estimated_time: this.totalEstimatedTime,
+          test_instructions: "", // or use a field if present
+          course_id: this.$route.query.courseId,
+          type: this.testOptions.selectedTemplate || "All Questions"
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (response.status === 201) {
+          console.log("✅ Finalized test:", response.data);
+          return {
+            testId: response.data.test_id,
+            questionCount: response.data.question_count
+          };
+        } else {
+          throw new Error("Failed to finalize test");
+        }
+      } catch (err) {
+        alert("Failed to finalize the test. Please try again.");
+        throw err;
+      }
+    },
+    async confirmExport() {
+      this.exportWarning = false;
+      try {
+        const finalizedMeta = await this.finalizeTestBeforeExport();
+        await this.exportToWord(finalizedMeta); // pass backend-confirmed metadata
+      } catch (err) {
+        console.error("Export canceled due to finalize error");
+      }
+    },
+
     confirmPublish() {
       this.publishWarning = false;
       this.publishTest(); // call your existing publish logic
@@ -271,6 +379,9 @@ export default {
         }
       });
     },
+
+
+    //methods for page contents==========================================
     //fetch desired testbank questions
     async fetchQuestions() {
       try {
@@ -383,7 +494,20 @@ export default {
     },
 
     //export the questions to a document
-    async exportToWord() {
+    async exportToWord(finalizedMeta) {
+      const totalPoints = this.questions.reduce((sum, q) => {
+        const pts = parseFloat(q.default_points);
+        return sum + (isNaN(pts) ? 0 : pts);
+      }, 0);
+
+      const totalTime = this.questions.reduce((sum, q) => {
+        const time = parseInt(q.est_time, 10);
+        return sum + (isNaN(time) ? 0 : time);
+      }, 0);
+
+      const confirmedPoints = finalizedMeta && finalizedMeta.questionCount ? finalizedMeta.questionCount : totalPoints;
+      const confirmedTime = this.totalEstimatedTime || totalTime;
+
       const {
         Document,
         Packer,
@@ -435,8 +559,8 @@ export default {
             spacing: { after: 100 },
           }),
           ...[
-            `This exam is worth ${this.questions.length} points.`,
-            `You have ${this.totalEstimatedTime || "N/A"} minutes to complete the exam.`,
+            `This exam is worth ${confirmedPoints} points.`,
+            `You have ${confirmedTime || "N/A"} minutes to complete the exam.`,
             "Read each question carefully.",
             "Be sure to answer all questions, do not leave anything blank.",
             "Turn in all work and scratch paper with your exam.",
@@ -700,6 +824,35 @@ export default {
         Packer.toBlob(testDoc),
         Packer.toBlob(keyDoc)
       ]);
+
+
+      const testFile = this.blobToFile(testBlob, `${this.testOptions.testName || "GeneratedTest"}.docx`);
+      const keyFile = this.blobToFile(keyBlob, `${this.testOptions.testName || "TestKey"}.key.docx`);
+
+      const testId = finalizedMeta.testId;
+
+      try {
+        // Upload the test file as PDF equivalent
+        const testForm = new FormData();
+        testForm.append('file', testFile);
+
+        await api.post(`/tests/${testId}/upload_pdf`, testForm, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        // Upload the answer key to its dedicated endpoint
+        await this.uploadAnswerKey(testId, keyFile);
+
+      } catch (err) {
+        console.error("❌ Upload failed:", err);
+        alert("Failed to upload test or answer key.");
+      }
+
+
+
 
       saveAs(testBlob, `${this.testOptions.testName || "GeneratedTest"}.docx`);
       saveAs(keyBlob, `${this.testOptions.testName || "TestKey"}.key.docx`);
