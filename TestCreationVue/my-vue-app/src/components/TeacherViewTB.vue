@@ -173,8 +173,6 @@ export default {
       selectedQuestionId: null,
       editingQuestionData: {},
       editingQuestionId: null,
-      displayChapter: this.$route.query.chapter || '',
-      displaySection: this.$route.query.section || '',
       courseId: this.$route.query.courseId || '',
       courseTitle: this.$route.query.courseTitle || '',
       testBankId: this.$route.query.testBankId || '',
@@ -194,6 +192,14 @@ export default {
       }
     };
   },
+  computed: {
+  displayChapter() {
+    return this.editForm.chapter || this.$route.query.chapter || '';
+  },
+  displaySection() {
+    return this.editForm.section || this.$route.query.section || '';
+  }
+},
 
   mounted() {
     this.initialize();
@@ -259,7 +265,6 @@ export default {
     },
 
     async updateTestBank() {
-      try {
         await api.put(`/testbanks/teacher/${this.testBankId}`, {
           name: this.editForm.name,
           chapter_number: this.editForm.chapter,
@@ -272,12 +277,10 @@ export default {
 
 
         this.testBankName = this.editForm.name; // update title
+        this.displayChapter = this.editForm.chapter;
+        this.displaySection = this.editForm.section;
         this.showEditForm = false;
-        alert('Test bank updated successfully.');
-      } catch (err) {
-        console.error('Error updating test bank:', err);
-        alert('Failed to update test bank.');
-      }
+
     },
 
     async initialize() {
