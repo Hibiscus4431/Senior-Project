@@ -228,4 +228,94 @@ def download_questions_csv():
         headers={"Content-Disposition": "attachment; filename=questions.csv"}
     )
 
+@downloads_bp.route('/tests', methods=['GET'])
+def download_tests_csv():
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return auth_data
 
+    if auth_data["role"] != "webmaster":
+        return {"error": "Unauthorized"}, 403
+
+    conn = Config.get_db_connection()
+    cursor = conn.cursor()
+
+    # 1. Get all Final and Published tests + associated teacher username
+    cursor.execute("""
+        SELECT
+            t.tests_id,
+            t.name,
+            t.status,
+            u.username AS teacher_name,
+            t.course_id,
+            t.filename
+        FROM tests t
+        JOIN users u ON t.user_id = u.user_id
+        WHERE t.status IN ('Final', 'Published')
+    """)
+    test_rows = cursor.fetchall()
+
+    # 2. Prepare CSV headers
+    headers = ['test_id', 'name', 'status', 'teacher_name', 'course_id', 'test_file_url', 'answer_key_file_url']
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(headers)
+
+    # 3. Get Supabase storage access
+    from config import get_supabase_client
+    supabase = get_supabase_client()
+    test_bucket = "Tests"
+
+    for row in test_rows:
+        test_id, name, status, teacher_name, course_id, test_filename = row
+
+        # Test file (already has full path like 'final/test1.pdf')
+        test_file_url = None
+        if test_filename:
+            try:
+                signed = supabase.storage.from_(test_bucket).create_signed_url(
+                    path=test_filename,
+                    expires_in=3600
+                )
+                test_file_url = signed['signedURL']
+            except Exception as e:
+                test_file_url = f"ERROR: {e}"
+
+        # Answer key file
+        cursor.execute("""
+            SELECT filename FROM Answer_Key_Table
+            WHERE test_id = %s
+        """, (test_id,))
+        key_result = cursor.fetchone()
+        answer_key_file_url = None
+
+        if key_result and key_result[0]:
+            try:
+                signed_key = supabase.storage.from_(test_bucket).create_signed_url(
+                    path=key_result[0],  # includes 'answer_keys/filename.pdf'
+                    expires_in=3600
+                )
+                answer_key_file_url = signed_key['signedURL']
+            except Exception as e:
+                answer_key_file_url = f"ERROR: {e}"
+
+        # Add to CSV
+        writer.writerow([
+            test_id,
+            name,
+            status,
+            teacher_name,
+            course_id,
+            test_file_url,
+            answer_key_file_url
+        ])
+
+    output.seek(0)
+    cursor.close()
+    conn.close()
+
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={"Content-Disposition": "attachment;filename=tests.csv"}
+    )
