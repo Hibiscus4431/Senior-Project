@@ -10,6 +10,17 @@
       </div>
     </div>
 
+    <!-- Edit Blocked Warning Popup -->
+    <div class="popup-overlay" v-if="editBlockedPopup" @click.self="editBlockedPopup = false">
+      <div class="form-popup-modal">
+        <h2>Cannot Edit Question</h2>
+        <p>{{ editBlockedReason }}</p>
+        <p>A new copy will be made instead.</p>
+        <button class="btn" @click="createCopyInstead">Create a Copy</button>
+        <button class="btn cancel" @click="editBlockedPopup = false">Cancel</button>
+      </div>
+    </div>
+
     <div class="page-wrapper">
       <div class="button-row">
         <div class="t_dropdown">
@@ -291,7 +302,9 @@ export default {
       editCourseNumber: '',
       showAddToTBModal: false,
       questionToAddToTB: null,
-      oldMCOptionIds: [] // ✅ Restored: used for tracking MC option deletions
+      oldMCOptionIds: [], // used for tracking MC option deletions
+      editBlockedPopup: false, // flag and variable for the edit warning popup
+      editBlockedReason: '',
     };
   },
   mounted() {
@@ -731,7 +744,29 @@ export default {
 
     },
 
-    editQuestion(question) {
+    async editQuestion(question) {
+      try {
+        const res = await api.get(`/questions/${question.id}/used_in`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (res.data.is_used) {
+          // Question is used in a published/final test
+          this.editBlockedReason = `This question is used in a "${res.data.tests[0].status}" test: "${res.data.tests[0].name}".`;
+          this.editingQuestionId = question.id;
+          this.editBlockedPopup = true;
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking question status:', err);
+        alert('Could not verify question status.');
+        return;
+      }
+
+      // If not used, proceed with edit
+
       this.editingQuestionId = question.id;
       this.question = question.text;
       this.chapter = question.chapter;
@@ -787,6 +822,24 @@ export default {
         } catch (err) {
           console.error(err);
         }
+      }
+    },
+    async createCopyInstead() {
+      try {
+        const res = await api.post(`/questions/${this.editingQuestionId}/copy_to_course`, {
+          course_id: this.courseId
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        alert('A copy of the question was created. You can now edit it.');
+        this.editBlockedPopup = false;
+        this.fetchQuestions(this.selectedQuestionType); // reload with new question included
+      } catch (err) {
+        console.error('Failed to create copy:', err);
+        alert('Failed to create a copy of this question.');
       }
     }
   }
