@@ -331,20 +331,24 @@ export default {
 
     async finalizeTestBeforeExport() {
       try {
-        // ✅ STEP 1: LOG the payload
+        const selectedTemplate = this.testOptions.selectedTemplate || "All Questions";
+
         const finalizePayload = {
           test_bank_id: parseInt(this.testBankId),
           name: this.testOptions.testName,
           estimated_time: this.totalEstimatedTime > 0 ? this.totalEstimatedTime : 1,
           test_instructions: "",
           course_id: parseInt(this.$route.query.courseId),
-          type: this.testOptions.selectedTemplate || "All Questions"
+          type: selectedTemplate
         };
 
+        // 🔑 If it's not "All Questions", provide question_ids
+        if (selectedTemplate !== "All Questions") {
+          finalizePayload.question_ids = this.questions.map(q => q.id);
+        }
 
-        console.log("🟡 Sending finalize payload:", finalizePayload);
+        console.log("🟡 Finalizing test with payload:", finalizePayload);
 
-        // ✅ STEP 2: SEND the request
         const response = await api.post('/tests/finalize', finalizePayload, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -354,7 +358,7 @@ export default {
         if (response.status === 201) {
           const testId = response.data.test_id;
 
-          // ✅ Upload resource image if present
+          // Upload graphic if present
           if (this.testOptions.graphicPreview) {
             const imageFile = this.dataUrlToFile(this.testOptions.graphicPreview, "resource_image.png");
             const formData = new FormData();
@@ -373,13 +377,12 @@ export default {
             questionCount: response.data.question_count
           };
         } else {
-          throw new Error("Failed to finalize test (non-201 response)");
+          throw new Error("Finalize test failed with non-201 response");
         }
 
       } catch (err) {
-        // ✅ STEP 3: LOG the backend error message
-        console.error("❌ Finalize error response:", (err.response && err.response.data) || err.message);
-        alert("Failed to finalize the test. Please check the console.");
+        console.error("❌ Finalize error:", (err.response && err.response.data) || err.message);
+        alert("Failed to finalize test. See console for details.");
         throw err;
       }
     },

@@ -27,7 +27,6 @@
         <button class="t_button" @click="showCreateTestWarning = true">Create New Test</button>
 
 
-        <button class="t_button" @click="viewPrevious">View Previous Tests</button>
         <br>
       </div>
 
@@ -124,26 +123,6 @@
         </div>
       </div>
 
-      <!-- Final Tests Popup -->
-      <div class="popup-overlay" v-if="showPopup" @click.self="closeForm">
-  <div class="form-popup-modal">
-    <form class="form-container" @submit.prevent>
-      <h3>Your Finalized Tests</h3>
-      <ul style="list-style-type: none; padding-left: 0;">
-        <li v-for="test in testFiles" :key="test.test_id" >
-          <button
-            v-if="test.download_url && test.hasAnswerKey"
-            class="t_button"
-            @click="downloadTestAndKey(test)"
-          >
-             {{ test.name }}
-          </button>
-        </li>
-      </ul>
-      <button type="button" class="btn cancel" @click="closeForm">Close</button>
-    </form>
-  </div>
-</div>
 
 
 
@@ -243,7 +222,8 @@ export default {
       showDeleteConfirm: false,
       questionIdToDelete: null,
       popupMessage: '',
-      showInfoPopup: false,
+      showInfoPopup: false
+
 
     };
   },
@@ -285,40 +265,7 @@ export default {
 
 
 
-    async viewPrevious() {
-  try {
-    const response = await api.get('/tests/final', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-
-    const tests = response.data.final_tests || [];
-
-    const enrichedTests = await Promise.all(tests.map(async test => {
-      try {
-        const keyRes = await api.get(`/tests/${test.test_id}/answer_key`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        test.hasAnswerKey = !!(keyRes.data && keyRes.data.file_url);
-      } catch {
-        test.hasAnswerKey = false;
-      }
-      return test;
-    }));
-
-    this.testFiles = enrichedTests;
-    this.showPopup = true;
-  } catch (err) {
-    console.error('Failed to fetch final tests:', err);
-    alert('Could not load previous tests.');
-  }
-},
-    closeForm() {
-      this.showPopup = false;
-    },
+   
     async fetchQuestions() {
       if (!this.testBankId) return;
       try {
@@ -415,46 +362,7 @@ export default {
           testBankName: this.testBankName
         }
       });
-    },
-    async downloadTestAndKey(test) {
-      if (!test.download_url) {
-        alert('Test file not available for download.');
-        return;
-      }
-
-      // Step 1: Download the test PDF
-      const testLink = document.createElement('a');
-      testLink.href = test.download_url;
-      testLink.download = ''; // Let browser use default filename
-      document.body.appendChild(testLink);
-      testLink.click();
-      document.body.removeChild(testLink);
-
-      // Step 2: Try to get answer key
-      try {
-        const response = await api.get(`/tests/${test.test_id}/answer_key`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        if (response.data.file_url) {
-          const keyLink = document.createElement('a');
-          keyLink.href = response.data.file_url;
-          keyLink.download = '';
-          document.body.appendChild(keyLink);
-          keyLink.click();
-          document.body.removeChild(keyLink);
-        } else {
-          console.warn(`No answer key found for test ${test.test_id}`);
-        }
-      } catch (err) {
-        console.warn(`Failed to download answer key for test ${test.test_id}:`, err);
-      }
     }
-
-
-
   }
 };
 

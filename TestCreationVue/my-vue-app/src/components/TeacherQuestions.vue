@@ -41,12 +41,12 @@
         <div class="t_dropdown">
           <button class="t_dropbtn">Question Type</button>
           <div class="t_dropdown-content">
-            <a href="#" @click="selectQuestionType('True/False')">True/False</a>
-            <a href="#" @click="selectQuestionType('Multiple Choice')">Multiple Choice</a>
-            <a href="#" @click="selectQuestionType('Matching')">Matching</a>
-            <a href="#" @click="selectQuestionType('Fill in the Blank')">Fill in the Blank</a>
-            <a href="#" @click="selectQuestionType('Short Answer')">Short Answer</a>
-            <a href="#" @click="selectQuestionType('Essay')">Essay</a>
+            <a @click="selectQuestionType('True/False')">True/False</a>
+            <a @click="selectQuestionType('Multiple Choice')">Multiple Choice</a>
+            <a @click="selectQuestionType('Matching')">Matching</a>
+            <a @click="selectQuestionType('Fill in the Blank')">Fill in the Blank</a>
+            <a @click="selectQuestionType('Short Answer')">Short Answer</a>
+            <a @click="selectQuestionType('Essay')">Essay</a>
 
           </div>
         </div>
@@ -145,6 +145,24 @@
     </div>
 
     <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
+
+
+    <!-- Final Tests Popup -->
+    <div class="popup-overlay" v-if="showPopup" @click.self="closeForm">
+      <div class="form-popup-modal">
+        <form class="form-container" @submit.prevent>
+          <h3>Your Finalized Tests</h3>
+          <ul style="list-style-type: none; padding-left: 0;">
+            <li v-for="test in testFiles" :key="test.test_id">
+              <button v-if="test.download_url && test.hasAnswerKey" class="t_button" @click="downloadTestAndKey(test)">
+                {{ test.name }}
+              </button>
+            </li>
+          </ul>
+          <button type="button" class="btn cancel" @click="closeForm">Close</button>
+        </form>
+      </div>
+    </div>
 
     <!-- Popup Overlay -->
     <div class="popup-overlay" v-show="showForm" @click.self="closeForm">
@@ -304,7 +322,7 @@ export default {
       questionToAddToTB: null,
       oldMCOptionIds: [], // used for tracking MC option deletions
       editBlockedPopup: false, // flag and variable for the edit warning popup
-      editBlockedReason: '',
+      editBlockedReason: ''
     };
   },
   mounted() {
@@ -319,6 +337,8 @@ export default {
   },
 
   methods: {
+
+
     //functions to add question to test bank
     openAddToTestBank(questionId) {
       this.questionToAddToTB = questionId;
@@ -543,7 +563,7 @@ export default {
       }
       catch (error) {
         console.error('QTI import Failed:', error);
-  
+
       }
     },
     async handleQuestionSave() {
