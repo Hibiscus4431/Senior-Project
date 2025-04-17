@@ -1,245 +1,253 @@
 <template>
 
-  <div class="theme-publisher">
-    <div class="top-banner">
-      <div class="banner-title">{{ textbookTitle }}</div>
+<div class="theme-publisher">
+  <div class="top-banner">
+  <div class="banner-title">{{ textbookTitle }}</div>
 
-      <div class="banner-actions">
-        <router-link to="/PubHome" class="p_banner-btn">Home</router-link>
-        <button class="p_banner-btn" @click="logout">Log Out</button>
+  <div class="banner-actions">
+    <router-link to="/PubHome" class="p_banner-btn">Home</router-link>
+    <router-link to="/" class="p_banner-btn">Log Out</router-link>
+  </div>
+</div>
 
-      </div>
+
+
+<!-- Toolbar -->
+ <div class="page-wrapper">
+<div class="button-row">
+  <div class="p_dropdown">
+    <button class="p_dropbtn">
+      {{ selectedTestBank ? selectedTestBank.name : 'Select Draft Pool' }}
+    </button>
+    <div class="p_dropdown-content">
+      <a v-for="tb in testBanks" :key="tb.testbank_id" href="#" @click.prevent="selectTestBank(tb)">
+        {{ tb.name }}
+      </a>
     </div>
+  </div>
 
+  <router-link :to="{ path: 'PubNewTB', query: { title: textbookTitle, textbook_id: textbookId } }">
+    <button class="p_button">New Draft Pool</button>
+  </router-link>
 
+  <div class="p_dropdown">
+    <button class="p_dropbtn">Question Type</button>
+    <div class="p_dropdown-content">
+      <a href="#" @click="fetchQuestions('True/False')">True/False</a>
+      <a href="#" @click="fetchQuestions('Multiple Choice')">Multiple Choice</a>
+      <a href="#" @click="fetchQuestions('Matching')">Matching</a>
+      <a href="#" @click="fetchQuestions('Fill in the Blank')">Fill in the Blank</a>
+      <a href="#" @click="fetchQuestions('Short Answer')">Short Answer</a>
+      <a href="#" @click="fetchQuestions('Essay')">Essay</a>
+    </div>
+  </div>
 
-    <!-- Toolbar -->
-    <div class="page-wrapper">
-      <div class="button-row">
-        <div class="p_dropdown">
-          <button class="p_dropbtn">
-            {{ selectedTestBank ? selectedTestBank.name : 'Select Draft Pool' }}
-          </button>
-          <div class="p_dropdown-content">
-            <a v-for="tb in testBanks" :key="tb.testbank_id" href="#" @click.prevent="selectTestBank(tb)">
-              {{ tb.name }}
-            </a>
-          </div>
-        </div>
+  <button class="p_button" @click="edit">New Question</button>
+</div>
 
-        <router-link :to="{ path: 'PubNewTB', query: { title: textbookTitle, textbook_id: textbookId } }">
-          <button class="p_button">New Draft Pool</button>
-        </router-link>
+<!-- Optional display of selected type -->
+<div id="selectedQuestionType" style = "color: #222;" class="center large-paragraph">
+  {{ selectedQuestionType }}
+</div>
 
-        <div class="p_dropdown">
-          <button class="p_dropbtn">Question Type</button>
-          <div class="p_dropdown-content">
-            <a href="#" @click="fetchQuestions('True/False')">True/False</a>
-            <a href="#" @click="fetchQuestions('Multiple Choice')">Multiple Choice</a>
-            <a href="#" @click="fetchQuestions('Matching')">Matching</a>
-            <a href="#" @click="fetchQuestions('Fill in the Blank')">Fill in the Blank</a>
-            <a href="#" @click="fetchQuestions('Short Answer')">Short Answer</a>
-            <a href="#" @click="fetchQuestions('Essay')">Essay</a>
-          </div>
-        </div>
+<hr />
 
-        <button class="p_button" @click="edit">New Question</button>
+  <!-- Question List Display -->
+  <ul>
+    <div v-for="(question, index) in questions" :key="index" class="p_question-box"
+      :class="{ selected: selectedQuestionId === question.id }" @click="toggleQuestionSelection(question.id)">
+      <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
+      <span><strong>Type:</strong> {{ question.type }}</span><br>
+      <span><strong>Chapter:</strong> {{ question.chapter || 'N/A' }}</span><br>
+      <span><strong>Section:</strong> {{ question.section || 'N/A' }}</span><br>
+      <span><strong>Points:</strong> {{ question.points }}</span><br>
+      <span><strong>Estimated Time:</strong> {{ question.time }} minutes</span><br>
+
+      <!-- ✅ New Image Section -->
+      <div v-if="question.image_url" style="margin-top: 10px;">
+        <strong>Attached Image:</strong><br />
+        <img :src="question.image_url" alt="Attached Image" style="max-width: 100%; margin-top: 5px;" />
       </div>
 
-      <!-- Optional display of selected type -->
-      <div id="selectedQuestionType" style="color: #222;" class="center large-paragraph">
-        {{ selectedQuestionType }}
+      <div v-if="question.type === 'True/False'">
+        <strong>Answer:</strong> {{ question.answer ? 'True' : 'False' }}
       </div>
 
-      <hr />
+      <div v-if="question.type === 'Multiple Choice'">
+        <strong>Correct Answer:</strong>
+        {{ (question.correctOption && question.correctOption.option_text) || 'Not specified' }}<br>
 
-      <!-- Question List Display -->
-      <ul>
-        <div v-for="(question, index) in questions" :key="index" class="p_question-box"
-          :class="{ selected: selectedQuestionId === question.id }" @click="toggleQuestionSelection(question.id)">
-          <strong>Question {{ index + 1 }}:</strong> {{ question.text }}<br>
-          <span><strong>Type:</strong> {{ question.type }}</span><br>
-          <span><strong>Chapter:</strong> {{ question.chapter || 'N/A' }}</span><br>
-          <span><strong>Section:</strong> {{ question.section || 'N/A' }}</span><br>
-          <span><strong>Points:</strong> {{ question.points }}</span><br>
-          <span><strong>Estimated Time:</strong> {{ question.time }} minutes</span><br>
+        <strong>Other Options:</strong>
+        <ul>
+          <li v-for="(option, i) in question.incorrectOptions" :key="i">{{ option.option_text }}</li>
+        </ul>
+      </div>
 
-          <!-- ✅ New Image Section -->
-          <div v-if="question.image_url" style="margin-top: 10px;">
-            <strong>Attached Image:</strong><br />
-            <img :src="question.image_url" alt="Attached Image" style="max-width: 100%; margin-top: 5px;" />
-          </div>
+      <div v-if="question.type === 'Matching'">
+        <strong>Pairs:</strong>
+        <ul>
+          <li v-for="(pair, i) in question.pairs" :key="i">{{ pair.term }} - {{ pair.definition }}</li>
+        </ul>
+      </div>
 
-          <div v-if="question.type === 'True/False'">
-            <strong>Answer:</strong> {{ question.answer ? 'True' : 'False' }}
-          </div>
+      <div v-if="question.type === 'Fill in the Blank'">
+        <strong>Correct Answer(s):</strong>
+        <ul>
+          <li v-for="(blank, i) in question.blanks" :key="i">{{ blank.correct_text }}</li>
+        </ul>
+      </div>
 
-          <div v-if="question.type === 'Multiple Choice'">
-            <strong>Correct Answer:</strong>
-            {{ (question.correctOption && question.correctOption.option_text) || 'Not specified' }}<br>
-
-            <strong>Other Options:</strong>
-            <ul>
-              <li v-for="(option, i) in question.incorrectOptions" :key="i">{{ option.option_text }}</li>
-            </ul>
-          </div>
-
-          <div v-if="question.type === 'Matching'">
-            <strong>Pairs:</strong>
-            <ul>
-              <li v-for="(pair, i) in question.pairs" :key="i">{{ pair.term }} - {{ pair.definition }}</li>
-            </ul>
-          </div>
-
-          <div v-if="question.type === 'Fill in the Blank'">
-            <strong>Correct Answer(s):</strong>
-            <ul>
-              <li v-for="(blank, i) in question.blanks" :key="i">{{ blank.correct_text }}</li>
-            </ul>
-          </div>
-
-          <!-- <div v-if="question.type === 'Short Answer'">
+      <!-- <div v-if="question.type === 'Short Answer'">
         <strong>Answer:</strong> {{ question.answer || 'Not provided' }}
       </div> -->
 
-          <!-- <div v-if="question.type === 'Essay'">
+      <!-- <div v-if="question.type === 'Essay'">
         <strong>Essay Instructions:</strong> {{ question.instructions || 'None' }}
       </div> -->
 
-          <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span>
+      <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span>
 
-          <div v-if="selectedQuestionId === question.id" class="p_button-group">
-            <button @click.stop="editQuestion(question)">Edit</button>
-            <button @click.stop="deleteQuestion(question.id)">Delete</button>
-            <button @click.stop="openAddToTestBank(question.id)">Add to Test Bank</button>
-          </div>
-        </div>
-      </ul>
-
-      <!-- Add to Test Bank Modal -->
-      <div class="popup-overlay" v-if="showAddToTBModal" @click.self="closeAddToTBModal">
-        <div class="form-popup-modal">
-          <p style="color: red; font-weight: bold; text-align: center; margin-bottom: 1rem;">
-            Once the question is added to a draft pool, it can no longer be edited.
-          </p>
-          <h2 style="text-align: center;">Select Draft Pool</h2>
-          <div class="form-container"
-            style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 1rem;">
-            <button v-for="tb in testBanks" :key="tb.testbank_id" class="t_button" style="width: 100%;"
-              @click="assignQuestionToTestBank(tb.testbank_id)">
-              {{ tb.name }}
-            </button>
-            <button type="button" class="btn cancel" style="width: 100%;" @click="closeAddToTBModal">
-              Close
-            </button>
-          </div>
-        </div>
+      <div v-if="selectedQuestionId === question.id" class="p_button-group">
+        <button @click.stop="editQuestion(question)">Edit</button>
+        <button @click.stop="deleteQuestion(question.id)">Delete</button>
+        <button @click.stop="openAddToTestBank(question.id)">Add to Test Bank</button>
       </div>
+    </div>
+  </ul>
 
-      <!-- Popup Overlay -->
-      <div class="popup-overlay" v-show="showForm" @click.self="closeForm">
-        <div class="form-popup-modal">
-          <form class="form-container" @submit.prevent="handleQuestionSave">
-            <h1>{{ editingQuestionId ? 'Edit Question' : 'New Question' }}</h1>
+  <!-- Add to Test Bank Modal -->
+  <div class="popup-overlay" v-if="showAddToTBModal" @click.self="closeAddToTBModal">
+    <div class="form-popup-modal">
+      <p style="color: red; font-weight: bold; text-align: center; margin-bottom: 1rem;">
+        Once the question is added to a draft pool, it can no longer be edited.
+      </p>
+      <h2 style="text-align: center;">Select Draft Pool</h2>
+      <div class="form-container" style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 1rem;">
+        <button
+          v-for="tb in testBanks"
+          :key="tb.testbank_id"
+          class="t_button"
+          style="width: 100%;"
+          @click="assignQuestionToTestBank(tb.testbank_id)"
+        >
+          {{ tb.name }}
+        </button>
+        <button
+          type="button"
+          class="btn cancel"
+          style="width: 100%;"
+          @click="closeAddToTBModal"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
 
-            <label><b>Chapter Number</b></label>
-            <input type="text" v-model="questionData.chapter" required />
+  <!-- Popup Overlay -->
+  <div class="popup-overlay" v-show="showForm" @click.self="closeForm">
+    <div class="form-popup-modal">
+      <form class="form-container" @submit.prevent="handleQuestionSave">
+        <h1>{{ editingQuestionId ? 'Edit Question' : 'New Question' }}</h1>
 
-            <label><b>Section Number</b></label>
-            <input type="text" v-model="questionData.section" required />
+        <label><b>Chapter Number</b></label>
+        <input type="text" v-model="questionData.chapter" required />
 
-            <label><b>Question Type</b><br /></label>
+        <label><b>Section Number</b></label>
+        <input type="text" v-model="questionData.section" required />
 
-            <!-- Show a disabled select in view-only mode when editing -->
-            <div v-if="editingQuestionId">
-              <input type="text" :value="selectedQuestionType" disabled class="readonly-input" />
-            </div>
-            <!-- Allow selecting type only if creating -->
-            <div v-else>
-              <select v-model="selectedQuestionType" required>
-                <option disabled value="">Select a type</option>
-                <option>True/False</option>
-                <option>Multiple Choice</option>
-                <option>Matching</option>
-                <option>Fill in the Blank</option>
-                <option>Short Answer</option>
-                <option>Essay</option>
-              </select>
-            </div>
+        <label><b>Question Type</b><br /></label>
 
-            <br /><br />
-            <label><b>Question Text</b></label>
-            <input type="text" v-model="questionData.question" required />
+        <!-- Show a disabled select in view-only mode when editing -->
+        <div v-if="editingQuestionId">
+          <input type="text" :value="selectedQuestionType" disabled class="readonly-input" />
+        </div>
+        <!-- Allow selecting type only if creating -->
+        <div v-else>
+          <select v-model="selectedQuestionType" required>
+            <option disabled value="">Select a type</option>
+            <option>True/False</option>
+            <option>Multiple Choice</option>
+            <option>Matching</option>
+            <option>Fill in the Blank</option>
+            <option>Short Answer</option>
+            <option>Essay</option>
+          </select>
+        </div>
 
-            <!-- Conditional Fields -->
-            <div v-if="selectedQuestionType === 'True/False'">
-              <label><b>Answer</b></label>
-              <select v-model="questionData.answer">
-                <option value="True">True</option>
-                <option value="False">False</option>
-              </select>
-            </div>
+        <br /><br />
+        <label><b>Question Text</b></label>
+        <input type="text" v-model="questionData.question" required />
 
-            <div v-if="selectedQuestionType === 'Multiple Choice'">
-              <label><b>Correct Answer</b></label>
-              <input type="text" v-model="questionData.answer" />
-              <label><b>Incorrect Answer Choices (comma-separated)</b></label>
-              <input type="text" v-model="questionData.answerChoices" />
-            </div>
+        <!-- Conditional Fields -->
+        <div v-if="selectedQuestionType === 'True/False'">
+          <label><b>Answer</b></label>
+          <select v-model="questionData.answer">
+            <option value="True">True</option>
+            <option value="False">False</option>
+          </select>
+        </div>
 
-            <div v-if="selectedQuestionType === 'Matching'">
-              <label><b>Matching Pairs</b></label>
-              <div v-for="(pair, index) in matchingPairs" :key="index">
-                <input type="text" v-model="pair.term" placeholder="Term" />
-                <input type="text" v-model="pair.definition" placeholder="Definition" />
-                <button type="button" @click="removePair(index)">Remove</button>
-              </div>
-              <button type="button" @click="addPair">Add Pair</button>
-            </div>
+        <div v-if="selectedQuestionType === 'Multiple Choice'">
+          <label><b>Correct Answer</b></label>
+          <input type="text" v-model="questionData.answer" />
+          <label><b>Incorrect Answer Choices (comma-separated)</b></label>
+          <input type="text" v-model="questionData.answerChoices" />
+        </div>
 
-            <div v-if="selectedQuestionType === 'Fill in the Blank'">
-              <label><b>Correct Answer</b></label>
-              <input type="text" v-model="questionData.answer" />
-            </div>
+        <div v-if="selectedQuestionType === 'Matching'">
+          <label><b>Matching Pairs</b></label>
+          <div v-for="(pair, index) in matchingPairs" :key="index">
+            <input type="text" v-model="pair.term" placeholder="Term" />
+            <input type="text" v-model="pair.definition" placeholder="Definition" />
+            <button type="button" @click="removePair(index)">Remove</button>
+          </div>
+          <button type="button" @click="addPair">Add Pair</button>
+        </div>
 
-            <!-- <div v-if="selectedQuestionType === 'Short Answer'">
+        <div v-if="selectedQuestionType === 'Fill in the Blank'">
+          <label><b>Correct Answer</b></label>
+          <input type="text" v-model="questionData.answer" />
+        </div>
+
+        <!-- <div v-if="selectedQuestionType === 'Short Answer'">
           <label><b>Answer</b></label>
           <input type="text" v-model="questionData.answer" />
         </div> -->
 
-            <div v-if="selectedQuestionType === 'Essay'">
-            </div>
-
-            <br />
-            <label><b>Points Worth</b></label>
-            <input type="text" v-model="questionData.points" required />
-
-            <label><b>Estimated Time (in minutes)</b></label>
-            <input type="text" v-model="questionData.time" required />
-
-            <label><b>Grading Instructions</b></label>
-            <input type="text" v-model="questionData.instructions" required />
-
-            <label><b>Attached Image</b></label>
-            <!-- Show existing image when editing -->
-            <div v-if="editingQuestionId && imagePreview">
-              <img :src="imagePreview" alt="Attached" style="max-width: 100%;" />
-            </div>
-
-            <!-- Only allow upload when creating -->
-            <div v-else>
-              <input type="file" @change="handleImageUpload" accept="image/*" />
-              <img v-if="imagePreview" :src="imagePreview" alt="Preview" style="max-width: 100%;" />
-            </div>
-            <br /><br />
-
-            <button type="submit" class="btn">Save</button>
-            <button type="button" class="btn cancel" @click="closeForm">Close</button>
-          </form>
+        <div v-if="selectedQuestionType === 'Essay'">
         </div>
-      </div>
+
+        <br />
+        <label><b>Points Worth</b></label>
+        <input type="text" v-model="questionData.points" required />
+
+        <label><b>Estimated Time (in minutes)</b></label>
+        <input type="text" v-model="questionData.time" required />
+
+        <label><b>Grading Instructions</b></label>
+        <input type="text" v-model="questionData.instructions" required />
+
+        <label><b>Attached Image</b></label>
+        <!-- Show existing image when editing -->
+        <div v-if="editingQuestionId && imagePreview">
+          <img :src="imagePreview" alt="Attached" style="max-width: 100%;" />
+        </div>
+
+        <!-- Only allow upload when creating -->
+        <div v-else>
+          <input type="file" @change="handleImageUpload" accept="image/*" />
+          <img v-if="imagePreview" :src="imagePreview" alt="Preview" style="max-width: 100%;" />
+        </div>
+        <br /><br />
+
+        <button type="submit" class="btn">Save</button>
+        <button type="button" class="btn cancel" @click="closeForm">Close</button>
+      </form>
     </div>
   </div>
+  </div>
+</div>
 </template>
 
 <script>
@@ -399,6 +407,7 @@ export default {
         } else {
           await api.post('/questions', postData, config);
         }
+        alert('Question saved successfully!');
         this.closeForm();
         this.resetForm();
         this.fetchQuestions(this.selectedQuestionType);
@@ -408,6 +417,7 @@ export default {
         if (err && err.response && err.response.data) {
           serverMsg = err.response.data.error || err.response.data.message || serverMsg;
         }
+        alert('Save failed: ' + serverMsg);
         console.error('Error saving question:', err);
       }
     },
@@ -477,13 +487,16 @@ export default {
         }, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
+        alert('Question successfully added to testbank!');
         this.closeAddToTBModal();
       } catch (error) {
         console.error('Failed to add question to testbank:', error);
+        // alert('Failed to add question.');
         let errMsg = 'Failed to add question.';
         if (error.response && error.response.data && error.response.data.error) {
           errMsg = error.response.data.error;
         }
+        alert(errMsg);
       }
     },
 
@@ -572,7 +585,7 @@ export default {
       this.imagePreview = question.image_url || '';
 
       if (question.type === 'Multiple Choice') {
-        this.questionData.answer = (question.correctOption && question.correctOption.option_text) || ''; this.questionData.answerChoices = question.incorrectOptions.map(opt => opt.option_text).join(', ');
+        this.questionData.answer = (question.correctOption && question.correctOption.option_text) || '';        this.questionData.answerChoices = question.incorrectOptions.map(opt => opt.option_text).join(', ');
         this.oldMCOptionIds = [];
         if (question.correctOption && question.correctOption.option_id) {
           this.oldMCOptionIds.push(question.correctOption.option_id);
@@ -601,15 +614,12 @@ export default {
             }
           });
           this.questions = this.questions.filter(q => q.id !== id);
+          alert('Question deleted.');
         } catch (err) {
           console.error(err);
+          alert('Failed to delete question.');
         }
       }
-    },
-    logout() {
-      localStorage.removeItem('token');
-      localStorage.removeItem('userRole');
-      this.$router.push('/');
     }
 
   },
@@ -625,4 +635,5 @@ export default {
 
 <style scoped>
 @import '../assets/publisher_styles.css';
+
 </style>

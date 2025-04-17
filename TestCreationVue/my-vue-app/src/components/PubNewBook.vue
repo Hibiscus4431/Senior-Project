@@ -68,12 +68,15 @@ export default {
             },
           });
           console.log('Book saved successfully:', response.data);
+          alert('Book saved successfully!');
           this.$router.push({ path: '/PubQuestions' });
         }
         catch (error) {
           console.error('Error saving book:', error);
+          alert('Failed to save the book. Please try again.');
         }
       } else {
+        alert('Please fill out all fields.');
       }
     }
   }
