@@ -273,17 +273,21 @@ export default {
     //publish the test
     async publishTest() {
       try {
-        // Step 1: Finalize the test first
-        const finalizedMeta = await this.finalizeTestBeforeExport();
-        const testId = finalizedMeta.testId;
+        const testId = localStorage.getItem('finalizedTestId');
 
-        // Step 2: Generate the test and key Word documents
+        if (!testId) {
+          alert("❌ No finalized test found. Please export the test first.");
+          return;
+        }
+
+
+        // Step 1: Generate test + key Word documents
         const { Packer } = await import("docx");
-        const [testBlob, keyBlob] = await this.generateTestAndKeyDocs(); // helper method below
+        const [testBlob, keyBlob] = await this.generateTestAndKeyDocs();
         const testFile = this.blobToFile(testBlob, `${this.testOptions.testName}.docx`);
         const keyFile = this.blobToFile(keyBlob, `${this.testOptions.testName}.key.docx`);
 
-        // Step 3: Upload the test file
+        // Step 2: Upload the test file
         const testForm = new FormData();
         testForm.append('file', testFile);
         await api.post(`/tests/${testId}/upload_pdf`, testForm, {
@@ -293,8 +297,22 @@ export default {
           }
         });
 
-        // Step 4: Upload the answer key
+        // Step 3: Upload the answer key
         await this.uploadAnswerKey(testId, keyFile);
+
+        // Step 4: Upload the resource image if present
+        if (this.testOptions.graphicPreview) {
+          const imageFile = this.dataUrlToFile(this.testOptions.graphicPreview, "resource_image.png");
+          const imageForm = new FormData();
+          imageForm.append("file", imageFile);
+
+          await api.post(`/tests/${testId}/upload_attachment`, imageForm, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+        }
 
         // Step 5: Call publish route
         await api.post(`/tests/${testId}/publish`, {}, {
@@ -303,53 +321,97 @@ export default {
           }
         });
 
-        alert("✅ Test and key successfully published!");
+        alert("✅ Test successfully uploaded and published!");
       } catch (err) {
-        console.error("❌ Failed to publish test:", err);
-        alert("An error occurred during publishing. Please try again.");
+        console.error("❌ Failed to publish test:", (err.response && err.response.data) || err.message);
+        alert("An error occurred while publishing. Check the console.");
       }
     },
 
 
     async finalizeTestBeforeExport() {
       try {
-        const response = await api.post('/tests/finalize', {
-          test_bank_id: this.testBankId,
+        // ✅ STEP 1: LOG the payload
+        const finalizePayload = {
+          test_bank_id: parseInt(this.testBankId),
           name: this.testOptions.testName,
-          estimated_time: this.totalEstimatedTime,
-          test_instructions: "", // or use a field if present
-          course_id: this.$route.query.courseId,
+          estimated_time: this.totalEstimatedTime > 0 ? this.totalEstimatedTime : 1,
+          test_instructions: "",
+          course_id: parseInt(this.$route.query.courseId),
           type: this.testOptions.selectedTemplate || "All Questions"
-        }, {
+        };
+
+
+        console.log("🟡 Sending finalize payload:", finalizePayload);
+
+        // ✅ STEP 2: SEND the request
+        const response = await api.post('/tests/finalize', finalizePayload, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
 
         if (response.status === 201) {
-          console.log("✅ Finalized test:", response.data);
+          const testId = response.data.test_id;
+
+          // ✅ Upload resource image if present
+          if (this.testOptions.graphicPreview) {
+            const imageFile = this.dataUrlToFile(this.testOptions.graphicPreview, "resource_image.png");
+            const formData = new FormData();
+            formData.append('file', imageFile);
+
+            await api.post(`/tests/${testId}/upload_attachment`, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+          }
+
           return {
-            testId: response.data.test_id,
+            testId,
             questionCount: response.data.question_count
           };
         } else {
-          throw new Error("Failed to finalize test");
+          throw new Error("Failed to finalize test (non-201 response)");
         }
+
       } catch (err) {
-        alert("Failed to finalize the test. Please try again.");
+        // ✅ STEP 3: LOG the backend error message
+        console.error("❌ Finalize error response:", (err.response && err.response.data) || err.message);
+        alert("Failed to finalize the test. Please check the console.");
         throw err;
       }
     },
+
+    // Convert data URL to File object
+    dataUrlToFile(dataUrl, filename) {
+      const arr = dataUrl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new File([u8arr], filename, { type: mime });
+    },
+
+
     async confirmExport() {
       this.exportWarning = false;
       try {
         const finalizedMeta = await this.finalizeTestBeforeExport();
-        await this.exportToWord(finalizedMeta); // pass backend-confirmed metadata
+        const testId = finalizedMeta.testId;
+
+        // ✅ Save to localStorage or Vue data
+        localStorage.setItem('finalizedTestId', testId); // OR use: this.finalizedTestId = testId;
+
+        await this.exportToWord(finalizedMeta);
       } catch (err) {
         console.error("Export canceled due to finalize error");
       }
     },
-
     confirmPublish() {
       this.publishWarning = false;
       this.publishTest(); // call your existing publish logic
@@ -370,14 +432,15 @@ export default {
     //function to go back to draft pool
     goBackTB() {
       this.$router.push({
-        name: 'TeacherViewTB',
-        params: { id: this.testBankId },
+        path: '/TeacherViewTB',
         query: {
           courseId: this.$route.query.courseId,
           courseTitle: this.$route.query.courseTitle,
+          testBankId: this.testBankId,
           testBankName: this.$route.query.testBankName
         }
       });
+
     },
 
 

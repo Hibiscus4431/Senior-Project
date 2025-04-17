@@ -1,15 +1,15 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/PubNewBook.vue -->
 <template>
   <div class="theme-publisher">
-  <div class="top-banner">
-  <div class="banner-title">Add New Textbook</div>
+    <div class="top-banner">
+      <div class="banner-title">Add New Textbook</div>
 
-  <div class="banner-actions">
-    <router-link to="/PubHome" class="p_banner-btn">Home</router-link>
-    <router-link to="/" class="p_banner-btn">Log Out</router-link>
-  </div>
-</div>
-    <div class="center large-paragraph" style = "color:#222">
+      <div class="banner-actions">
+        <router-link to="/PubHome" class="p_banner-btn">Home</router-link>
+        <router-link to="/" class="p_banner-btn">Log Out</router-link>
+      </div>
+    </div>
+    <div class="center large-paragraph" style="color:#222">
       <form @submit.prevent="saveBook">
         <label for="textbookTitle">Textbook Title:</label>
         <input type="text" id="textbookTitle" v-model="textbookTitle" style="height:20px"><br>
@@ -68,8 +68,12 @@ export default {
             },
           });
           console.log('Book saved successfully:', response.data);
-          alert('Book saved successfully!');
-          this.$router.push({ path: '/PubQuestions' });
+          //alert('Book saved successfully!');
+          this.$router.push({
+            path: '/PubHome'
+          }
+          );
+
         }
         catch (error) {
           console.error('Error saving book:', error);
@@ -85,6 +89,7 @@ export default {
 
 <style scoped>
 @import '../assets/publisher_styles.css';
+
 .small-font {
   font-size: 15x;
 }

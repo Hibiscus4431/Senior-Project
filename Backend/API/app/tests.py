@@ -236,6 +236,8 @@ def finalize_test():
         }), 201
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()  # ✅ prints full traceback to terminal
         conn.rollback()
         return jsonify({"error": f"Something went wrong: {str(e)}"}), 500
 

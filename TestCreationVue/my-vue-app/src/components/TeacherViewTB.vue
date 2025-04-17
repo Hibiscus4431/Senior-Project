@@ -33,6 +33,33 @@
 
       <hr>
 
+      <!-- Delete Confirm Popup -->
+      <div class="popup-overlay" v-if="showDeleteConfirm" @click.self="showDeleteConfirm = false">
+        <div class="form-popup-modal">
+          <div class="form-container">
+            <h2 style="text-align:center;">Confirm Removal</h2>
+            <p style="text-align:center;">Are you sure you want to remove this question from the test bank?</p>
+            <div class="popup-button-group">
+              <button class="btn" @click="confirmRemoveQuestion">Yes, Remove</button>
+              <button class="btn cancel" @click="showDeleteConfirm = false">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Message Popup -->
+      <div class="popup-overlay" v-if="showInfoPopup" @click.self="showInfoPopup = false">
+        <div class="form-popup-modal">
+          <div class="form-container">
+            <p style="text-align:center;">{{ popupMessage }}</p>
+            <div class="popup-button-group" style="text-align:center; margin-top: 1rem;">
+              <button class="btn" @click="showInfoPopup = false">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
       <!-- Edit Test Bank Info Popup Form -->
       <!-- Modal Popup -->
       <div class="popup-overlay" v-if="showEditForm">
@@ -147,7 +174,7 @@
         <!-- Action buttons -->
         <div v-if="selectedQuestionId === q.id" class="button-group">
           <!-- <button @click.stop="editQuestion(q)">Edit</button> -->
-          <button @click.stop="removeQuestionFromTestBank(q.id)">Remove</button>
+          <button @click.stop="promptRemoveQuestion(q.id)">Remove</button>
         </div>
         <hr>
       </div>
@@ -191,7 +218,12 @@ export default {
         graphicFile: null,
         graphicFileName: '',
         graphicPreview: ''
-      }
+      },
+      showDeleteConfirm: false,
+      questionIdToDelete: null,
+      popupMessage: '',
+      showInfoPopup: false,
+
     };
   },
 
@@ -199,6 +231,31 @@ export default {
     this.initialize();
   },
   methods: {
+    promptRemoveQuestion(questionId) {
+      this.questionIdToDelete = questionId;
+      this.showDeleteConfirm = true;
+    },
+    async confirmRemoveQuestion() {
+      try {
+        await api.delete(`/testbanks/${this.testBankId}/questions/${this.questionIdToDelete}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        this.selectedQuestions = this.selectedQuestions.filter(q => q.id !== this.questionIdToDelete);
+        this.questionIdToDelete = null;
+        this.showDeleteConfirm = false;
+        this.popupMessage = 'Question removed from test bank.';
+        this.showInfoPopup = true;
+      } catch (err) {
+        console.error('Error removing question:', err);
+        this.popupMessage = 'Failed to remove question from test bank.';
+        this.showInfoPopup = true;
+      }
+    },
+
+
+
     async viewPrevious() {
       try {
         const response = await api.get('/tests', {

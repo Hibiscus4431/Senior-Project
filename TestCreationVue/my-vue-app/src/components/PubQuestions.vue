@@ -118,9 +118,6 @@
   <!-- Add to Test Bank Modal -->
   <div class="popup-overlay" v-if="showAddToTBModal" @click.self="closeAddToTBModal">
     <div class="form-popup-modal">
-      <p style="color: red; font-weight: bold; text-align: center; margin-bottom: 1rem;">
-        Once the question is added to a draft pool, it can no longer be edited.
-      </p>
       <h2 style="text-align: center;">Select Draft Pool</h2>
       <div class="form-container" style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 1rem;">
         <button
@@ -407,7 +404,7 @@ export default {
         } else {
           await api.post('/questions', postData, config);
         }
-        alert('Question saved successfully!');
+        //alert('Question saved successfully!');
         this.closeForm();
         this.resetForm();
         this.fetchQuestions(this.selectedQuestionType);
@@ -496,7 +493,7 @@ export default {
         if (error.response && error.response.data && error.response.data.error) {
           errMsg = error.response.data.error;
         }
-        alert(errMsg);
+        //alert(errMsg);
       }
     },
 
@@ -614,7 +611,7 @@ export default {
             }
           });
           this.questions = this.questions.filter(q => q.id !== id);
-          alert('Question deleted.');
+          //alert('Question deleted.');
         } catch (err) {
           console.error(err);
           alert('Failed to delete question.');
