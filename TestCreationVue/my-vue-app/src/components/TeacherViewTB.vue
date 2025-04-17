@@ -2,7 +2,11 @@
 <template>
   <div class="theme-teacher">
     <div class="top-banner">
-      <div class="banner-title">Test Draft: {{ testBankName }}</div>
+      <div class="banner-title">Test Draft: {{ testBankName }}<br>
+        <span style="font-size: 16px; color: #222;">
+          Chapter {{ displayChapter || 'N/A' }}, Section {{ displaySection || 'N/A' }}
+        </span>
+      </div>
 
       <div class="t_banner-actions">
         <router-link to="/TeacherHome" class="t_banner-btn">Home</router-link>
@@ -11,8 +15,8 @@
     </div>
     <div class="center large-paragraph" style="color:#222">
       <router-link :to="{ path: '/TeacherQuestions', query: { courseTitle: courseTitle, courseId: courseId } }">
-          <button class="t_button">Return to Question Page</button>
-        </router-link><br>
+        <button class="t_button">Return to Question Page</button>
+      </router-link><br>
       <div class="button-row">
         <!-- Edit Test Bank Info Button -->
         <button class="t_button" @click="showEditForm = true">Edit Draft Pool Info</button>
@@ -169,9 +173,11 @@ export default {
       selectedQuestionId: null,
       editingQuestionData: {},
       editingQuestionId: null,
+      displayChapter: this.$route.query.chapter || '',
+      displaySection: this.$route.query.section || '',
       courseId: this.$route.query.courseId || '',
       courseTitle: this.$route.query.courseTitle || '',
-      testBankId: this.$route.params.id || '',
+      testBankId: this.$route.query.testBankId || '',
       testBankName: this.$route.query.testBankName || '',
       editForm: {
         name: this.$route.query.testBankName || '',
@@ -275,20 +281,11 @@ export default {
     },
 
     async initialize() {
-      await this.fetchQuestions();
-      try {
-        const res = await api.get(`/testbanks/${this.testBankId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        this.testBankName = res.data.name;
-        this.editForm.name = res.data.name;
-        this.editForm.chapter = res.data.chapter_number;
-        this.editForm.section = res.data.section_number;
-      } catch (err) {
-        console.warn("Couldn't load testbank details:", err);
+      if (!this.testBankId) {
+        console.warn('No testBankId provided — cannot load questions.');
+        return;
       }
+      await this.fetchQuestions();
 
     },
     handleGraphicUpload(event) {
