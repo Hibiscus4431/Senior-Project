@@ -65,11 +65,15 @@ export default {
             }
           });
           console.log('Test bank saved successfully:', response.data);
+          alert('Test bank saved successfully!');
           this.$router.push({ path: '/TeacherQuestions', query: { courseTitle: this.courseTitle, courseId: this.courseId } });
 
         } catch (error) {
           console.error('Error saving test bank:', error);
+          alert('Failed to save the test bank. Please try again.');
         }
+      } else {
+        alert('Please fill out all fields.');
       }
     }
   }
