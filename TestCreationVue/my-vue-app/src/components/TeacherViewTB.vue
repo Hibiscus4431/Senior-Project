@@ -171,6 +171,12 @@
           <strong>Essay Instructions:</strong> {{ q.grading_instructions || 'None' }}
         </div>
 
+        <div v-if="q.attachment && q.attachment.url">
+          <p><strong>Attached Image:</strong></p>
+          <img :src="q.attachment.url" alt="Question Attachment:"
+            style="max-width: 100%; max-height: 400px; margin-bottom: 10px;" />
+        </div>
+
         <span><strong>Grading Instructions:</strong> {{ q.grading_instructions || 'None' }}</span>
 
         <!-- Action buttons -->
@@ -280,6 +286,7 @@ export default {
         console.error('Error fetching questions for test bank:', err);
         this.selectedQuestions = [];
       }
+
     },
 
     //helper functions for generated questions

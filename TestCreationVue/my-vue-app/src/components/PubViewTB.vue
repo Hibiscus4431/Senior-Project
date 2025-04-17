@@ -109,6 +109,12 @@
             <strong>Essay Instructions:</strong> {{ question.instructions || 'None' }}
           </div>
 
+          <div v-if="question.attachment">
+            <p><strong>Attached Image:</strong></p>
+            <img :src="question.attachment" alt="Question Attachment:"
+              style="max-width: 100%; max-height: 400px; margin-bottom: 10px;" />
+          </div>
+
           <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
 
           <!-- Buttons shown only if selected -->
@@ -216,7 +222,8 @@ export default {
               section: q.section_number || 'N/A',
               points: q.default_points || 'N/A',
               time: q.est_time || 'N/A',
-              instructions: q.grading_instructions || 'None'
+              instructions: q.grading_instructions || 'None',
+              attachment: q.attachment && q.attachment.url ? q.attachment.url : ''
             };
 
             switch (q.type) {
