@@ -10,7 +10,16 @@
     </div>
   </div>
   
-  
+  <!-- Edit Blocked Warning Popup -->
+  <div class="popup-overlay" v-if="editBlockedPopup" @click.self="editBlockedPopup = false">
+    <div class="form-popup-modal">
+      <h2>Cannot Edit Question</h2>
+      <p>{{ editBlockedReason }}</p>
+      <p>A new copy will be made instead.</p>
+      <button class="btn" @click="createCopyInstead">Create a Copy</button>
+      <button class="btn cancel" @click="editBlockedPopup = false">Cancel</button>
+    </div>
+  </div>
   
   <!-- Toolbar -->
    <div class="page-wrapper">
@@ -108,8 +117,8 @@
         <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span>
   
         <div v-if="selectedQuestionId === question.id" class="p_button-group">
-          <button @click.stop="editQuestion(question)">Edit</button>
-          <button @click.stop="deleteQuestion(question.id)">Delete</button>
+          <button v-if="!question.is_published" @click.stop="editQuestion(question)">Edit</button>
+          <button v-if="!question.is_published" @click.stop="deleteQuestion(question.id)">Delete</button>
           <button @click.stop="openAddToTestBank(question.id)">Add to Test Bank</button>
         </div>
       </div>
@@ -268,6 +277,8 @@
         imagePreview: '',
         editingQuestionId: null,
         oldMCOptionIds: [],
+        editBlockedPopup: false,
+        editBlockedReason: '',
         questionData: {
           chapter: '',
           section: '',
@@ -448,7 +459,8 @@
                 time: question.est_time,
                 chapter: question.chapter_number,
                 section: question.section_number,
-                image_url: question.attachment && question.attachment.url ? question.attachment.url : '' // ✅ Fixed
+                image_url: question.attachment && question.attachment.url ? question.attachment.url : '',
+                is_published: question.is_published || false
               };
               switch (question.type) {
                 case 'True/False': return { ...base, answer: question.true_false_answer };
@@ -567,7 +579,29 @@
         if (fileInput) fileInput.value = '';
       },
   
-      editQuestion(question) {
+      async editQuestion(question) {
+
+        try {
+          const res = await api.get(`/questions/${question.id}/used_in`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+
+          if (res.data.is_used) {
+            // Question is used in a published/final test
+            this.editBlockedReason = `This question is used in a "${res.data.tests[0].status}" test: "${res.data.tests[0].name}".`;
+            this.editingQuestionId = question.id;
+            this.editBlockedPopup = true;
+            return;
+          }
+        } catch (err) {
+          console.error('Error checking question status:', err);
+          alert('Could not verify question status.');
+          return;
+        }
+
+        // If not used, proceed with editing
         this.editingQuestionId = question.id;
         this.questionData.question = question.text;
         this.questionData.chapter = question.chapter;
@@ -616,6 +650,25 @@
             console.error(err);
             alert('Failed to delete question.');
           }
+        }
+      },
+
+      async createCopyInstead() {
+        try {
+          const res = await api.post(`/questions/${this.editingQuestionId}/copy_to_textbook`, {
+            textbook_id: this.textbookId
+          }, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+
+          alert('A copy of the question was created. You can now edit it.');
+          this.editBlockedPopup = false;
+          this.fetchQuestions(this.selectedQuestionType); // reload with new question included
+        } catch (err) {
+          console.error('Failed to create copy:', err);
+          alert('Failed to create a copy of this question.');
         }
       }
   
