@@ -111,6 +111,17 @@
 
           <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
 
+          <div v-if="question.attachments && question.attachments.length">
+            <strong>Attachments:</strong>
+            <ul>
+              <li v-for="(att, i) in question.attachments" :key="i">
+                <a :href="att.url" target="_blank" rel="noopener">{{ att.filename }}</a>
+                <div v-if="att.filename && att.filename.match(/\.(jpg|jpeg|png|gif)$/i)">
+                  <img :src="att.url" alt="Attachment Image" style="max-width: 200px; margin-top: 10px;" />
+                </div>
+              </li>
+            </ul>
+          </div>
           <!-- Buttons shown only if selected -->
           <div v-if="selectedQuestionId === question.id && !published" class="p_button-group">
             <button @click.stop="removeQuestionFromTestBank(question.id)" :disabled="published"
@@ -216,7 +227,8 @@ export default {
               section: q.section_number || 'N/A',
               points: q.default_points || 'N/A',
               time: q.est_time || 'N/A',
-              instructions: q.grading_instructions || 'None'
+              instructions: q.grading_instructions || 'None',
+              attachments: q.attachments || []
             };
 
             switch (q.type) {
@@ -267,7 +279,7 @@ export default {
       }
     },
     async removeQuestionFromTestBank(questionId) {
-      
+
       if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
 
       try {
