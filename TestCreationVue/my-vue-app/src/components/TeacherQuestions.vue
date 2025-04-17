@@ -68,6 +68,8 @@
         </div>
       </div>
 
+      <p><strong>Note:</strong> Import one Canvas quiz in the QTI at a time please.</p>
+
       <hr>
     </div>
 
