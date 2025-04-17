@@ -8,11 +8,18 @@
       </div>
     </div>
 
-    <div class="center large-paragraph" style="color:#222">
-      <router-link
-        :to="{ path: '/PubViewTB', query: { title: $route.query.title, textbook_id: $route.query.textbook_id } }">
+    <div class="page-wrapper">
+      <router-link :to="{
+        path: '/PubViewTB',
+        query: {
+          name: selectedTestBank,
+          textbook_id: $route.query.textbook_id,
+          testbank_id: $route.query.testbank_id  // ✅ Add this!
+        }
+      }">
         <button class="p_button">Return to Test Banks</button>
       </router-link>
+
 
       <hr />
 
@@ -21,18 +28,38 @@
         <p v-else-if="feedbackList.length === 0">No questions in this test bank have feedback yet.</p>
 
         <div v-else>
-          <div v-for="(entry, index) in feedbackList" :key="index" class="question-box">
-            <p><strong>Question Type:</strong> {{ entry.type || 'Unknown' }}</p>
-            <p><strong>Question:</strong> {{ entry.question }}</p>
-            <p><strong>Correct Answer:</strong> <span class="correct-answer">{{ entry.correct_answer }}</span></p>
+          <div v-for="(entry, index) in feedbackList" :key="index"
+            :class="['p_question-box', { selected: selectedQuestionId === entry.question_id }]"
+            @click="toggleQuestionSelection(entry.question_id)">
+            <strong>Question {{ index + 1 }}:</strong> {{ entry.question_text }}
 
-            <div v-if="entry.feedbacks && entry.feedbacks.length">
+            <!-- Always show feedback -->
+            <div v-if="entry.feedback && entry.feedback.length" class="feedback-section">
               <p><strong>Feedback:</strong></p>
               <ul>
-                <li v-for="(fb, i) in entry.feedbacks" :key="i">
+                <li v-for="(fb, i) in entry.feedback" :key="i">
                   "{{ fb.comment }}" — <em>{{ fb.username }} ({{ fb.role }})</em>
                 </li>
               </ul>
+            </div>
+            <div v-else>
+              <p>No feedback yet.</p>
+            </div>
+
+            <!-- ✅ Button shows only if question is selected -->
+            <div v-if="selectedQuestionId === entry.question_id" class="p_button-group">
+              <button @click.stop="openFeedbackForm(entry.question_id)">Leave Feedback</button>
+            </div>
+          </div>
+
+          <!-- ✅ Feedback popup -->
+          <div v-if="showFeedbackForm" class="popup-overlay" @click.self="closeFeedbackForm">
+            <div class="form-popup-modal">
+              <h2>Leave Feedback</h2>
+              <textarea v-model="feedbackText" rows="5" placeholder="Enter your comment here..."></textarea>
+              <br /><br />
+              <button class="btn" @click="submitFeedback">Submit</button>
+              <button class="btn cancel" @click="closeFeedbackForm">Cancel</button>
             </div>
           </div>
         </div>
@@ -49,72 +76,92 @@ export default {
   data() {
     return {
       testbankId: null,
-      selectedTestBank: this.$route.query.title || 'No Test Bank Selected',
+      selectedTestBank: '',
       feedbackList: [],
-      questions: [],
-      loading: true
+      loading: true,
+      userRole: '',
+      selectedQuestionId: null,
+      showFeedbackForm: false,
+      selectedQuestionIdForFeedback: null,
+      feedbackText: ''
     };
   },
-  mounted() {
+  async mounted() {
     const query = this.$route.query;
     this.testbankId = parseInt(query.testbank_id);
     this.selectedTestBank = query.title || 'No Test Bank Selected';
 
-    console.log('Parsed testbankId:', this.testbankId);
-    this.fetchQuestionsAndFeedback();
+    const token = localStorage.getItem('token');
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      this.userRole = payload.role;
+    }
+
+    this.fetchFeedbackByTestbank();
   },
   methods: {
-    getCorrectAnswer(q) {
-      switch (q.type) {
-        case 'True/False':
-          return q.true_false_answer ? 'True' : 'False';
-        case 'Multiple Choice':
-          return q.correct_option ? q.correct_option.option_text : 'N/A';
-        case 'Fill in the Blank':
-          return q.blanks ? q.blanks.map(b => b.correct_text).join(', ') : 'N/A';
-        case 'Matching':
-          return q.matches ? q.matches.map(m => `${m.prompt_text} → ${m.match_text}`).join('; ') : 'N/A';
-        default:
-          return 'N/A';
+    async fetchFeedbackByTestbank() {
+      try {
+        const res = await api.get(`/feedback/${this.testbankId}/questions-with-feedback`);
+        this.feedbackList = res.data;
+        console.log('Feedback loaded:', this.feedbackList);
+      } catch (err) {
+        console.error('Error loading feedback:', err);
+        alert('Failed to load feedback.');
+      } finally {
+        this.loading = false;
       }
     },
 
-    async fetchQuestionsAndFeedback() {
+    toggleQuestionSelection(questionId) {
+      this.selectedQuestionId = this.selectedQuestionId === questionId ? null : questionId;
+    },
+
+    openFeedbackForm(questionId) {
+      this.selectedQuestionIdForFeedback = questionId;
+      this.feedbackText = '';
+      this.showFeedbackForm = true;
+    },
+
+    closeFeedbackForm() {
+      this.selectedQuestionIdForFeedback = null;
+      this.feedbackText = '';
+      this.showFeedbackForm = false;
+    },
+
+    async submitFeedback() {
       try {
-        const res = await api.get(`/questions`, {
-          params: { testbank_id: this.testbankId }
-        });
-        this.questions = res.data.questions;
-        console.log('Raw question objects:', this.questions);
-
-        const feedbacks = [];
-
-        for (const q of this.questions) {
-          try {
-            const feedbackRes = await api.get(`/feedback/question/${q.id}`);
-            if (feedbackRes.data.length > 0) {
-              feedbacks.push({
-                question: q.question_text,
-                type: q.type,
-                correct_answer: this.getCorrectAnswer(q),
-                feedbacks: feedbackRes.data
-              });
-            }
-          } catch (err) {
-            console.warn(`Failed to fetch feedback for question ${q.id}`, err);
+        await api.post('/feedback/create', {
+          question_id: this.selectedQuestionIdForFeedback,
+          comment_field: this.feedbackText
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
           }
+        });
+
+        alert('Feedback submitted!');
+        this.closeFeedbackForm();
+
+        const entry = this.feedbackList.find(q => q.question_id === this.selectedQuestionIdForFeedback);
+        if (entry) {
+          if (!entry.feedback) entry.feedback = [];
+          entry.feedback.push({
+            comment: this.feedbackText,
+            username: 'You',
+            role: this.userRole
+          });
         }
 
-        this.feedbackList = feedbacks;
-      } catch (err) {
-        console.error('Error loading feedback:', err);
-      } finally {
-        this.loading = false;
+      } catch (error) {
+        console.error('Error submitting feedback:', error);
+        alert('Failed to submit feedback.');
       }
     }
   }
 };
 </script>
+
 
 <style scoped>
 @import '../assets/publisher_styles.css';

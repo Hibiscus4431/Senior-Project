@@ -68,6 +68,15 @@
 
             <div><strong>Grading Instructions:</strong> {{ q.grading_instructions || 'None' }}</div>
 
+            <!-- Feedback Section -->
+            <div v-if="q.feedback && q.feedback.length" class="feedback-section">
+              <strong>Feedback:</strong>
+              <ul>
+                <li v-for="(f, i) in q.feedback" :key="i">
+                  <em>{{ f.username }} ({{ f.role }})</em>: "{{ f.comment }}"
+                </li>
+              </ul>
+            </div>
             <!-- ✅ Buttons only visible when box is selected -->
             <div v-if="selectedQuestionId === q.id" class="button-group">
               <button @click.stop="openFeedbackForm(q.id)">Leave Feedback</button>
@@ -207,8 +216,17 @@ export default {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
+
         this.fullTestbanks = res.data.testbanks || [];
         console.log("Full published testbanks loaded:", this.fullTestbanks);
+
+        // ✅ Load feedback for all questions up front
+        for (const tb of this.fullTestbanks) {
+          for (const q of tb.questions) {
+            await this.loadFeedbackForQuestion(q);
+          }
+        }
+
       } catch (err) {
         console.error('Failed to load testbanks:', err);
         alert('Could not load published testbanks.');
@@ -278,8 +296,16 @@ export default {
         alert("Could not add question to the selected pool.");
       }
     },
-    toggleQuestionSelection(questionId) {
-      this.selectedQuestionId = this.selectedQuestionId === questionId ? null : questionId;
+    async toggleQuestionSelection(questionId) {
+      if (this.selectedQuestionId === questionId) {
+        this.selectedQuestionId = null;
+      } else {
+        this.selectedQuestionId = questionId;
+        const question = this.fullTestbanks
+          .flatMap(tb => tb.questions)
+          .find(q => q.id === questionId);
+
+      }
     },
     async viewPublishedTests() {
       this.viewing = 'published-tests';
@@ -321,9 +347,17 @@ export default {
         console.error("Failed to load published tests:", err);
         alert("Could not load published test questions.");
       }
+    },
+    async loadFeedbackForQuestion(question) {
+      try {
+        const res = await api.get(`/feedback/question/${question.id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        question.feedback = res.data || [];
+      } catch (err) {
+        console.error(`Failed to load feedback for question ${question.id}`, err);
+      }
     }
-
-
 
   }
 };

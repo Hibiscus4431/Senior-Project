@@ -45,7 +45,7 @@ async function refreshToken() {
   if (!currentToken) return null;
 
   try {
-    const res = await axios.post('http://127.0.0.1:5000/auth/refresh', {
+    const res = await axios.post('http://127.0.0.1:5000//auth/refresh', {
       token: currentToken
     });
 

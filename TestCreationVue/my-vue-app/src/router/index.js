@@ -12,7 +12,6 @@ import TeacherHome from '../components/TeacherHome.vue';
 import TeacherLog from '../components/TeacherLog.vue';
 import TeacherNewClass from '../components/TeacherNewClass.vue';
 import TeacherNewTB from '../components/TeacherNewTB.vue';
-import TeacherNewTest from '../components/TeacherNewTest.vue';
 import TeacherPubQ from '../components/TeacherPubQ.vue';
 import TeacherQuestions from '../components/TeacherQuestions.vue';
 import TeacherTemplate from '../components/TeacherTemplate.vue';
@@ -33,7 +32,6 @@ const routes = [
   { path: '/TeacherLog', name: 'TeacherLog', component: TeacherLog },
   { path: '/TeacherNewClass', name: 'TeacherNewClass', component: TeacherNewClass },
   { path: '/TeacherNewTB', name: 'TeacherNewTB', component: TeacherNewTB },
-  { path: '/TeacherNewTest', name: 'TeacherNewTest', component: TeacherNewTest },
   { path: '/TeacherPubQ', name: 'TeacherPubQ', component: TeacherPubQ },
   { path: '/TeacherQuestions', name: 'TeacherQuestions', component: TeacherQuestions },
   { path: '/TeacherTemplate', name: 'TeacherTemplate', component: TeacherTemplate },
