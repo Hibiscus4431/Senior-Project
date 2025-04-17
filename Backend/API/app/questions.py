@@ -507,23 +507,27 @@ def copy_question_to_course(question_id):
         cur.execute("""
             INSERT INTO questions (
                 owner_id, type, question_text, default_points, source,
-                is_published, course_id, textbook_id, attachment_id, original_question_id,
+                is_published, course_id, textbook_id, attachment_id,
                 true_false_answer, est_time, grading_instructions,
                 chapter_number, section_number
             )
             SELECT owner_id, type, question_text, default_points, source,
-                   FALSE, %s, textbook_id, attachment_id, id,
-                   true_false_answer, est_time, grading_instructions,
-                   chapter_number, section_number
+                FALSE, %s, textbook_id, attachment_id,
+                true_false_answer, est_time, grading_instructions,
+                chapter_number, section_number
             FROM questions
             WHERE id = %s
             RETURNING id;
         """, (course_id, question_id))
+        print("this works up to here")
         new_question_id = cur.fetchone()[0]
+
 
         # Step 2: Copy attachments (if any)
         cur.execute("SELECT attachment_id FROM questions WHERE id = %s", (question_id,))
         attachment_id = cur.fetchone()[0]
+
+        
 
         if attachment_id:
             # Copy attachment row
@@ -583,6 +587,8 @@ def copy_question_to_course(question_id):
         }), 201
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()  # Print full error to console
         conn.rollback()
         return jsonify({"error": f"Failed to copy question: {str(e)}"}), 500
 
@@ -591,7 +597,7 @@ def copy_question_to_course(question_id):
         conn.close()
 
 
-@question_bp.route('/questions/<int:question_id>/used_in', methods=['GET'])
+@question_bp.route('/<int:question_id>/used_in', methods=['GET'])
 def check_question_used_in_tests(question_id):
     auth_data = authorize_request()
     if isinstance(auth_data, tuple):
@@ -619,6 +625,119 @@ def check_question_used_in_tests(question_id):
 
     except Exception as e:
         return jsonify({"error": f"Failed to check usage: {str(e)}"}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+
+@question_bp.route('/<int:question_id>/copy_to_textbook', methods=['POST'])
+def copy_question_to_textbook(question_id):
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    user_id = auth_data['user_id']
+    data = request.get_json()
+    textbook_id = data.get("textbook_id")
+    
+
+    if not textbook_id:
+        return jsonify({"error": "Textbook_id must be provided"}), 400
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # Step 1: Copy base question
+        cur.execute("""
+            INSERT INTO questions (
+                owner_id, type, question_text, default_points, source,
+                is_published, textbook_id, textbook_id, attachment_id,
+                true_false_answer, est_time, grading_instructions,
+                chapter_number, section_number
+            )
+            SELECT owner_id, type, question_text, default_points, source,
+                FALSE, %s, textbook_id, attachment_id,
+                true_false_answer, est_time, grading_instructions,
+                chapter_number, section_number
+            FROM questions
+            WHERE id = %s
+            RETURNING id;
+        """, (textbook_id, question_id))
+        print("this works up to here")
+        new_question_id = cur.fetchone()[0]
+
+
+        # Step 2: Copy attachments (if any)
+        cur.execute("SELECT attachment_id FROM questions WHERE id = %s", (question_id,))
+        attachment_id = cur.fetchone()[0]
+
+        
+
+        if attachment_id:
+            # Copy attachment row
+            cur.execute("""
+                INSERT INTO attachments (file_name, file_path, storage_bucket, uploaded_by)
+                SELECT file_name, file_path, storage_bucket, %s
+                FROM attachments
+                WHERE attachments_id = %s
+                RETURNING attachments_id;
+            """, (user_id, attachment_id))
+            new_attachment_id = cur.fetchone()[0]
+
+            # Copy metadata
+            cur.execute("""
+                INSERT INTO attachments_metadata (attachments_id, key, value)
+                SELECT %s, key, value
+                FROM attachments_metadata
+                WHERE attachments_id = %s;
+            """, (new_attachment_id, attachment_id))
+
+            # Update question with new attachment_id
+            cur.execute("""
+                UPDATE questions
+                SET attachment_id = %s
+                WHERE id = %s;
+            """, (new_attachment_id, new_question_id))
+
+        # Step 3: Copy multiple choice options
+        cur.execute("SELECT option_text, is_correct FROM questionoptions WHERE question_id = %s", (question_id,))
+        for opt_text, is_correct in cur.fetchall():
+            cur.execute("""
+                INSERT INTO questionoptions (question_id, option_text, is_correct)
+                VALUES (%s, %s, %s);
+            """, (new_question_id, opt_text, is_correct))
+
+        # Step 4: Copy matching pairs
+        cur.execute("SELECT prompt_text, match_text FROM questionmatches WHERE question_id = %s", (question_id,))
+        for prompt, match in cur.fetchall():
+            cur.execute("""
+                INSERT INTO questionmatches (question_id, prompt_text, match_text)
+                VALUES (%s, %s, %s);
+            """, (new_question_id, prompt, match))
+
+        # Step 5: Copy fill-in-the-blank answers
+        cur.execute("SELECT correct_text FROM questionfillblanks WHERE question_id = %s", (question_id,))
+        for (correct_text,) in cur.fetchall():
+            cur.execute("""
+                INSERT INTO questionfillblanks (question_id, correct_text)
+                VALUES (%s, %s);
+            """, (new_question_id, correct_text))
+
+        conn.commit()
+
+        return jsonify({
+            "message": "Question copied successfully",
+            "new_question_id": new_question_id
+        }), 201
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # Print full error to console
+        conn.rollback()
+        return jsonify({"error": f"Failed to copy question: {str(e)}"}), 500
 
     finally:
         cur.close()

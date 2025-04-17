@@ -31,6 +31,61 @@
             <button class="t_button">Create New Course</button>
           </router-link>
         </div>
+
+        <!-- Test Options Section -->
+        <div class="page-wrapper" style="margin-top: 40px;">
+          Test Options:
+          <div class="button-row">
+            <button class="t_button" @click="viewPreviousTests">View Previous Tests</button>
+            <button class="t_button" @click="chooseTestToPublish">Choose Test to Publish</button>
+          </div>
+        </div>
+
+        <!-- Finalized Test Popup -->
+        <div class="popup-overlay" v-if="showPopup" @click.self="showPopup = false">
+          <div class="form-popup-modal">
+            <form class="form-container">
+              Your Finalized Tests
+              <ul style="list-style-type: none; padding-left: 0;">
+                <li v-for="test in testFiles" :key="test.test_id">
+                  <button v-if="test.download_url && test.hasAnswerKey" class="t_button"
+                    @click.prevent="downloadTestAndKey(test)">
+                    {{ test.name }}
+                  </button>
+                </li>
+              </ul>
+              <button type="button" class="btn cancel" @click="showPopup = false">Close</button>
+            </form>
+          </div>
+        </div>
+
+
+        <!-- Choose Test to Publish Popup -->
+        <div class="popup-overlay" v-if="showPublishSelector" @click.self="showPublishSelector = false">
+          <div class="form-popup-modal">
+            <form class="form-container" @submit.prevent="publishSelectedTest">
+              <h3>Select a Finalized Test to Publish</h3>
+              <p>Note: Any questions on a published tests </p>
+              <ul style="list-style-type: none; padding-left: 0;">
+                <li v-for="test in testFiles" :key="test.test_id" style="margin-bottom: 8px;">
+                  <label style="display: flex; align-items: center;">
+                    <input type="radio" v-model="selectedTestIdToPublish" :value="test.test_id"
+                      style="margin-right: 10px;" />
+                    {{ test.name }}
+                  </label>
+                </li>
+              </ul>
+
+              <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn">Confirm Publish</button>
+                <button type="button" class="btn cancel" @click="showPublishSelector = false">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+
+
       </div>
     </div>
     <br>
@@ -47,6 +102,10 @@ export default {
     return {
       courses: [],
       error: null,
+      testFiles: [],
+      showPopup: false,
+      showPublishSelector: false,
+      selectedTestIdToPublish: null
     };
   },
   created() {
@@ -96,12 +155,117 @@ export default {
           textbook_id: course.textbook_id
         }
       });
+    },
+
+
+    async viewPreviousTests() {
+      try {
+        const response = await api.get('/tests/final', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        const tests = response.data.final_tests || [];
+
+        const enrichedTests = await Promise.all(tests.map(async test => {
+          try {
+            const keyRes = await api.get(`/tests/${test.test_id}/answer_key`, {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            test.hasAnswerKey = !!(keyRes.data && keyRes.data.file_url);
+          } catch {
+            test.hasAnswerKey = false;
+          }
+          return test;
+        }));
+
+        this.testFiles = enrichedTests;
+        this.showPopup = true;
+      } catch (err) {
+        console.error('Failed to fetch final tests:', err);
+        alert('Could not load previous tests.');
+      }
+    },
+
+    async downloadTestAndKey(test) {
+      if (!test.download_url) {
+        alert('Test file not available for download.');
+        return;
+      }
+
+      const testLink = document.createElement('a');
+      testLink.href = test.download_url;
+      testLink.download = '';
+      document.body.appendChild(testLink);
+      testLink.click();
+      document.body.removeChild(testLink);
+
+      try {
+        const response = await api.get(`/tests/${test.test_id}/answer_key`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (response.data.file_url) {
+          const keyLink = document.createElement('a');
+          keyLink.href = response.data.file_url;
+          keyLink.download = '';
+          document.body.appendChild(keyLink);
+          keyLink.click();
+          document.body.removeChild(keyLink);
+        }
+      } catch (err) {
+        console.warn(`Failed to download answer key for test ${test.test_id}:`, err);
+      }
+    },
+
+    async chooseTestToPublish() {
+      try {
+        const response = await api.get('/tests/final', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        this.testFiles = response.data.final_tests || [];
+        this.selectedTestIdToPublish = null;
+        this.showPublishSelector = true;
+      } catch (err) {
+        console.error("Failed to load final tests for publishing:", err);
+        alert("Could not load test list.");
+      }
+    },
+
+    async publishSelectedTest() {
+      if (!this.selectedTestIdToPublish) {
+        alert("Please select a test to publish.");
+        return;
+      }
+
+      try {
+        await api.post(`/tests/${this.selectedTestIdToPublish}/publish`, {}, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        //alert("✅ Test successfully published!");
+        this.showPublishSelector = false;
+      } catch (err) {
+        console.error("❌ Publish failed:", (err.response && err.response.data) || err.message);
+        alert("Failed to publish the selected test.");
+      }
     }
-  }
+  },
+
+
 };
 </script>
 
 <style scoped>
 @import '../assets/teacher_styles.css';
-
 </style>

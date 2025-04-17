@@ -107,7 +107,6 @@ export default {
         console.log('Feedback loaded:', this.feedbackList);
       } catch (err) {
         console.error('Error loading feedback:', err);
-        alert('Failed to load feedback.');
       } finally {
         this.loading = false;
       }
@@ -140,7 +139,6 @@ export default {
           }
         });
 
-        alert('Feedback submitted!');
         this.closeFeedbackForm();
 
         const entry = this.feedbackList.find(q => q.question_id === this.selectedQuestionIdForFeedback);
@@ -155,7 +153,6 @@ export default {
 
       } catch (error) {
         console.error('Error submitting feedback:', error);
-        alert('Failed to submit feedback.');
       }
     }
   }

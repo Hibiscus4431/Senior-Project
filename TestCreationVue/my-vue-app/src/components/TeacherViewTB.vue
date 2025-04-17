@@ -27,11 +27,37 @@
         <button class="t_button" @click="showCreateTestWarning = true">Create New Test</button>
 
 
-        <button class="t_button" @click="viewPrevious">View Previous Tests</button>
         <br>
       </div>
 
       <hr>
+
+      <!-- Delete Confirm Popup -->
+      <div class="popup-overlay" v-if="showDeleteConfirm" @click.self="showDeleteConfirm = false">
+        <div class="form-popup-modal">
+          <div class="form-container">
+            <h2 style="text-align:center;">Confirm Removal</h2>
+            <p style="text-align:center;">Are you sure you want to remove this question from the test bank?</p>
+            <div class="popup-button-group">
+              <button class="btn" @click="confirmRemoveQuestion">Yes, Remove</button>
+              <button class="btn cancel" @click="showDeleteConfirm = false">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Message Popup -->
+      <div class="popup-overlay" v-if="showInfoPopup" @click.self="showInfoPopup = false">
+        <div class="form-popup-modal">
+          <div class="form-container">
+            <p style="text-align:center;">{{ popupMessage }}</p>
+            <div class="popup-button-group" style="text-align:center; margin-top: 1rem;">
+              <button class="btn" @click="showInfoPopup = false">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       <!-- Edit Test Bank Info Popup Form -->
       <!-- Modal Popup -->
@@ -97,6 +123,9 @@
         </div>
       </div>
 
+
+
+
       <!--Test bank questions will be generated here-->
       <div v-for="(q, index) in selectedQuestions" :key="q.id" class="question-box"
         :class="{ selected: selectedQuestionId === q.id }" @click="toggleQuestionSelection(q.id)">
@@ -147,7 +176,7 @@
         <!-- Action buttons -->
         <div v-if="selectedQuestionId === q.id" class="button-group">
           <!-- <button @click.stop="editQuestion(q)">Edit</button> -->
-          <button @click.stop="removeQuestionFromTestBank(q.id)">Remove</button>
+          <button @click.stop="promptRemoveQuestion(q.id)">Remove</button>
         </div>
         <hr>
       </div>
@@ -173,8 +202,6 @@ export default {
       selectedQuestionId: null,
       editingQuestionData: {},
       editingQuestionId: null,
-      displayChapter: this.$route.query.chapter || '',
-      displaySection: this.$route.query.section || '',
       courseId: this.$route.query.courseId || '',
       courseTitle: this.$route.query.courseTitle || '',
       testBankId: this.$route.query.testBankId || '',
@@ -191,35 +218,54 @@ export default {
         graphicFile: null,
         graphicFileName: '',
         graphicPreview: ''
-      }
+      },
+      showDeleteConfirm: false,
+      questionIdToDelete: null,
+      popupMessage: '',
+      showInfoPopup: false
+
+
     };
+  },
+  computed: {
+    displayChapter() {
+      return this.editForm.chapter || this.$route.query.chapter || '';
+    },
+    displaySection() {
+      return this.editForm.section || this.$route.query.section || '';
+    }
   },
 
   mounted() {
     this.initialize();
   },
   methods: {
-    async viewPrevious() {
+    promptRemoveQuestion(questionId) {
+      this.questionIdToDelete = questionId;
+      this.showDeleteConfirm = true;
+    },
+    async confirmRemoveQuestion() {
       try {
-        const response = await api.get('/tests', {
+        await api.delete(`/testbanks/${this.testBankId}/questions/${this.questionIdToDelete}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
-          },
-          params: {
-            course_id: this.courseId,
-            testbank_id: this.testBankId
           }
         });
-        this.testFiles = response.data.tests || [];
-        this.showPopup = true;
+        this.selectedQuestions = this.selectedQuestions.filter(q => q.id !== this.questionIdToDelete);
+        this.questionIdToDelete = null;
+        this.showDeleteConfirm = false;
+        this.popupMessage = 'Question removed from test bank.';
+        this.showInfoPopup = true;
       } catch (err) {
-        console.error('Failed to fetch tests:', err);
-        alert('Could not load previous tests.');
+        console.error('Error removing question:', err);
+        this.popupMessage = 'Failed to remove question from test bank.';
+        this.showInfoPopup = true;
       }
     },
-    closeForm() {
-      this.showPopup = false;
-    },
+
+
+
+   
     async fetchQuestions() {
       if (!this.testBankId) return;
       try {
@@ -251,33 +297,28 @@ export default {
           }
         });
         this.selectedQuestions = this.selectedQuestions.filter(q => q.id !== questionId);
-        alert('Question removed from test bank.');
       } catch (err) {
         console.error('Error removing question:', err);
-        alert('Failed to remove question from test bank.');
       }
     },
 
     async updateTestBank() {
-      try {
-        await api.put(`/testbanks/teacher/${this.testBankId}`, {
-          name: this.editForm.name,
-          chapter_number: this.editForm.chapter,
-          section_number: this.editForm.section
-        }, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+      await api.put(`/testbanks/teacher/${this.testBankId}`, {
+        name: this.editForm.name,
+        chapter_number: this.editForm.chapter,
+        section_number: this.editForm.section
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
 
 
-        this.testBankName = this.editForm.name; // update title
-        this.showEditForm = false;
-        alert('Test bank updated successfully.');
-      } catch (err) {
-        console.error('Error updating test bank:', err);
-        alert('Failed to update test bank.');
-      }
+      this.testBankName = this.editForm.name; // update title
+      this.displayChapter = this.editForm.chapter;
+      this.displaySection = this.editForm.section;
+      this.showEditForm = false;
+
     },
 
     async initialize() {
@@ -322,8 +363,6 @@ export default {
         }
       });
     }
-
-
   }
 };
 
@@ -367,5 +406,19 @@ export default {
   font-weight: bold;
   margin-top: 10px;
   margin-bottom: 6px;
+}
+
+.download-link {
+  color: #4b0082;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.form-popup-modal ul {
+  padding-left: 0;
+}
+
+.form-popup-modal li {
+  margin: 10px 0;
 }
 </style>

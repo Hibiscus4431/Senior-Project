@@ -10,6 +10,17 @@
       </div>
     </div>
 
+    <!-- Edit Blocked Warning Popup -->
+    <div class="popup-overlay" v-if="editBlockedPopup" @click.self="editBlockedPopup = false">
+      <div class="form-popup-modal">
+        <h2>Cannot Edit Question</h2>
+        <p>{{ editBlockedReason }}</p>
+        <p>A new copy will be made instead.</p>
+        <button class="btn" @click="createCopyInstead">Create a Copy</button>
+        <button class="btn cancel" @click="editBlockedPopup = false">Cancel</button>
+      </div>
+    </div>
+
     <div class="page-wrapper">
       <div class="button-row">
         <div class="t_dropdown">
@@ -30,12 +41,12 @@
         <div class="t_dropdown">
           <button class="t_dropbtn">Question Type</button>
           <div class="t_dropdown-content">
-            <a href="#" @click="selectQuestionType('True/False')">True/False</a>
-            <a href="#" @click="selectQuestionType('Multiple Choice')">Multiple Choice</a>
-            <a href="#" @click="selectQuestionType('Matching')">Matching</a>
-            <a href="#" @click="selectQuestionType('Fill in the Blank')">Fill in the Blank</a>
-            <a href="#" @click="selectQuestionType('Short Answer')">Short Answer</a>
-            <a href="#" @click="selectQuestionType('Essay')">Essay</a>
+            <a @click="selectQuestionType('True/False')">True/False</a>
+            <a @click="selectQuestionType('Multiple Choice')">Multiple Choice</a>
+            <a @click="selectQuestionType('Matching')">Matching</a>
+            <a @click="selectQuestionType('Fill in the Blank')">Fill in the Blank</a>
+            <a @click="selectQuestionType('Short Answer')">Short Answer</a>
+            <a @click="selectQuestionType('Essay')">Essay</a>
 
           </div>
         </div>
@@ -56,6 +67,8 @@
         <div id="selectedQuestionType" style="color: #222" class="center large-paragraph">{{ selectedQuestionType }}
         </div>
       </div>
+
+      <p><strong>Note:</strong> Import one Canvas quiz in the QTI at a time please.</p>
 
       <hr>
     </div>
@@ -134,6 +147,24 @@
     </div>
 
     <input type="file" id="fileInput" style="display: none;" @change="handleFileUpload">
+
+
+    <!-- Final Tests Popup -->
+    <div class="popup-overlay" v-if="showPopup" @click.self="closeForm">
+      <div class="form-popup-modal">
+        <form class="form-container" @submit.prevent>
+          <h3>Your Finalized Tests</h3>
+          <ul style="list-style-type: none; padding-left: 0;">
+            <li v-for="test in testFiles" :key="test.test_id">
+              <button v-if="test.download_url && test.hasAnswerKey" class="t_button" @click="downloadTestAndKey(test)">
+                {{ test.name }}
+              </button>
+            </li>
+          </ul>
+          <button type="button" class="btn cancel" @click="closeForm">Close</button>
+        </form>
+      </div>
+    </div>
 
     <!-- Popup Overlay -->
     <div class="popup-overlay" v-show="showForm" @click.self="closeForm">
@@ -291,7 +322,9 @@ export default {
       editCourseNumber: '',
       showAddToTBModal: false,
       questionToAddToTB: null,
-      oldMCOptionIds: [] // ✅ Restored: used for tracking MC option deletions
+      oldMCOptionIds: [], // used for tracking MC option deletions
+      editBlockedPopup: false, // flag and variable for the edit warning popup
+      editBlockedReason: ''
     };
   },
   mounted() {
@@ -306,6 +339,8 @@ export default {
   },
 
   methods: {
+
+
     //functions to add question to test bank
     openAddToTestBank(questionId) {
       this.questionToAddToTB = questionId;
@@ -325,11 +360,9 @@ export default {
         });
 
 
-        alert('Question successfully added to testbank!');
         this.closeAddToTBModal();
       } catch (error) {
         console.error('Failed to add question to testbank:', error);
-        alert('Failed to add question.');
       }
     },
     //functions to edit course info
@@ -355,10 +388,8 @@ export default {
         this.courseTitle = newTitle;
         document.title = newTitle;
         this.showCourseEditPopup = false;
-        alert('Course info updated successfully.');
       } catch (error) {
         console.error('Failed to update course:', error);
-        alert('Failed to update course.');
       }
     },
 
@@ -527,7 +558,6 @@ export default {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           }
         });
-        alert(saveResponse.data.message || 'Questions imported successfully!');
         console.log('Questions imported successfully:', saveResponse.data);
 
         //refrsh the question list
@@ -535,7 +565,7 @@ export default {
       }
       catch (error) {
         console.error('QTI import Failed:', error);
-        alert('Failed to upload file. Please try again.');
+
       }
     },
     async handleQuestionSave() {
@@ -674,7 +704,6 @@ export default {
           await api.post('/questions', postData, config);
         }
 
-        alert('Question saved successfully!');
         this.closeForm();
         this.resetForm();
         this.fetchQuestions(this.selectedQuestionType);
@@ -683,7 +712,6 @@ export default {
         if (err && err.response && err.response.data) {
           serverMsg = err.response.data.error || err.response.data.message || serverMsg;
         }
-        alert('Save failed: ' + serverMsg);
         console.error('Error saving question:', err);
       }
     },
@@ -738,7 +766,29 @@ export default {
 
     },
 
-    editQuestion(question) {
+    async editQuestion(question) {
+      try {
+        const res = await api.get(`/questions/${question.id}/used_in`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (res.data.is_used) {
+          // Question is used in a published/final test
+          this.editBlockedReason = `This question is used in a "${res.data.tests[0].status}" test: "${res.data.tests[0].name}".`;
+          this.editingQuestionId = question.id;
+          this.editBlockedPopup = true;
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking question status:', err);
+        alert('Could not verify question status.');
+        return;
+      }
+
+      // If not used, proceed with edit
+
       this.editingQuestionId = question.id;
       this.question = question.text;
       this.chapter = question.chapter;
@@ -791,11 +841,27 @@ export default {
             }
           });
           this.questions = this.questions.filter(q => q.id !== id);
-          alert('Question deleted.');
         } catch (err) {
           console.error(err);
-          alert('Failed to delete question.');
         }
+      }
+    },
+    async createCopyInstead() {
+      try {
+        const res = await api.post(`/questions/${this.editingQuestionId}/copy_to_course`, {
+          course_id: this.courseId
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        alert('A copy of the question was created. You can now edit it.');
+        this.editBlockedPopup = false;
+        this.fetchQuestions(this.selectedQuestionType); // reload with new question included
+      } catch (err) {
+        console.error('Failed to create copy:', err);
+        alert('Failed to create a copy of this question.');
       }
     }
   }
