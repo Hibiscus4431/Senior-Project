@@ -293,10 +293,8 @@ export default {
           }
         });
         this.selectedQuestions = this.selectedQuestions.filter(q => q.id !== questionId);
-        alert('Question removed from test bank.');
       } catch (err) {
         console.error('Error removing question:', err);
-        alert('Failed to remove question from test bank.');
       }
     },
 
@@ -395,7 +393,6 @@ export default {
         }
       } catch (err) {
         console.warn(`Failed to download answer key for test ${test.test_id}:`, err);
-        // Optional: alert('Answer key not available.');
       }
     }
 

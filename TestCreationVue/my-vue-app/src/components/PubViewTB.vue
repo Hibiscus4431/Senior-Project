@@ -189,10 +189,8 @@ export default {
 
         this.selectedTestBank = this.editForm.name;
         this.showEditForm = false;
-        alert('Test bank updated successfully.');
       } catch (err) {
         console.error('Error updating test bank:', err);
-        alert('Failed to update test bank.');
       }
     },
 
@@ -269,16 +267,7 @@ export default {
       }
     },
     async removeQuestionFromTestBank(questionId) {
-      if (this.published) {
-        alert("This test bank is published and cannot be modified.");
-        return;
-      }
-
-      if (!this.selectedTestBankId) {
-        alert("Test bank ID is missing. Cannot remove question.");
-        return;
-      }
-
+      
       if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
 
       try {
@@ -291,11 +280,8 @@ export default {
 
         this.questions = this.questions.filter(q => q.id !== questionId);
         this.selectedQuestionId = null;
-
-        alert('Question removed from test bank.');
       } catch (err) {
         console.error('Error removing question:', err);
-        alert('Failed to remove question from test bank.');
       }
     },
     async publishTestbank() {
@@ -307,15 +293,12 @@ export default {
         });
 
         this.published = true;
-        alert("Test bank published successfully. Questions are now locked.");
       } catch (error) {
         console.error("Error publishing test bank:", error);
-        alert("Failed to publish test bank.");
       }
     },
     async deleteTestBank() {
       if (this.published) {
-        alert("Cannot delete a published test bank.");
         return;
       }
 
@@ -326,7 +309,6 @@ export default {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
 
-        alert('Draft pool deleted successfully.');
         this.$router.push({
           path: '/PubQuestions',
           query: {
@@ -336,7 +318,6 @@ export default {
         });
       } catch (err) {
         console.error('Error deleting draft pool:', err);
-        alert('Failed to delete draft pool.');
       }
     },
     async checkPublishedStatus() {

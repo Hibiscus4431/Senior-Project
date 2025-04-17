@@ -325,11 +325,9 @@ export default {
         });
 
 
-        alert('Question successfully added to testbank!');
         this.closeAddToTBModal();
       } catch (error) {
         console.error('Failed to add question to testbank:', error);
-        alert('Failed to add question.');
       }
     },
     //functions to edit course info
@@ -355,10 +353,8 @@ export default {
         this.courseTitle = newTitle;
         document.title = newTitle;
         this.showCourseEditPopup = false;
-        alert('Course info updated successfully.');
       } catch (error) {
         console.error('Failed to update course:', error);
-        alert('Failed to update course.');
       }
     },
 
@@ -527,7 +523,6 @@ export default {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           }
         });
-        alert(saveResponse.data.message || 'Questions imported successfully!');
         console.log('Questions imported successfully:', saveResponse.data);
 
         //refrsh the question list
@@ -535,7 +530,7 @@ export default {
       }
       catch (error) {
         console.error('QTI import Failed:', error);
-        alert('Failed to upload file. Please try again.');
+  
       }
     },
     async handleQuestionSave() {
@@ -674,7 +669,6 @@ export default {
           await api.post('/questions', postData, config);
         }
 
-        alert('Question saved successfully!');
         this.closeForm();
         this.resetForm();
         this.fetchQuestions(this.selectedQuestionType);
@@ -683,7 +677,6 @@ export default {
         if (err && err.response && err.response.data) {
           serverMsg = err.response.data.error || err.response.data.message || serverMsg;
         }
-        alert('Save failed: ' + serverMsg);
         console.error('Error saving question:', err);
       }
     },
@@ -791,10 +784,8 @@ export default {
             }
           });
           this.questions = this.questions.filter(q => q.id !== id);
-          alert('Question deleted.');
         } catch (err) {
           console.error(err);
-          alert('Failed to delete question.');
         }
       }
     }
