@@ -327,7 +327,7 @@ def get_full_published_testbanks_by_course():
 
         # Step 3: Get questions in this testbank
         cur.execute("""
-            SELECT q.id, q.question_text, q.type, q.chapter_number, q.section_number
+            SELECT q.id, q.question_text, q.type, q.chapter_number, q.section_number, q.attachment_id
             FROM test_bank_questions tbq
             JOIN Questions q ON tbq.question_id = q.id
             WHERE tbq.test_bank_id = %s;
