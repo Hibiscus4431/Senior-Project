@@ -77,10 +77,8 @@ export default {
         }
         catch (error) {
           console.error('Error saving book:', error);
-          alert('Failed to save the book. Please try again.');
         }
       } else {
-        alert('Please fill out all fields.');
       }
     }
   }

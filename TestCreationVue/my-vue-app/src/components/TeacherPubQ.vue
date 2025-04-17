@@ -229,7 +229,6 @@ export default {
 
       } catch (err) {
         console.error('Failed to load testbanks:', err);
-        alert('Could not load published testbanks.');
       }
     },
     openFeedbackForm(questionId) {
@@ -253,11 +252,9 @@ export default {
           }
         });
 
-        alert('Feedback submitted!');
         this.closeFeedbackForm();
       } catch (error) {
         console.error('Error submitting feedback:', error);
-        alert('Failed to submit feedback.');
       }
     },
     async fetchTeacherTestbanks() {
@@ -289,11 +286,9 @@ export default {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
 
-        alert('Question added to the selected draft pool!');
         this.closeTestBankModal();
       } catch (err) {
         console.error("Failed to add question:", err);
-        alert("Could not add question to the selected pool.");
       }
     },
     async toggleQuestionSelection(questionId) {
@@ -345,7 +340,6 @@ export default {
         console.log("Published test questions loaded:", this.fullTestbanks);
       } catch (err) {
         console.error("Failed to load published tests:", err);
-        alert("Could not load published test questions.");
       }
     },
     async loadFeedbackForQuestion(question) {

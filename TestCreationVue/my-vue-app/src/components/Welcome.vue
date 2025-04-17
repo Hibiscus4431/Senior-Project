@@ -38,14 +38,12 @@ export default {
 .button {
     background-color: var(--banner-color);
     border: none;
-    color: #222;
-    padding: 10px 15px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 25px;
-    margin: 4px 2px;
+    color: var(--text-color);
+    padding: 10px 20px;
+    font-size: 18px;
+    border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .button-container {

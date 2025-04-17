@@ -107,14 +107,10 @@ export default {
             }
           });
           console.log('Course saved successfully:', response.data);
-          alert('Course saved successfully!');
           this.$router.push({ path: '/TeacherHome' });
         } catch (error) {
           console.error('Error saving course:', error);
-          alert('Failed to save the course. Please try again.');
         }
-      } else {
-        alert('Please fill out all fields.');
       }
     }
   }

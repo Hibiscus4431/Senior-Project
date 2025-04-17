@@ -2,16 +2,14 @@
 
   /* changing style of create button */
   .button {
-    background-color: #89c6ef;
+    background-color: var(--banner-color);
     border: none;
-    color: black;
-    padding: 10px 15px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 25px;
-    margin: 4px 2px;
+    color: var(--text-color);
+    padding: 10px 20px;
+    font-size: 18px;
+    border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .button:hover {
@@ -116,4 +114,13 @@
 
 .theme-publisher input[type="submit"]:hover {
   background-color: #7db4d9;
+}
+
+.button-row {
+  display: flex;
+  justify-content: center; /* centers items horizontally */
+  align-items: center;
+  gap: 15px;
+  width: 100%; /* ensures it fills the parent width */
+  margin: 20px 0;
 }
