@@ -42,12 +42,12 @@
     <div class="p_dropdown">
       <button class="p_dropbtn">Question Type</button>
       <div class="p_dropdown-content">
-        <a href="#" @click="fetchQuestions('True/False')">True/False</a>
-        <a href="#" @click="fetchQuestions('Multiple Choice')">Multiple Choice</a>
-        <a href="#" @click="fetchQuestions('Matching')">Matching</a>
-        <a href="#" @click="fetchQuestions('Fill in the Blank')">Fill in the Blank</a>
-        <a href="#" @click="fetchQuestions('Short Answer')">Short Answer</a>
-        <a href="#" @click="fetchQuestions('Essay')">Essay</a>
+        <a @click="fetchQuestions('True/False')">True/False</a>
+        <a @click="fetchQuestions('Multiple Choice')">Multiple Choice</a>
+        <a @click="fetchQuestions('Matching')">Matching</a>
+        <a @click="fetchQuestions('Fill in the Blank')">Fill in the Blank</a>
+        <a @click="fetchQuestions('Short Answer')">Short Answer</a>
+        <a @click="fetchQuestions('Essay')">Essay</a>
       </div>
     </div>
   
