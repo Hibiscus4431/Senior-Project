@@ -189,18 +189,24 @@ def save_qti_questions(import_id):
 
         
         # Re-extract if missing
-        if not os.path.exists(unzipped_folder_path):
-            print("🛠️ Folder not found locally. Re-extracting from Supabase...")
-            unzipped_folder_path = extract_qti_zip_from_supabase(original_supabase_path, import_id)
-
-        
-        # Get the inner folder (e.g., group-4-project-quiz-export-3)
+        # ✅ Skip __MACOSX and find the correct main folder
         try:
-            inner_dir = next(os.scandir(unzipped_folder_path)).path
+            inner_dir = next(
+                d.path for d in os.scandir(unzipped_folder_path)
+                if d.is_dir() and "__MACOSX" not in d.name
+            )
         except StopIteration:
-            return jsonify({"error": "Extracted folder is empty!"}), 500
-        
-        manifest_path = os.path.join(inner_dir, "imsmanifest.xml")
+            return jsonify({"error": "No valid folder found inside extracted zip!"}), 500
+
+        # ✅ Recursively find imsmanifest.xml regardless of depth
+        manifest_path = None
+        for root, dirs, files in os.walk(inner_dir):
+            if "imsmanifest.xml" in files:
+                manifest_path = os.path.join(root, "imsmanifest.xml")
+                break
+
+        if not manifest_path:
+            return jsonify({"error": "imsmanifest.xml not found in extracted content!"}), 400
 
 
         # Parse file
