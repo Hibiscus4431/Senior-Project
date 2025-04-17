@@ -13,6 +13,10 @@
       <button class="t_button" @click="showBackWarning = true">Back to Draft Pool</button>
       <button class="t_button" @click="exportWarning = true">Export Test to Document</button>
     </div>
+    <p class="export-note">
+      <strong>Note:</strong> Only the most recently <strong>Exported</strong> test document
+      will be published. You <strong>must</strong> export a test once to publish.<br />
+    </p>
 
     <p class="export-note">
       <strong>Note:</strong> Anything displayed in <span class="green-text">green</span> will not appear on the student
@@ -280,48 +284,16 @@ export default {
           return;
         }
 
-
-        // Step 1: Generate test + key Word documents
-        const { Packer } = await import("docx");
-        const [testBlob, keyBlob] = await this.generateTestAndKeyDocs();
-        const testFile = this.blobToFile(testBlob, `${this.testOptions.testName}.docx`);
-        const keyFile = this.blobToFile(keyBlob, `${this.testOptions.testName}.key.docx`);
-
-        // Step 2: Upload the test file
-        const testForm = new FormData();
-        testForm.append('file', testFile);
-        await api.post(`/tests/${testId}/upload_pdf`, testForm, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        // Step 3: Upload the answer key
-        await this.uploadAnswerKey(testId, keyFile);
-
-        // Step 4: Upload the resource image if present
-        if (this.testOptions.graphicPreview) {
-          const imageFile = this.dataUrlToFile(this.testOptions.graphicPreview, "resource_image.png");
-          const imageForm = new FormData();
-          imageForm.append("file", imageFile);
-
-          await api.post(`/tests/${testId}/upload_attachment`, imageForm, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-        }
-
-        // Step 5: Call publish route
+        // Step 1: Publish the finalized test
         await api.post(`/tests/${testId}/publish`, {}, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
 
-        alert("✅ Test successfully uploaded and published!");
+        alert("✅ Test successfully published!");
+        localStorage.removeItem('finalizedTestId');
+
       } catch (err) {
         console.error("❌ Failed to publish test:", (err.response && err.response.data) || err.message);
         alert("An error occurred while publishing. Check the console.");
