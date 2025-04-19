@@ -357,6 +357,8 @@ def save_qti_questions(import_id):
 
         conn.commit()
 
+        shutil.rmtree(unzipped_folder_path, ignore_erros=True)
+
         return jsonify({
             "message": f"{len(inserted)} questions saved and linkes to test bank '{quiz_title}' successfully.",
             "test_bank_id": test_bank_id,
@@ -368,7 +370,7 @@ def save_qti_questions(import_id):
         return jsonify({"error": str(e)}), 500
 
 
-
+    
     finally:
         cursor.close()
         conn.close()
