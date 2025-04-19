@@ -14,33 +14,42 @@ def get_draft_questions():
         return jsonify(auth_data[0]), auth_data[1]
 
     test_bank_id = request.args.get('test_bank_id')
-    type_filter = request.args.get('type', 'All Questions')
+    types_param = request.args.get('types')  # New: comma-separated or JSON list
 
     if not test_bank_id:
         return jsonify({"error": "Missing test_bank_id"}), 400
+
+    # Parse type filters
+    import json
+    type_filters = []
+    if types_param:
+        try:
+            type_filters = json.loads(types_param) if isinstance(types_param, str) else types_param
+            if not isinstance(type_filters, list):
+                raise ValueError
+            # ✅ New rule: if "All Questions" is selected, ignore other filters
+            if "All Questions" in type_filters:
+                type_filters = []
+        except:
+            return jsonify({"error": "Invalid 'types' parameter. Must be a JSON array like [\"Multiple Choice\", \"Essay\"]"}), 400
 
     conn = Config.get_db_connection()
     cur = conn.cursor()
 
     try:
         # Step 1: Fetch filtered questions from test bank
-        if type_filter == "Multiple Choice":
-            cur.execute("""
+        if type_filters:
+            type_placeholders = ','.join(['%s'] * len(type_filters))
+            query = f"""
                 SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.est_time, q.source,
                        q.true_false_answer, q.is_published, q.attachment_id
                 FROM test_bank_questions tbq
                 JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s AND q.type IN ('Multiple Choice', 'Matching', 'True/False', 'Fill in the Blank')
-            """, (test_bank_id,))
-        elif type_filter == "Short Answer/Essay":
-            cur.execute("""
-                SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.est_time, q.source,
-                       q.is_published, q.attachment_id
-                FROM test_bank_questions tbq
-                JOIN questions q ON tbq.question_id = q.id
-                WHERE tbq.test_bank_id = %s AND q.type IN ('Essay', 'Short Answer')
-            """, (test_bank_id,))
-        else:  # all questions
+                WHERE tbq.test_bank_id = %s AND q.type IN ({type_placeholders})
+            """
+            cur.execute(query, (test_bank_id, *type_filters))
+        else:
+            # All questions
             cur.execute("""
                 SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.est_time, q.source,
                        q.true_false_answer, q.is_published, q.attachment_id
@@ -95,7 +104,6 @@ def get_draft_questions():
                     dict(zip([desc[0] for desc in cur.description], row))
                     for row in cur.fetchall()
                 ]
-
                 q['correct_option'] = next((opt for opt in options if opt['is_correct']), None)
                 q['incorrect_options'] = [opt for opt in options if not opt['is_correct']]
 
