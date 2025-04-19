@@ -205,7 +205,7 @@ def get_questions_in_testbank(testbank_id):
     ###################
     cur.execute("""
     SELECT q.id, q.question_text, q.type, q.chapter_number, q.section_number,
-        q.default_points, q.est_time, q.grading_instructions
+        q.default_points, q.est_time, q.grading_instructions, q.attachment_id
         FROM test_bank_questions tbq
         JOIN questions q ON tbq.question_id = q.id
         WHERE tbq.test_bank_id = %s;
@@ -484,7 +484,7 @@ def get_questions_in_testbank_publihser(testbank_id):
         return jsonify({"error": "You do not own this testbank"}), 403
 
     cur.execute("""
-        SELECT q.id, q.question_text, q.type, q.chapter_number, q.section_number
+        SELECT q.id, q.question_text, q.type, q.chapter_number, q.section_number, q.attachment_id
         FROM test_bank_questions tbq
         JOIN questions q ON tbq.question_id = q.id
         WHERE tbq.test_bank_id = %s;
