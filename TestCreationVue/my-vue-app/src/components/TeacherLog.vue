@@ -1,12 +1,12 @@
 <!-- filepath: /c:/Users/laure/Senior-Project/TestCreationVue/src/components/TeacherLog.vue -->
 
 <template>
- <div class="theme-teacher">
-  <div class="top-banner">
-  <div class="banner-title">Teacher Login</div>
-</div>
+  <div class="theme-teacher">
+    <div class="top-banner">
+      <div class="banner-title">Teacher Login</div>
+    </div>
 
-    <div class="center large-paragraph" style ="color: #222">
+    <div class="center large-paragraph" style="color: #222">
       Please enter your teacher username and password:
       <br />
       <br />
@@ -24,7 +24,7 @@
 
       <!-- Show error message if user and password are entered incorrectly -->
       <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
-      
+
       <!-- Show loading spinner if the form is submitting -->
       <div v-if="loading" class="loading-message">Logging in...</div>
     </div>
@@ -33,7 +33,7 @@
 
 <script>
 import api from '@/api'; // <-- your custom Axios instance with token handling
-import jwtDecode from 'jwt-decode';
+import { default as jwtDecode } from 'jwt-decode';
 
 export default {
   data() {
@@ -51,6 +51,8 @@ export default {
       try {
         const decoded = jwtDecode(token);
         const currentTime = Date.now() / 1000;
+        console.log('Decoded token:', decoded);
+
 
         if (decoded.exp > currentTime && decoded.role === 'teacher') {
           this.$router.push('/TeacherHome');
@@ -62,51 +64,51 @@ export default {
   },
   methods: {
     async submitForm() {
-  if (!this.username || !this.password) {
-    this.errorMessage = "Please enter both username and password.";
-    return;
-  }
+      if (!this.username || !this.password) {
+        this.errorMessage = "Please enter both username and password.";
+        return;
+      }
 
-  if (this.username.trim().length < 3 || this.password.trim().length < 6) {
-    this.errorMessage = "Username must be at least 3 characters and password at least 6 characters.";
-    return;
-  }
+      if (this.username.trim().length < 3 || this.password.trim().length < 6) {
+        this.errorMessage = "Username must be at least 3 characters and password at least 6 characters.";
+        return;
+      }
 
-  this.loading = true;
-  this.errorMessage = "";
+      this.loading = true;
+      this.errorMessage = "";
 
-  try {
-    const res = await api.post('/auth/login', {
-      username: this.username.toLowerCase(),
-      password: this.password
-    });
+      try {
+        const res = await api.post('/auth/login', {
+          username: this.username.toLowerCase(),
+          password: this.password
+        });
 
-    const { token, user_id, role } = res.data;
+        const { token, user_id, role } = res.data;
 
-    // Store token and identity in localStorage
-    localStorage.setItem('token', token);
-    localStorage.setItem('user_id', user_id);
-    localStorage.setItem('role', role);
+        // Store token and identity in localStorage
+        localStorage.setItem('token', token);
+        localStorage.setItem('user_id', user_id);
+        localStorage.setItem('role', role);
 
-    // Redirect based on role
-    if (role === 'teacher') {
-      this.$router.push('/TeacherHome');
-    } else {
-      this.errorMessage = "Only teachers can log in here.";
-      localStorage.clear(); // Clear stored data for non-teachers
+        // Redirect based on role
+        if (role === 'teacher') {
+          this.$router.push('/TeacherHome');
+        } else {
+          this.errorMessage = "Only teachers can log in here.";
+          localStorage.clear(); // Clear stored data for non-teachers
+        }
+      } catch (error) {
+        if (!error.response) {
+          this.errorMessage = "Network error. Please check your connection.";
+        } else if (error.response.status === 401) {
+          this.errorMessage = "Invalid username or password.";
+        } else {
+          this.errorMessage = (error.response && error.response.data && error.response.data.message) || "An error occurred during login.";
+        }
+      } finally {
+        this.loading = false;
+      }
     }
-  } catch (error) {
-    if (!error.response) {
-      this.errorMessage = "Network error. Please check your connection.";
-    } else if (error.response.status === 401) {
-      this.errorMessage = "Invalid username or password.";
-    } else {
-  this.errorMessage = (error.response && error.response.data && error.response.data.message) || "An error occurred during login.";
-}
-  } finally {
-    this.loading = false;
-  }
-}
   }
 };
 </script>
@@ -134,5 +136,4 @@ export default {
   color: #ffffff;
   margin-top: 10px;
 }
-
 </style>
