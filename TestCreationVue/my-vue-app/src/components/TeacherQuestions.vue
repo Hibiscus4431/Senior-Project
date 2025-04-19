@@ -11,13 +11,17 @@
     </div>
 
     <!-- Edit Blocked Warning Popup -->
-    <div class="popup-overlay" v-if="editBlockedPopup" @click.self="editBlockedPopup = false">
+    <div class="popup-overlay" v-if="editBlockedPopup">
       <div class="form-popup-modal">
-        <h2>Cannot Edit Question</h2>
-        <p>{{ editBlockedReason }}</p>
-        <p>A new copy will be made instead.</p>
-        <button class="btn" @click="createCopyInstead">Create a Copy</button>
-        <button class="btn cancel" @click="editBlockedPopup = false">Cancel</button>
+        <form class="form-container" @submit.prevent>
+          <h1>Cannot Edit Question</h1>
+          <p style="margin-top: 15px;">{{ editBlockedReason }}</p>
+          <p>A new copy will be made instead.</p>
+
+          <br />
+          <button type="button" class="btn" @click="createCopyInstead">Create a Copy</button>
+          <button type="button" class="btn cancel" @click="editBlockedPopup = false">Cancel</button>
+        </form>
       </div>
     </div>
 
@@ -128,7 +132,7 @@
 
 
     <!-- Add to Test Bank Modal -->
-    <div class="popup-overlay" v-show="showAddToTBModal" @click.self="closeAddToTBModal">
+    <div class="popup-overlay" v-show="showAddToTBModal">
       <div class="form-popup-modal">
         <h2>Select draft pool to add question to:</h2>
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
@@ -150,7 +154,7 @@
 
 
     <!-- Final Tests Popup -->
-    <div class="popup-overlay" v-if="showPopup" @click.self="closeForm">
+    <div class="popup-overlay" v-if="showPopup">
       <div class="form-popup-modal">
         <form class="form-container" @submit.prevent>
           <h3>Your Finalized Tests</h3>
@@ -167,7 +171,7 @@
     </div>
 
     <!-- Popup Overlay -->
-    <div class="popup-overlay" v-show="showForm" @click.self="closeForm">
+    <div class="popup-overlay" v-show="showForm">
       <div class="form-popup-modal">
         <form class="form-container" @submit.prevent="handleQuestionSave">
           <h1>{{ editingQuestionId ? 'Edit Question' : 'New Question' }}</h1>
@@ -267,7 +271,7 @@
     </div>
 
     <!-- Course Edit Popup -->
-    <div class="popup-overlay" v-if="showCourseEditPopup" @click.self="showCourseEditPopup = false">
+    <div class="popup-overlay" v-if="showCourseEditPopup">
       <div class="form-popup-modal">
         <form class="form-container" @submit.prevent="saveCourseInfo">
           <h1>Edit Course Info</h1>
