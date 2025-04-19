@@ -47,7 +47,7 @@
       </div>
 
       <!-- Info Message Popup -->
-      <div class="popup-overlay" v-if="showInfoPopup" >
+      <div class="popup-overlay" v-if="showInfoPopup">
         <div class="form-popup-modal">
           <div class="form-container">
             <p style="text-align:center;">{{ popupMessage }}</p>
@@ -81,7 +81,7 @@
 
       <!-- Create New Test Popup -->
       <div class="center large-paragraph" style="color:#222">
-        <div class="popup-overlay" v-if="showCreateTestWarning" >
+        <div class="popup-overlay" v-if="showCreateTestWarning">
           <div class="form-popup-modal">
             <form class="form-container" @submit.prevent="goToCreateTest">
               <label><strong>Test Name:</strong></label>

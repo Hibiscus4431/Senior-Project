@@ -43,7 +43,7 @@
         </div>
 
         <!-- Finalized Test Popup -->
-        <div class="popup-overlay" v-if="showPopup" @click.self="showPopup = false">
+        <div class="popup-overlay" v-if="showPopup">
           <div class="form-popup-modal">
             <form class="form-container">
               Your Finalized Tests
@@ -62,7 +62,7 @@
 
 
         <!-- Choose Test to Publish Popup -->
-        <div class="popup-overlay" v-if="showPublishSelector" @click.self="showPublishSelector = false">
+        <div class="popup-overlay" v-if="showPublishSelector">
           <div class="form-popup-modal">
             <form class="form-container" @submit.prevent="publishSelectedTest">
               <h3>Select a Finalized Test to Publish</h3>

@@ -53,7 +53,7 @@
           </div>
 
           <!-- ✅ Feedback popup -->
-          <div v-if="showFeedbackForm" class="popup-overlay" @click.self="closeFeedbackForm">
+          <div v-if="showFeedbackForm" class="popup-overlay">
             <div class="form-popup-modal">
               <h2>Leave Feedback</h2>
               <textarea v-model="feedbackText" rows="5" placeholder="Enter your comment here..."></textarea>
