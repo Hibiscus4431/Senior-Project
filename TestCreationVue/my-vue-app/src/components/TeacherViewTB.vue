@@ -173,6 +173,12 @@
 
         <span><strong>Grading Instructions:</strong> {{ q.grading_instructions || 'None' }}</span>
 
+        <div v-if="q.attachment && q.attachment.url">
+          <p><strong>Attached Image:</strong></p>
+          <img :src="q.attachment.url" alt="Attachment" style="max-width: 100%; max-height: 300px; margin: 10px 0;" />
+        </div>
+
+
         <!-- Action buttons -->
         <div v-if="selectedQuestionId === q.id" class="button-group">
           <!-- <button @click.stop="editQuestion(q)">Edit</button> -->
@@ -265,7 +271,7 @@ export default {
 
 
 
-   
+
     async fetchQuestions() {
       if (!this.testBankId) return;
       try {

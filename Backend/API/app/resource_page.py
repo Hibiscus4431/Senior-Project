@@ -637,19 +637,22 @@ def get_test_questions(test_id):
 
             # Attachments (signed URL)
             if q.get('attachment_id'):
-                cur.execute("""
-                    SELECT file_name, file_path FROM attachments WHERE attachments_id = %s;
-                """, (q['attachment_id'],))
-                attachment = cur.fetchone()
-                if attachment:
-                    signed = supabase.storage.from_('Attachments').create_signed_url(
-                        path=attachment[1],
-                        expires_in=14400  # 4 hours
-                    )
-                    q['attachment'] = {
-                        "name": attachment[0],
-                        "url": signed['signedURL']
-                    }
+                try:
+                    cur.execute("""
+                        SELECT name, filepath FROM attachments WHERE attachments_id = %s;
+                    """, (q['attachment_id'],))
+                    attachment = cur.fetchone()
+                    if attachment:
+                        signed = supabase.storage.from_('attachments').create_signed_url(
+                            path=attachment[1],
+                            expires_in=14400  # 4 hours
+                        )
+                        q['attachment'] = {
+                            "name": attachment[0],
+                            "url": signed['signedURL']
+                        }
+                except Exception as e:
+                    print(f"❌ Error generating signed URL for qid {q['id']}: {e}")
 
             # Multiple Choice
             if qtype == 'Multiple Choice':

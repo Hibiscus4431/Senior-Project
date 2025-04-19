@@ -1,7 +1,7 @@
 <template>
   <div class="theme-publisher">
     <div class="top-banner">
-      <div class="banner-title">Create New Test Bank</div>
+      <div class="banner-title">Create New Draft Pool</div>
 
       <div class="banner-actions">
         <router-link to="/PubHome" class="p_banner-btn">Home</router-link>
@@ -11,7 +11,7 @@
     <div class="center large-paragraph" style="color:#222">
       <form @submit.prevent="saveTestBank">
 
-        <label for="bankName">Name of Test Bank:</label>
+        <label for="bankName">Name of Draft Pool:</label>
         <input type="text" id="bankName" v-model="bankName" style="height:20px" required /><br>
 
         <label for="bankCh">Textbook Chapter:</label>
