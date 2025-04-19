@@ -95,6 +95,13 @@
               <h3>{{ index + 1 }}. {{ element.question_text }}</h3>
             </div>
 
+            <!-- Image Preview if available -->
+            <div v-if="element.attachment && element.attachment.url" class="question-image-preview">
+              <img :src="element.attachment.url" alt="Question Image"
+                style="max-width: 100%; max-height: 300px; margin-top: 10px; margin-bottom: 10px;" />
+            </div>
+
+
             <!-- Multiple Choice Question boxes-->
             <div v-if="element.type === 'Multiple Choice'">
               <ol type="A">
@@ -330,19 +337,20 @@ export default {
         if (response.status === 201) {
           const testId = response.data.test_id;
 
-          // Upload graphic if present
-          if (this.testOptions.graphicPreview) {
-            const imageFile = this.dataUrlToFile(this.testOptions.graphicPreview, "resource_image.png");
-            const formData = new FormData();
-            formData.append('file', imageFile);
+          //this needs to be debugged
+          // // Upload graphic if present
+          // if (this.testOptions.graphicPreview) {
+          //   const imageFile = this.dataUrlToFile(this.testOptions.graphicPreview, "resource_image.png");
+          //   const formData = new FormData();
+          //   formData.append('file', imageFile);
 
-            await api.post(`/tests/${testId}/upload_attachment`, formData, {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-                Authorization: `Bearer ${localStorage.getItem('token')}`
-              }
-            });
-          }
+          //   await api.post(`/tests/${testId}/upload_attachment`, formData, {
+          //     headers: {
+          //       'Content-Type': 'multipart/form-data',
+          //       Authorization: `Bearer ${localStorage.getItem('token')}`
+          //     }
+          //   });
+          // }
 
           return {
             testId,
@@ -617,7 +625,7 @@ export default {
       };
 
       // ------Test Page-----
-      const testContent = () => {
+      const testContent = async () => {
         const content = [
           new Paragraph({
             text: `${this.testOptions.testName} - Version: XXXX`,
@@ -628,7 +636,36 @@ export default {
           createHorizontalLine()
         ];
 
-        this.questions.forEach((q, index) => {
+        for (let index = 0; index < this.questions.length; index++) {
+          const q = this.questions[index];
+          // ✅ Fetch and insert question attachment image
+          if (q.attachment && q.attachment.url) {
+            try {
+              const imageResponse = await fetch(q.attachment.url);
+              const imageBuffer = await imageResponse.arrayBuffer();
+              const imageBytes = new Uint8Array(imageBuffer);
+
+              content.push(
+                new Paragraph({
+                  children: [
+                    new ImageRun({
+                      data: imageBytes,
+                      transformation: {
+                        width: 500,
+                        height: 300
+                      }
+                    })
+                  ],
+                  spacing: { after: 100 }
+                })
+              );
+            } catch (err) {
+              console.warn(`⚠ Failed to fetch image for question ${index + 1}:`, err);
+            }
+          };
+
+
+          //question text
           content.push(
             new Paragraph({
               text: `${index + 1}. ${q.question_text}`,
@@ -709,7 +746,7 @@ export default {
 
 
           content.push(new Paragraph({ text: " ", spacing: { after: 300 } }));
-        });
+        };
 
         return content;
       };
@@ -825,7 +862,7 @@ export default {
           properties: {},
           children: [
             ...coverPageContent(),
-            ...testContent(),
+            ...(await testContent()),
             ...resourceSection
           ]
         }],

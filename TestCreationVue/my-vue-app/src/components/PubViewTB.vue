@@ -108,6 +108,12 @@
             <strong>Essay Instructions:</strong> {{ question.instructions || 'None' }}
           </div>
 
+          <div v-if="question.attachment">
+            <p><strong>Attached Image:</strong></p>
+            <img :src="question.attachment" alt="Question Attachment:"
+              style="max-width: 100%; max-height: 400px; margin-bottom: 10px;" />
+          </div>
+
           <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
 
           <div v-if="question.attachment && question.attachment.url">
