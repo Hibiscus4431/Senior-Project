@@ -33,12 +33,13 @@
         </div>
 
         <!-- Test Options Section -->
-        <div class="page-wrapper" style="margin-top: 40px;">
+        <div class="center large-paragraph" style="color:#222">
           Test Options:
           <div class="button-row">
             <button class="t_button" @click="viewPreviousTests">View Previous Tests</button>
             <button class="t_button" @click="chooseTestToPublish">Choose Test to Publish</button>
           </div>
+
         </div>
 
         <!-- Finalized Test Popup -->

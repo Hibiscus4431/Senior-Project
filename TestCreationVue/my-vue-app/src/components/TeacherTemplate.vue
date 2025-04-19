@@ -9,14 +9,10 @@
     </div>
 
     <div class="button-row">
-      <button class="t_button" @click="publishWarning = true">Publish Final Test</button>
       <button class="t_button" @click="showBackWarning = true">Back to Draft Pool</button>
       <button class="t_button" @click="exportWarning = true">Export Test to Document</button>
     </div>
-    <p class="export-note">
-      <strong>Note:</strong> Only the most recently <strong>Exported</strong> test document
-      will be published. You <strong>must</strong> export a test once to publish.<br />
-    </p>
+
 
     <p class="export-note">
       <strong>Note:</strong> Anything displayed in <span class="green-text">green</span> will not appear on the student
@@ -48,23 +44,6 @@
       </div>
     </div>
 
-    <!-- Publish Warning Modal -->
-    <div class="popup-overlay" v-if="publishWarning" @click.self="publishWarning = false">
-      <div class="form-popup-modal">
-        <div class="form-container">
-          <h2 style="text-align: center;">Confirm Publish</h2>
-          <p style="text-align: center; font-size: 18px;">
-            Once you publish this test, the questions on this page will no longer be editable.
-            Are you sure you want to continue?
-          </p>
-          <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
-            <button class="btn" @click="confirmPublish">Yes, Publish</button>
-            <button class="btn cancel" @click="publishWarning = false">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Export Warning Modal -->
     <div class="popup-overlay" v-if="exportWarning" @click.self="exportWarning = false">
       <div class="form-popup-modal">
@@ -82,6 +61,52 @@
       </div>
     </div>
 
+    <!-- Edit Blocked Warning Modal -->
+    <div class="popup-overlay" v-if="editBlockedPopup" @click.self="editBlockedPopup = false">
+      <div class="form-popup-modal">
+        <h2>Cannot Edit Question</h2>
+        <p>{{ editBlockedReason }}</p>
+        <p>A new copy will be made and inserted to your draft pool instead.</p>
+        <div class="button-group">
+          <button @click="createCopyInstead">Create a Copy</button>
+          <button @click="editBlockedPopup = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Question Modal -->
+    <div class="popup-overlay" v-if="showEditForm" @click.self="showEditForm = false">
+      <div class="form-popup-modal">
+        <form class="form-container" @submit.prevent="saveEditedQuestion">
+          <h2>Edit Question</h2>
+
+          <label><b>Question Text</b></label>
+          <input type="text" v-model="editForm.question_text" required />
+
+          <label><b>Chapter Number</b></label>
+          <input type="text" v-model="editForm.chapter" required />
+
+          <label><b>Section Number</b></label>
+          <input type="text" v-model="editForm.section" required />
+
+          <label><b>Points</b></label>
+          <input type="text" v-model="editForm.points" required />
+
+          <label><b>Estimated Time (in minutes)</b></label>
+          <input type="text" v-model="editForm.est_time" required />
+
+          <label><b>Grading Instructions</b></label>
+          <input type="text" v-model="editForm.grading_instructions" />
+
+          <br /><br />
+          <button type="submit" class="btn">Save</button>
+          <button type="button" class="btn cancel" @click="showEditForm = false">Cancel</button>
+        </form>
+      </div>
+    </div>
+
+
+
 
 
     <div class="question-list-container">
@@ -89,7 +114,8 @@
         <template #header></template>
 
         <template #item="{ element, index }">
-          <div class="question-box">
+          <div class="question-box" :class="{ selected: selectedQuestionId === element.id }"
+            @click="toggleQuestionSelection(element.id)">
             <div class="drag-header">
               <span class="drag-handle" title="Drag to reorder">✥</span>
               <h3>{{ index + 1 }}. {{ element.question_text }}</h3>
@@ -181,6 +207,12 @@
               <em>Type: {{ element.type }}</em>
             </div>
 
+            <div v-if="selectedQuestionId === element.id" class="button-group">
+              <button @click.stop="editQuestion(element)">Edit</button>
+              <button @click.stop="removeFromTest(element.id)">Remove from Test</button>
+            </div>
+
+
           </div>
         </template>
 
@@ -209,13 +241,29 @@ export default {
         coverPage: savedOptions.coverPage || false,
         selectedTemplate: savedOptions.selectedTemplate || "All Questions",
         uploadedImage: savedOptions.uploadedImage || '',
-        graphicPreview: savedOptions.graphicPreview || ''
+        graphicPreview: savedOptions.graphicPreview || '',
+        selectedTypes: savedOptions.selectedTypes || [],
       },
       testBankId: this.$route.query.testBankId,
       showBackWarning: false,
       hasUnsavedChanges: true,
       publishWarning: false,
-      exportWarning: false
+      exportWarning: false,
+      selectedQuestionId: null,
+      editingQuestionId: null,
+      editBlockedPopup: false,
+      editBlockedReason: '',
+      showEditForm: false,
+      editForm: {
+        question_text: '',
+        chapter: '',
+        section: '',
+        type: '',
+        points: '',
+        est_time: '',
+        grading_instructions: ''
+      }
+
     };
   },
 
@@ -253,6 +301,122 @@ export default {
   },
 
   methods: {
+    //methods for editing questions==========================================
+    async editQuestion(question) {
+      try {
+        const res = await api.get(`/questions/${question.id}/used_in`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (res.data.is_used) {
+          // Question is used in a finalized test
+          this.editBlockedReason = `This question is used in a "${res.data.tests[0].status}" test: "${res.data.tests[0].name}".`;
+          this.editingQuestionId = question.id;
+          this.editBlockedPopup = true;
+          return;
+        }
+        this.editingQuestionId = question.id;
+        this.editForm = {
+          question_text: question.question_text,
+          chapter: question.chapter_number,
+          section: question.section_number,
+          type: question.type,
+          points: question.default_points,
+          est_time: question.est_time,
+          grading_instructions: question.grading_instructions
+        };
+        this.showEditForm = true;
+
+      } catch (err) {
+        console.error('Error checking question status:', err);
+        alert('Could not verify question status.');
+      }
+    },
+    async createCopyInstead() {
+      try {
+        const res = await api.post(`/questions/${this.editingQuestionId}/copy_to_course`, {
+          course_id: this.$route.query.courseId
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        const newQuestionId = res.data.new_question_id;
+
+        if (!newQuestionId) {
+          throw new Error("New question ID not returned.");
+        }
+
+        // Remove the old question from the local array
+        const index = this.questions.findIndex(q => q.id === this.editingQuestionId);
+        if (index !== -1) this.questions.splice(index, 1);
+
+        // Add new question to the test bank
+        await api.post(`/testbanks/${this.testBankId}/questions`, {
+          question_ids: [newQuestionId]
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        // Refresh the full list and locate the new question
+        await this.fetchQuestions();
+
+        const newQuestion = this.questions.find(q => q.id === newQuestionId);
+        if (!newQuestion) throw new Error("Newly copied question not found.");
+
+        // Open the edit modal on the new question
+        this.editingQuestionId = newQuestion.id;
+        this.selectedQuestionId = newQuestion.id;
+        this.editForm = {
+          question_text: newQuestion.question_text,
+          chapter: newQuestion.chapter_number,
+          section: newQuestion.section_number,
+          type: newQuestion.type,
+          points: newQuestion.default_points,
+          est_time: newQuestion.est_time,
+          grading_instructions: newQuestion.grading_instructions || ''
+        };
+        this.editBlockedPopup = false;
+        this.showEditForm = true;
+
+      } catch (err) {
+        console.error('❌ Failed to create or edit copy:', err);
+        alert('An error occurred while replacing the uneditable question.');
+      }
+    }
+    ,
+
+    async saveEditedQuestion() {
+      try {
+        const res = await api.patch(`/questions/${this.editingQuestionId}`, {
+          question_text: this.editForm.question_text,
+          chapter_number: this.editForm.chapter,
+          section_number: this.editForm.section,
+          default_points: parseFloat(this.editForm.points),
+          est_time: parseInt(this.editForm.est_time),
+          grading_instructions: this.editForm.grading_instructions
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        alert("✅ Question updated!");
+        this.showEditForm = false;
+        await this.fetchQuestions(); // refresh questions from backend
+      } catch (err) {
+        console.error("❌ Failed to update question:", err);
+        alert("Could not update question.");
+      }
+    },
+
+
+
     //methods for exporting, publishing, and going back to the draft pool
     // finalize the document export
     blobToFile(blob, filename) {
@@ -424,6 +588,16 @@ export default {
         }
       });
 
+    },
+    //methods for question management==========================================
+    toggleQuestionSelection(questionId) {
+      this.selectedQuestionId = this.selectedQuestionId === questionId ? null : questionId;
+    },
+    removeFromTest(questionId) {
+      if (confirm("Remove this question from the test?")) {
+        this.questions = this.questions.filter(q => q.id !== questionId);
+        this.selectedQuestionId = null;
+      }
     },
 
 
