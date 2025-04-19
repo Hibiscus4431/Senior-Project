@@ -27,8 +27,11 @@ def get_draft_questions():
             type_filters = json.loads(types_param) if isinstance(types_param, str) else types_param
             if not isinstance(type_filters, list):
                 raise ValueError
+            # ✅ New rule: if "All Questions" is selected, ignore other filters
+            if "All Questions" in type_filters:
+                type_filters = []
         except:
-            return jsonify({"error": "Invalid 'types' parameter. Must be a JSON array like [\"Multiple Choice\", \"Matching\"]"}), 400
+            return jsonify({"error": "Invalid 'types' parameter. Must be a JSON array like [\"Multiple Choice\", \"Essay\"]"}), 400
 
     conn = Config.get_db_connection()
     cur = conn.cursor()
