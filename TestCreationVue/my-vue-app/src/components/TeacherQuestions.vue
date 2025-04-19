@@ -33,7 +33,7 @@
             </a>
           </div>
         </div>
-        <router-link :to="{ path: '/TeacherNewTB', query: { courseId: courseId } }">
+        <router-link :to="{ path: '/TeacherNewTB', query: { courseId: courseId, courseTitle: courseTitle } }">
           <button class="t_button">New Draft Pool</button>
         </router-link>
         <button class="t_button" @click="importTest">Import Test</button>
