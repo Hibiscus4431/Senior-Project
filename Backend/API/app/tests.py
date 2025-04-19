@@ -710,3 +710,70 @@ def get_published_tests():
         cur.close()
         conn.close()
 
+@tests_bp.route('/questions/bulk-update-points', methods=['PATCH'])
+def bulk_update_question_points():
+    auth_data = authorize_request()
+    if isinstance(auth_data, tuple):
+        return jsonify(auth_data[0]), auth_data[1]
+
+    user_id = auth_data["user_id"]
+    role = auth_data.get("role")
+
+    data = request.get_json()
+    updates = data.get("updates", [])
+
+    if not updates or not isinstance(updates, list):
+        return jsonify({"error": "Invalid or missing 'updates' array."}), 400
+
+    conn = Config.get_db_connection()
+    cur = conn.cursor()
+
+    success_count = 0
+    failed_updates = []
+
+    try:
+        for update in updates:
+            question_id = update.get("question_id")
+            points = update.get("points")
+
+            if question_id is None or points is None:
+                failed_updates.append({ "question_id": question_id, "error": "Missing question_id or points" })
+                continue
+
+            # Authorization: teacher must own the question unless role is admin or publisher
+            cur.execute("""
+                SELECT owner_id FROM questions WHERE id = %s
+            """, (question_id,))
+            result = cur.fetchone()
+
+            if not result:
+                failed_updates.append({ "question_id": question_id, "error": "Question not found" })
+                continue
+
+            owner_id = result[0]
+            if role == "teacher" and owner_id != user_id:
+                failed_updates.append({ "question_id": question_id, "error": "Unauthorized" })
+                continue
+
+            # Update default_points
+            cur.execute("""
+                UPDATE questions
+                SET default_points = %s
+                WHERE id = %s
+            """, (points, question_id))
+            success_count += 1
+
+        conn.commit()
+        return jsonify({
+            "message": f"{success_count} questions updated successfully.",
+            "failed": failed_updates
+        }), 200
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({ "error": f"Bulk update failed: {str(e)}" }), 500
+
+    finally:
+        cur.close()
+        conn.close()
+

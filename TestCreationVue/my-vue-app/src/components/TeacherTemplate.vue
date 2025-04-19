@@ -29,7 +29,7 @@
     <hr />
 
     <!-- Warning Modal -->
-    <div class="popup-overlay" v-if="showBackWarning" @click.self="showBackWarning = false">
+    <div class="popup-overlay" v-if="showBackWarning">
       <div class="form-popup-modal">
         <div class="form-container">
           <h2 style="text-align: center;">Warning</h2>
@@ -45,7 +45,7 @@
     </div>
 
     <!-- Export Warning Modal -->
-    <div class="popup-overlay" v-if="exportWarning" @click.self="exportWarning = false">
+    <div class="popup-overlay" v-if="exportWarning">
       <div class="form-popup-modal">
         <div class="form-container">
           <h2 style="text-align: center;">Confirm Export</h2>
@@ -62,7 +62,7 @@
     </div>
 
     <!-- Edit Blocked Warning Modal -->
-    <div class="popup-overlay" v-if="editBlockedPopup" @click.self="editBlockedPopup = false">
+    <div class="popup-overlay" v-if="editBlockedPopup">
       <div class="form-popup-modal">
         <h2>Cannot Edit Question</h2>
         <p>{{ editBlockedReason }}</p>
@@ -75,19 +75,64 @@
     </div>
 
     <!-- Edit Question Modal -->
-    <div class="popup-overlay" v-if="showEditForm" @click.self="showEditForm = false">
+    <div class="popup-overlay" v-if="showEditForm">
       <div class="form-popup-modal">
         <form class="form-container" @submit.prevent="saveEditedQuestion">
           <h2>Edit Question</h2>
-
-          <label><b>Question Text</b></label>
-          <input type="text" v-model="editForm.question_text" required />
-
           <label><b>Chapter Number</b></label>
           <input type="text" v-model="editForm.chapter" required />
 
           <label><b>Section Number</b></label>
           <input type="text" v-model="editForm.section" required />
+
+          <label><b>Question Text</b></label>
+          <input type="text" v-model="editForm.question_text" required />
+
+          <!-- Inside your Edit Question Modal -->
+          <label><b>Question Type</b></label>
+          <input type="text" :value="editForm.type" disabled />
+
+          <!-- True/False -->
+          <div v-if="editForm.type === 'True/False'">
+            <label><b>Answer</b></label>
+            <select v-model="editForm.true_false_answer">
+              <option :value="true">True</option>
+              <option :value="false">False</option>
+            </select>
+          </div>
+
+          <!-- Multiple Choice -->
+          <div v-if="editForm.type === 'Multiple Choice'">
+            <label><b>Correct Answer</b></label>
+            <input type="text" v-model="editForm.correct_option.option_text" />
+
+            <label><b>Incorrect Answers (readonly)</b></label>
+            <ul>
+              <li v-for="(opt, index) in editForm.incorrect_options" :key="index">{{ opt.option_text }}</li>
+            </ul>
+          </div>
+
+          <!-- Fill in the Blank -->
+          <div v-if="editForm.type === 'Fill in the Blank'">
+            <label><b>Blanks</b></label>
+            <ul>
+              <li v-for="(blank, index) in editForm.blanks" :key="index">
+                <input type="text" v-model="blank.correct_text" />
+              </li>
+            </ul>
+          </div>
+
+          <!-- Matching -->
+          <div v-if="editForm.type === 'Matching'">
+            <label><b>Matching Pairs</b></label>
+            <ul>
+              <li v-for="(match, index) in editForm.matches" :key="index">
+                <input type="text" v-model="match.prompt_text" placeholder="Prompt" />
+                <input type="text" v-model="match.match_text" placeholder="Match" />
+              </li>
+            </ul>
+          </div>
+
 
           <label><b>Points</b></label>
           <input type="text" v-model="editForm.points" required />
@@ -238,11 +283,12 @@ export default {
       questions: [],
       testOptions: {
         testName: savedOptions.testName || this.$route.query.testBankName || "Test Template",
-        coverPage: savedOptions.coverPage || false,
-        selectedTemplate: savedOptions.selectedTemplate || "All Questions",
+        coverPage: savedOptions.coverPage === true || savedOptions.coverPage === 'true', selectedTemplate: savedOptions.selectedTemplate || "All Questions",
         uploadedImage: savedOptions.uploadedImage || '',
         graphicPreview: savedOptions.graphicPreview || '',
-        selectedTypes: savedOptions.selectedTypes || [],
+        selectedTypes: this.$route.query.selectedTypes
+          ? JSON.parse(this.$route.query.selectedTypes)
+          : savedOptions.selectedTypes || [],
       },
       testBankId: this.$route.query.testBankId,
       showBackWarning: false,
@@ -325,8 +371,15 @@ export default {
           type: question.type,
           points: question.default_points,
           est_time: question.est_time,
-          grading_instructions: question.grading_instructions
+          grading_instructions: question.grading_instructions || '',
+          correct_option: question.correct_option || null,
+          incorrect_options: question.incorrect_options || [],
+          blanks: question.blanks || [],
+          matches: question.matches || [],
+          true_false_answer: question.true_false_answer
         };
+
+
         this.showEditForm = true;
 
       } catch (err) {
@@ -336,6 +389,7 @@ export default {
     },
     async createCopyInstead() {
       try {
+        // Step 1: Copy the question to the current course
         const res = await api.post(`/questions/${this.editingQuestionId}/copy_to_course`, {
           course_id: this.$route.query.courseId
         }, {
@@ -345,16 +399,23 @@ export default {
         });
 
         const newQuestionId = res.data.new_question_id;
+        if (!newQuestionId) throw new Error("New question ID not returned.");
 
-        if (!newQuestionId) {
-          throw new Error("New question ID not returned.");
-        }
+        // Step 2: Remove the original question from the test bank (backend)
+        await api.delete(`/testbanks/${this.testBankId}/questions/${this.editingQuestionId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
 
-        // Remove the old question from the local array
-        const index = this.questions.findIndex(q => q.id === this.editingQuestionId);
-        if (index !== -1) this.questions.splice(index, 1);
+        // ✅ Remove old question ID from localStorage to keep it out on reload
+        const orderKey = `questionOrder_${this.testBankId}`;
+        const savedOrder = JSON.parse(localStorage.getItem(orderKey) || "[]");
+        const updatedOrder = savedOrder.filter(id => id !== this.editingQuestionId);
+        localStorage.setItem(orderKey, JSON.stringify(updatedOrder));
 
-        // Add new question to the test bank
+
+        // Step 3: Add the copied question to the test bank (backend)
         await api.post(`/testbanks/${this.testBankId}/questions`, {
           question_ids: [newQuestionId]
         }, {
@@ -363,44 +424,88 @@ export default {
           }
         });
 
-        // Refresh the full list and locate the new question
+        // Step 4: Refresh all questions in local state
         await this.fetchQuestions();
 
-        const newQuestion = this.questions.find(q => q.id === newQuestionId);
-        if (!newQuestion) throw new Error("Newly copied question not found.");
+        // Step 5: Scroll to and open the new question in edit mode
+        this.$nextTick(() => {
+          const newQuestion = this.questions.find(q => q.id === newQuestionId);
+          if (!newQuestion) {
+            alert("Newly copied question not found after refresh.");
+            return;
+          }
 
-        // Open the edit modal on the new question
-        this.editingQuestionId = newQuestion.id;
-        this.selectedQuestionId = newQuestion.id;
-        this.editForm = {
-          question_text: newQuestion.question_text,
-          chapter: newQuestion.chapter_number,
-          section: newQuestion.section_number,
-          type: newQuestion.type,
-          points: newQuestion.default_points,
-          est_time: newQuestion.est_time,
-          grading_instructions: newQuestion.grading_instructions || ''
-        };
-        this.editBlockedPopup = false;
-        this.showEditForm = true;
+          // Scroll to the question in the DOM (optional, improve UX)
+          const el = document.querySelector(`[data-id="${newQuestion.id}"]`);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          this.editingQuestionId = newQuestion.id;
+          this.selectedQuestionId = newQuestion.id;
+          this.editForm = {
+            question_text: newQuestion.question_text,
+            chapter: newQuestion.chapter_number,
+            section: newQuestion.section_number,
+            type: newQuestion.type,
+            points: newQuestion.default_points,
+            est_time: newQuestion.est_time,
+            grading_instructions: newQuestion.grading_instructions || '',
+            correct_option: newQuestion.correct_option || null,
+            incorrect_options: newQuestion.incorrect_options || [],
+            blanks: newQuestion.blanks || [],
+            matches: newQuestion.matches || [],
+            true_false_answer: newQuestion.true_false_answer
+          };
+
+          this.editBlockedPopup = false;
+          this.showEditForm = true;
+        });
 
       } catch (err) {
         console.error('❌ Failed to create or edit copy:', err);
         alert('An error occurred while replacing the uneditable question.');
       }
-    }
-    ,
+    },
 
     async saveEditedQuestion() {
       try {
-        const res = await api.patch(`/questions/${this.editingQuestionId}`, {
+        const payload = {
           question_text: this.editForm.question_text,
           chapter_number: this.editForm.chapter,
           section_number: this.editForm.section,
           default_points: parseFloat(this.editForm.points),
           est_time: parseInt(this.editForm.est_time),
           grading_instructions: this.editForm.grading_instructions
-        }, {
+        };
+
+        // Type-specific fields
+        if (this.editForm.type === 'True/False') {
+          payload.true_false_answer = this.editForm.true_false_answer;
+        }
+
+        if (this.editForm.type === 'Multiple Choice') {
+          payload.options = [
+            { option_text: this.editForm.correct_option.option_text, is_correct: true },
+            ...this.editForm.incorrect_options.map(opt => ({
+              option_text: opt.option_text,
+              is_correct: false
+            }))
+          ];
+        }
+
+        if (this.editForm.type === 'Fill in the Blank') {
+          payload.blanks = this.editForm.blanks.map(b => ({
+            correct_text: b.correct_text
+          }));
+        }
+
+        if (this.editForm.type === 'Matching') {
+          payload.matches = this.editForm.matches.map(pair => ({
+            prompt_text: pair.prompt_text,
+            match_text: pair.match_text
+          }));
+        }
+
+        const res = await api.patch(`/questions/${this.editingQuestionId}`, payload, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -408,7 +513,8 @@ export default {
 
         alert("✅ Question updated!");
         this.showEditForm = false;
-        await this.fetchQuestions(); // refresh questions from backend
+        await this.fetchQuestions(); // Refresh questions from backend
+
       } catch (err) {
         console.error("❌ Failed to update question:", err);
         alert("Could not update question.");
@@ -597,6 +703,12 @@ export default {
       if (confirm("Remove this question from the test?")) {
         this.questions = this.questions.filter(q => q.id !== questionId);
         this.selectedQuestionId = null;
+
+        // ✅ Update localStorage to exclude removed ID
+        const orderKey = `questionOrder_${this.testBankId}`;
+        const savedOrder = JSON.parse(localStorage.getItem(orderKey) || "[]");
+        const updatedOrder = savedOrder.filter(id => id !== questionId);
+        localStorage.setItem(orderKey, JSON.stringify(updatedOrder));
       }
     },
 
@@ -605,12 +717,19 @@ export default {
     //fetch desired testbank questions
     async fetchQuestions() {
       try {
+        const selectedTypes = this.testOptions.selectedTypes || [];
+
+        const params = {
+          test_bank_id: this.testBankId
+        };
+
+        // Only include 'types' param if not selecting all questions
+        if (!selectedTypes.includes("All Questions")) {
+          params.types = JSON.stringify(selectedTypes);
+        }
 
         const response = await api.get(`/tests/draft-questions`, {
-          params: {
-            test_bank_id: this.testBankId,
-            type: this.testOptions.selectedTemplate || "All Questions"
-          },
+          params,
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -619,30 +738,38 @@ export default {
         const rawQuestions = response.data.questions || [];
         const savedOrder = localStorage.getItem(`questionOrder_${this.testBankId}`);
 
+        let finalOrdered = [];
+
         if (savedOrder) {
           const idOrder = JSON.parse(savedOrder);
           const questionMap = new Map(rawQuestions.map(q => [q.id, q]));
 
-          const ordered = idOrder
-            .map(id => questionMap.get(id))
-            .filter(Boolean); // remove missing
+          // Preserve order from localStorage
+          finalOrdered = idOrder.map(id => questionMap.get(id)).filter(Boolean);
 
-          // Add any new questions that aren’t in saved order
+          // Add any newly added questions not in saved order
           rawQuestions.forEach(q => {
             if (!idOrder.includes(q.id)) {
-              ordered.push(q);
+              finalOrdered.push(q);
             }
           });
-
-          this.questions = ordered;
         } else {
-          this.questions = rawQuestions;
+          finalOrdered = rawQuestions;
         }
 
+        // Deep clone to ensure Vue reactivity and clear stale properties
+        this.questions = JSON.parse(JSON.stringify(finalOrdered));
+
+        // Clear any cached memoized data like _shuffledAnswers
+        this.questions.forEach(q => {
+          if (q._shuffledAnswers) delete q._shuffledAnswers;
+        });
+
       } catch (error) {
-        console.error("Failed to fetch questions:", error);
+        console.error("❌ Failed to fetch questions:", error);
       }
     },
+
 
 
 
@@ -725,7 +852,7 @@ export default {
         return sum + (isNaN(time) ? 0 : time);
       }, 0);
 
-      const confirmedPoints = finalizedMeta && finalizedMeta.questionCount ? finalizedMeta.questionCount : totalPoints;
+      const confirmedPoints = totalPoints;
       const confirmedTime = this.totalEstimatedTime || totalTime;
 
       const {
@@ -745,8 +872,6 @@ export default {
       } = await import("docx");
 
       const createHorizontalLine = () => new Paragraph(new ThematicBreak());
-
-
 
 
       const pageBreak = new Paragraph({ children: [], pageBreakBefore: true });
@@ -807,6 +932,7 @@ export default {
             spacing: { after: 300 },
           }),
           new Paragraph({ text: "Name: __________________________", spacing: { after: 400 } }),
+          new Paragraph({ text: `Score: ______ / ${confirmedPoints} points`, spacing: { after: 400 } }),
           createHorizontalLine()
         ];
 
@@ -1034,11 +1160,11 @@ export default {
       const testDoc = new Document({
         sections: [{
           properties: {},
-          children: [
-            ...coverPageContent(),
-            ...(await testContent()),
-            ...resourceSection
-          ]
+          children: []
+            .concat(this.testOptions.coverPage ? coverPageContent() : [])
+            .concat(await testContent())
+            .concat(resourceSection)
+
         }],
         styles: {
           default: {
