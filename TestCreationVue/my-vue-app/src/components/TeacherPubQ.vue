@@ -197,7 +197,7 @@
 
 
     <!-- Popups -->
-    <div class="popup-overlay" v-if="showFeedbackForm" @click.self="closeFeedbackForm">
+    <div class="popup-overlay" v-if="showFeedbackForm">
       <div class="form-popup-modal">
         <h2>Leave Feedback</h2>
         <textarea v-model="feedbackText" rows="5" style="width: 100%;"
@@ -210,7 +210,7 @@
       </div>
     </div>
 
-    <div class="popup-overlay" v-if="showTestBankModal" @click.self="closeTestBankModal">
+    <div class="popup-overlay" v-if="showTestBankModal">
       <div class="form-popup-modal">
         <h2>Select draft pool to add question to:</h2>
         <div style="display: flex; flex-direction: column; align-items: flex-start;">

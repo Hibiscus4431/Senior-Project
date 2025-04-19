@@ -11,7 +11,7 @@
     </div>
 
     <!-- Edit Blocked Warning Popup -->
-    <div class="popup-overlay" v-if="editBlockedPopup" @click.self="editBlockedPopup = false">
+    <div class="popup-overlay" v-if="editBlockedPopup">
       <div class="form-popup-modal">
         <h2>Cannot Edit Question</h2>
         <p>{{ editBlockedReason }}</p>
@@ -125,7 +125,7 @@
       </ul>
 
       <!-- Add to Test Bank Modal -->
-      <div class="popup-overlay" v-if="showAddToTBModal" @click.self="closeAddToTBModal">
+      <div class="popup-overlay" v-if="showAddToTBModal">
         <div class="form-popup-modal">
           <h2 style="text-align: center;">Select Draft Pool</h2>
           <div class="form-container"
@@ -142,7 +142,7 @@
       </div>
 
       <!-- Popup Overlay -->
-      <div class="popup-overlay" v-show="showForm" @click.self="closeForm">
+      <div class="popup-overlay" v-show="showForm">
         <div class="form-popup-modal">
           <form class="form-container" @submit.prevent="handleQuestionSave">
             <h1>{{ editingQuestionId ? 'Edit Question' : 'New Question' }}</h1>
