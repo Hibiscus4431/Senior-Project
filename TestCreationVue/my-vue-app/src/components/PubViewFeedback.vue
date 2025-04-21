@@ -13,8 +13,9 @@
         path: '/PubViewTB',
         query: {
           name: selectedTestBank,
-          textbook_id: $route.query.textbook_id,
-          testbank_id: $route.query.testbank_id  // ✅ Add this!
+          textbook_id: textbookId,
+          testbank_id: $route.query.testbank_id,  // ✅ Add this!
+          title: $route.query.title
         }
       }">
         <button class="p_button">Return to Draft Pools</button>
@@ -76,6 +77,7 @@ export default {
   data() {
     return {
       testbankId: null,
+      textbookId: this.$route.query.textbook_id || null,
       selectedTestBank: '',
       feedbackList: [],
       loading: true,

@@ -19,7 +19,7 @@
         </router-link>
 
         <router-link
-          :to="{ name: 'PubViewFeedback', query: { testbank_id: selectedTestBankId, title: selectedTestBank } }">
+          :to="{ name: 'PubViewFeedback', query: { testbank_id: selectedTestBankId, title: selectedTestBank, textbook_id: textbookId } }">
           <button class="p_button">View Feedback</button>
         </router-link>
 
@@ -86,9 +86,9 @@
             </ul>
           </div>
 
-          <div v-if="question.type === 'Short Answer'">
+          <!-- <div v-if="question.type === 'Short Answer'">
             <strong>Answer:</strong> {{ question.answer || 'Not provided' }}
-          </div>
+          </div> -->
 
           <div v-if="question.type === 'Fill in the Blank'">
             <strong>Correct Answer(s):</strong>
@@ -104,15 +104,15 @@
             </ul>
           </div>
 
-          <div v-if="question.type === 'Essay'">
+          <!-- <div v-if="question.type === 'Essay'">
             <strong>Essay Instructions:</strong> {{ question.instructions || 'None' }}
-          </div>
+          </div> -->
 
-          <div v-if="question.attachment">
+          <!-- <div v-if="question.attachment">
             <p><strong>Attached Image:</strong></p>
             <img :src="question.attachment" alt="Question Attachment:"
               style="max-width: 100%; max-height: 400px; margin-bottom: 10px;" />
-          </div>
+          </div> -->
 
           <span><strong>Grading Instructions:</strong> {{ question.instructions || 'None' }}</span><br>
 
@@ -154,8 +154,8 @@ export default {
       textbookId: this.$route.query.textbook_id || '',
       selectedTestBank: this.$route.query.name || 'No Draft Pool Selected',
       selectedTestBankId: this.$route.query.testbank_id || this.$route.params.testbank_id || null,
-      textbookId: this.$route.query.textbook_id || null,
-      textbookTitle: this.$route.query.title || null,
+      //textbookId: this.$route.query.textbook_id || null,
+      //textbookTitle: this.$route.query.title || null,
       selectedQuestionId: null,
       published: false,
       questions: [],
