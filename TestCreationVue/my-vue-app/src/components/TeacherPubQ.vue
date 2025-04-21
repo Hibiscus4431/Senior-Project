@@ -42,7 +42,7 @@
               <div v-if="q.type === 'Multiple Choice'">
                 <span class="correct-answer">Correct Answer:</span> {{ q.correct_option && q.correct_option.option_text
                   ||
-                'Not specified' }}
+                  'Not specified' }}
                 <br />
                 <p><strong>Other Options:</strong></p>
                 <ul>
@@ -84,7 +84,7 @@
                 <strong>Feedback:</strong>
                 <ul>
                   <li v-for="(f, i) in q.feedback" :key="i">
-                    <em>{{ f.username }} ({{ f.role }})</em>: "{{ f.comment }}"
+                    <em>{{ f.username }} ({{ f.role }})</em>: "{{ f.comment_field }}"
                   </li>
                 </ul>
               </div>
@@ -171,7 +171,7 @@
                 <strong>Feedback:</strong>
                 <ul>
                   <li v-for="(f, i) in q.feedback" :key="i">
-                    <em>{{ f.username }} ({{ f.role }})</em>: "{{ f.comment }}"
+                    <em>{{ f.username }} ({{ f.role }})</em>: "{{ f.comment_field }}"
                   </li>
                 </ul>
               </div>
@@ -183,6 +183,24 @@
                   </li>
                 </ul>
               </div>
+
+              <!-- Rating Display and Input -->
+              <div class="rating-section" v-if="selectedQuestionId === q.id">
+                <label><strong>Input Class Average:</strong></label>
+                <select v-model="q.newRating" @change="submitRating(q.id, q.newRating)">
+                  <option disabled value="">Select a rating</option>
+                  <option v-for="n in 5" :key="n" :value="n * 20">{{ n }} Star{{ n > 1 ? 's' : '' }} ({{ n * 20 }})
+                  </option>
+                </select>
+              </div>
+
+              <!-- Show average rating if available -->
+              <div v-if="q.feedback && q.feedback.length">
+                <span v-if="q.feedback[0].class_average !== undefined">
+                  <strong>Question Average:</strong> {{ q.feedback[0].class_average.toFixed(1) }}
+                </span>
+              </div>
+
 
 
               <div v-if="selectedQuestionId === q.id" class="button-group">
@@ -203,10 +221,14 @@
         <textarea v-model="feedbackText" rows="5" style="width: 100%;"
           placeholder="Enter your comment here..."></textarea>
         <br /><br />
-        <div class = "button-row">
-        <button class="btn" @click="submitFeedback">Submit</button>
-        <button class="btn cancel" @click="closeFeedbackForm">Cancel</button>
-      </div>
+        <label><strong>Please enter class average for this question: (0–100):</strong></label>
+        <input type="number" v-model="feedbackRating" min="0" max="100" style="width: 100%;" />
+
+        <br /><br />
+        <div class="button-row">
+          <button class="btn" @click="submitFeedback">Submit</button>
+          <button class="btn cancel" @click="closeFeedbackForm">Cancel</button>
+        </div>
       </div>
     </div>
 
@@ -251,6 +273,7 @@ export default {
       showTestBankModal: false,
       selectedQuestionId: null,
       loadingPublished: false,
+      feedbackRating: ''
     };
   },
   mounted() {
@@ -292,172 +315,200 @@ export default {
         console.error('Failed to load testbanks:', err);
         alert('Could not load published testbanks.');
       }
-     finally {
-      this.loadingPublished = false;
-    }
-  },
-  openFeedbackForm(questionId) {
-    this.selectedQuestionIdForFeedback = questionId;
-    this.feedbackText = '';
-    this.showFeedbackForm = true;
-  },
-  closeFeedbackForm() {
-    this.selectedQuestionIdForFeedback = null;
-    this.feedbackText = '';
-    this.showFeedbackForm = false;
-  },
-
-  async fetchCourseTextbook() {
-    try {
-      const res = await api.get(`/courses/${this.courseId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      this.textbookId = res.data.textbook_id;
-      console.log("Fetched textbook ID:", this.textbookId); // ✅ Add this
-    } catch (err) {
-      console.error("Failed to fetch course textbook:", err);
-    }
-  },
-  async viewPublishedTests() {
-    this.viewing = 'published-tests';
-    this.fullTestbanks = [];
-    this.loadingPublished = true;
-
-
-    try {
-      // Step 1: Get textbook ID if not already set
-      if (!this.textbookId) {
-        const courseRes = await api.get(`/courses/${this.courseId}`, {
+      finally {
+        this.loadingPublished = false;
+      }
+    },
+    async fetchCourseTextbook() {
+      try {
+        const res = await api.get(`/courses/${this.courseId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
-        this.textbookId = courseRes.data.textbook_id;
+        this.textbookId = res.data.textbook_id;
+        console.log("Fetched textbook ID:", this.textbookId); // ✅ Add this
+      } catch (err) {
+        console.error("Failed to fetch course textbook:", err);
       }
+    },
+    async viewPublishedTests() {
+      this.viewing = 'published-tests';
+      this.fullTestbanks = [];
+      this.loadingPublished = true;
 
-      // Step 2: Fetch all courses to get all that share the textbook
-      const courseListRes = await api.get(`/courses`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      const matchingCourseIds = (courseListRes.data || [])
-        .filter(c => c.textbook_id == this.textbookId)
-        .map(c => c.course_id);
 
-      // Step 3: Get all published tests
-      const testList = await api.get('/tests/published', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-
-      const publishedTests = (testList.data || []).filter(
-        t => matchingCourseIds.includes(t.course_id)
-      );
-
-      // Step 4: Load questions for each test (skip broken ones)
-      for (const test of publishedTests) {
-        try {
-          const res = await api.get(`/resources/tests/${test.test_id}/questions`, {
+      try {
+        // Step 1: Get textbook ID if not already set
+        if (!this.textbookId) {
+          const courseRes = await api.get(`/courses/${this.courseId}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
           });
-
-          const questions = res.data.questions || [];
-
-          for (const q of questions) {
-            await this.loadFeedbackForQuestion(q);
-
-            if (q.attachment && !q.attachments) {
-              q.attachments = [q.attachment];
-            }
-            console.log("Attachment for question", q.id, ":", q.attachment);
-
-          }
-
-          this.fullTestbanks.push({
-            testbank_id: test.test_id,
-            name: test.name || `Test ${test.test_id}`,
-            chapter_number: 'N/A',
-            section_number: 'N/A',
-            questions
-          });
-        } catch (err) {
-          console.error(`❌ Failed to fetch questions for test ID ${test.test_id}`, err);
-          // Skips to the next test
-        } finally {
-          this.loadingPublished = false;
+          this.textbookId = courseRes.data.textbook_id;
         }
+
+        // Step 2: Fetch all courses to get all that share the textbook
+        const courseListRes = await api.get(`/courses`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        const matchingCourseIds = (courseListRes.data || [])
+          .filter(c => c.textbook_id == this.textbookId)
+          .map(c => c.course_id);
+
+        // Step 3: Get all published tests
+        const testList = await api.get('/tests/published', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        const publishedTests = (testList.data || []).filter(
+          t => matchingCourseIds.includes(t.course_id)
+        );
+
+        // Step 4: Load questions for each test (skip broken ones)
+        for (const test of publishedTests) {
+          try {
+            const res = await api.get(`/resources/tests/${test.test_id}/questions`, {
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+
+            const questions = res.data.questions || [];
+
+            for (const q of questions) {
+              await this.loadFeedbackForQuestion(q);
+
+              if (q.attachment && !q.attachments) {
+                q.attachments = [q.attachment];
+              }
+              console.log("Attachment for question", q.id, ":", q.attachment);
+
+            }
+
+            this.fullTestbanks.push({
+              testbank_id: test.test_id,
+              name: test.name || `Test ${test.test_id}`,
+              chapter_number: 'N/A',
+              section_number: 'N/A',
+              questions
+            });
+          } catch (err) {
+            console.error(`❌ Failed to fetch questions for test ID ${test.test_id}`, err);
+            // Skips to the next test
+          } finally {
+            this.loadingPublished = false;
+          }
+        }
+
+        console.log("✅ Published test questions loaded:", this.fullTestbanks);
+      } catch (err) {
+        console.error("🚨 Failed to load published tests:", err);
       }
+    }
 
-      console.log("✅ Published test questions loaded:", this.fullTestbanks);
-    } catch (err) {
-      console.error("🚨 Failed to load published tests:", err);
-    }
-  }
+    ,
+    async fetchTeacherTestbanks() {
+      try {
+        const res = await api.get(`/testbanks/teacher?course_id=${this.courseId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        this.testBanks = res.data.testbanks || [];
+      } catch (err) {
+        console.error("Failed to load teacher testbanks:", err);
+      }
+    },
+    toggleQuestionSelection(questionId) {
+      this.selectedQuestionId = this.selectedQuestionId === questionId ? null : questionId;
+    },
+    openFeedbackForm(id) {
+      this.selectedQuestionIdForFeedback = id;
+      this.feedbackText = '';
+      this.showFeedbackForm = true;
+    },
+    closeFeedbackForm() {
+      this.selectedQuestionIdForFeedback = null;
+      this.feedbackText = '';
+      this.showFeedbackForm = false;
+    },
+    async submitFeedback() {
+      try {
+        console.log("Submitting feedback:", {
+          question_id: this.selectedQuestionIdForFeedback,
+          comment_field: this.feedbackText,
+          rating: this.feedbackRating
+        });
 
-  ,
-  async fetchTeacherTestbanks() {
-    try {
-      const res = await api.get(`/testbanks/teacher?course_id=${this.courseId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      this.testBanks = res.data.testbanks || [];
-    } catch (err) {
-      console.error("Failed to load teacher testbanks:", err);
+        await api.post('/feedback/create', {
+          question_id: this.selectedQuestionIdForFeedback,
+          comment_field: this.feedbackText,
+          rating: this.feedbackRating || null
+        }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        this.closeFeedbackForm();
+      } catch (err) {
+        console.error("Error submitting feedback:", err);
+        alert("❌ Failed to submit feedback.");
+      }
+    },
+    openTestBankModal(id) {
+      this.selectedQuestionToAdd = id;
+      this.showTestBankModal = true;
+    },
+    closeTestBankModal() {
+      this.selectedQuestionToAdd = null;
+      this.showTestBankModal = false;
+    },
+    async assignToDraftPool(testbankId) {
+      try {
+        await api.post(`/testbanks/${testbankId}/questions`, {
+          question_ids: [this.selectedQuestionToAdd]
+        }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        this.closeTestBankModal();
+      } catch (err) {
+        console.error("Failed to assign to draft pool:", err);
+      }
+    },
+    async loadFeedbackForQuestion(q) {
+      try {
+        const res = await api.get(`/feedback/question/${q.id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        const feedbackList = res.data.feedback || [];
+        q.feedback = feedbackList.map(f => ({
+          ...f,
+          comment_field: f.comment || f.comment_field,  // ensure compatibility
+        }));
+
+        q.newRating = ''; // default for new rating
+
+        // Assign class average to each feedback entry so we can show it
+        if (res.data.class_average !== null) {
+          q.feedback.forEach(f => f.class_average = res.data.class_average);
+        }
+      } catch (err) {
+        console.error(`Failed to load feedback for question ${q.id}`, err);
+      }
+    },
+    async submitRating(questionId, rating) {
+      try {
+        await api.post('/feedback/create', {
+          question_id: questionId,
+          rating: rating
+        }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        alert("✅ Rating submitted!");
+        const q = this.fullTestbanks.flatMap(tb => tb.questions).find(q => q.id === questionId);
+        if (q) await this.loadFeedbackForQuestion(q); // refresh feedback
+
+      } catch (err) {
+        console.error(`Error submitting rating for question ${questionId}:`, err);
+        alert("❌ Failed to submit rating.");
+      }
     }
-  },
-  toggleQuestionSelection(questionId) {
-    this.selectedQuestionId = this.selectedQuestionId === questionId ? null : questionId;
-  },
-  openFeedbackForm(id) {
-    this.selectedQuestionIdForFeedback = id;
-    this.feedbackText = '';
-    this.showFeedbackForm = true;
-  },
-  closeFeedbackForm() {
-    this.selectedQuestionIdForFeedback = null;
-    this.feedbackText = '';
-    this.showFeedbackForm = false;
-  },
-  async submitFeedback() {
-    try {
-      await api.post('/feedback/create', {
-        question_id: this.selectedQuestionIdForFeedback,
-        comment_field: this.feedbackText
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      this.closeFeedbackForm();
-    } catch (err) {
-      console.error("Error submitting feedback:", err);
-    }
-  },
-  openTestBankModal(id) {
-    this.selectedQuestionToAdd = id;
-    this.showTestBankModal = true;
-  },
-  closeTestBankModal() {
-    this.selectedQuestionToAdd = null;
-    this.showTestBankModal = false;
-  },
-  async assignToDraftPool(testbankId) {
-    try {
-      await api.post(`/testbanks/${testbankId}/questions`, {
-        question_ids: [this.selectedQuestionToAdd]
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      this.closeTestBankModal();
-    } catch (err) {
-      console.error("Failed to assign to draft pool:", err);
-    }
-  },
-  async loadFeedbackForQuestion(q) {
-    try {
-      const res = await api.get(`/feedback/question/${q.id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      q.feedback = res.data || [];
-    } catch (err) {
-      console.error(`Failed to load feedback for question ${q.id}`, err);
-    }
+
   }
-}
 };
 </script>
 
