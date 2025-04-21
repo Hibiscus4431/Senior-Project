@@ -283,7 +283,7 @@ export default {
     },
     async removeQuestionFromTestBank(questionId) {
 
-      if (!confirm('Are you sure you want to remove this question from the test bank?')) return;
+      if (!confirm('Are you sure you want to remove this question from the Draft Pool?')) return;
 
       try {
         // 👉 Force the DELETE to use the publisher-specific version

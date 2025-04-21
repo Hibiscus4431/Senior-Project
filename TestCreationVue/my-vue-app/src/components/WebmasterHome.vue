@@ -1,24 +1,28 @@
 <template>
   <div class="theme-webmaster">
-  <div class="top-banner">
-  <div class="banner-title">Database Downloads</div>
+    <div class="top-banner">
+      <div class="banner-title">Database Downloads</div>
 
-  <div class="banner-actions">
-    <router-link to="/" class="banner-btn">Log Out</router-link>
-  </div>
-  </div>
+      <div class="banner-actions">
+        <router-link to="/" class="banner-btn">Log Out</router-link>
+      </div>
+    </div>
 
     <div class="center large-paragraph" style="color: #222;">
-      <p>Select a dataset to download:</p>
-      <p>Note: Download All will download each file separately for readability.</p>
-      <div class="button-row">
-      <button class="button" @click="downloadData('users')">Download Users</button>
-      <button class="button" @click="downloadData('textbook')">Download Textbooks</button>
-      <button class="button" @click="downloadData('courses')">Download Courses</button>
-      <button class="button" @click="downloadData('questions')">Download Questions</button>
-      <!-- <button class="button" @click="downloadData('tests')">Download Tests</button> -->
-      <button class="button" @click="downloadData('all')">Download All</button>
-    </div>
+      <div class="page-wrapper" style="font-size: 24px; text-align: center;">
+        <h1>Select a dataset to download:</h1>
+        <br>
+       <strong>Note:</strong> Download All will download each file separately for readability.
+       <hr>
+        <div class="button-row">
+          <button class="button" @click="downloadData('users')">Download Users</button>
+          <button class="button" @click="downloadData('textbook')">Download Textbooks</button>
+          <button class="button" @click="downloadData('courses')">Download Courses</button>
+          <button class="button" @click="downloadData('questions')">Download Questions</button>
+          <!-- <button class="button" @click="downloadData('tests')">Download Tests</button> -->
+          <button class="button" @click="downloadData('all')">Download All</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -78,5 +82,4 @@ export default {
 
 <style scoped>
 @import '../assets/webmaster_styles.css';
-
 </style>

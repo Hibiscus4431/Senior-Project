@@ -136,4 +136,15 @@ export default {
   color: #ffffff;
   margin-top: 10px;
 }
+.center {
+  text-align: center;
+}
+
+.large-heading {
+  font-size: 2em;
+}
+
+.large-paragraph {
+  font-size: 1.2em;
+}
 </style>

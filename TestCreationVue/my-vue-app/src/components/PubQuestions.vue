@@ -119,7 +119,7 @@
           <div v-if="selectedQuestionId === question.id" class="p_button-group">
             <button v-if="!question.is_published" @click.stop="editQuestion(question)">Edit</button>
             <button v-if="!question.is_published" @click.stop="deleteQuestion(question.id)">Delete</button>
-            <button @click.stop="openAddToTestBank(question.id)">Add to Test Bank</button>
+            <button @click.stop="openAddToTestBank(question.id)">Add to Draft Pool</button>
           </div>
         </div>
       </ul>
