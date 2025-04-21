@@ -64,9 +64,10 @@
         <!-- Choose Test to Publish Popup -->
         <div class="popup-overlay" v-if="showPublishSelector">
           <div class="form-popup-modal">
-            <form class="form-container" @submit.prevent="publishSelectedTest">
-              <h3>Select a Finalized Test to Publish</h3>
-              <p>Note: Any questions on a published tests </p>
+            <form class="form-container" @submit.prevent="publishSelectedTest" style="font-size: 16px;">
+              <h1 style="align-items: center;"> Choose a Finalized Test to Publish:</h1>
+              <strong>Note:</strong> Any questions on tests that are published can no longer be edited or deleted.
+              <br><br>
               <ul style="list-style-type: none; padding-left: 0;">
                 <li v-for="test in testFiles" :key="test.test_id" style="margin-bottom: 8px;">
                   <label style="display: flex; align-items: center;">
