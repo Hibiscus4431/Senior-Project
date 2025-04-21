@@ -37,6 +37,7 @@
             <!-- Always show feedback -->
             <div v-if="entry.feedback && entry.feedback.length" class="feedback-section">
               <p><strong>Feedback:</strong></p>
+              
               <ul>
                 <li v-for="(fb, i) in entry.feedback" :key="i">
                   "{{ fb.comment }}" — <em>{{ fb.username }} ({{ fb.role }})</em>

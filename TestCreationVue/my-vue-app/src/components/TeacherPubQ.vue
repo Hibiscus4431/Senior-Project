@@ -82,10 +82,19 @@
               <!-- Feedback Section -->
               <div v-if="q.feedback && q.feedback.length" class="feedback-section">
                 <strong>Feedback:</strong>
+                <!-- Show average rating if available -->
+                <div v-if="q.feedback && q.feedback.length">
+                  <p v-if="q.class_average !== undefined">
+                    <strong>Average Question Rating:</strong> {{ q.class_average.toFixed(1) }}/100
+                  </p>
+                </div>
+
                 <ul>
                   <li v-for="(f, i) in q.feedback" :key="i">
                     <em>{{ f.username }} ({{ f.role }})</em>: "{{ f.comment_field }}"
+                    <span v-if="f.rating !== undefined"> - Class Average: {{ f.rating }}/100</span>
                   </li>
+
                 </ul>
               </div>
               <div v-if="q.attachment || (q.attachments && q.attachments.length)">
@@ -169,10 +178,20 @@
 
               <div v-if="q.feedback && q.feedback.length" class="feedback-section">
                 <strong>Feedback:</strong>
+
+                <!-- Show average rating if available -->
+                <div v-if="q.feedback && q.feedback.length">
+                  <p v-if="q.class_average !== undefined">
+                    <strong>Average Question Rating:</strong> {{ q.class_average.toFixed(1) }}/100
+                  </p>
+                </div>
+
                 <ul>
                   <li v-for="(f, i) in q.feedback" :key="i">
                     <em>{{ f.username }} ({{ f.role }})</em>: "{{ f.comment_field }}"
-                  </li>
+                    <span v-if="f.rating !== undefined"> - Class Average: {{ f.rating }}/100</span>
+                    </li>
+
                 </ul>
               </div>
               <div v-if="q.attachment || (q.attachments && q.attachments.length)">
@@ -183,25 +202,6 @@
                   </li>
                 </ul>
               </div>
-
-              <!-- Rating Display and Input -->
-              <div class="rating-section" v-if="selectedQuestionId === q.id">
-                <label><strong>Input Class Average:</strong></label>
-                <select v-model="q.newRating" @change="submitRating(q.id, q.newRating)">
-                  <option disabled value="">Select a rating</option>
-                  <option v-for="n in 5" :key="n" :value="n * 20">{{ n }} Star{{ n > 1 ? 's' : '' }} ({{ n * 20 }})
-                  </option>
-                </select>
-              </div>
-
-              <!-- Show average rating if available -->
-              <div v-if="q.feedback && q.feedback.length">
-                <span v-if="q.feedback[0].class_average !== undefined">
-                  <strong>Question Average:</strong> {{ q.feedback[0].class_average.toFixed(1) }}
-                </span>
-              </div>
-
-
 
               <div v-if="selectedQuestionId === q.id" class="button-group">
                 <button @click.stop="openFeedbackForm(q.id)">Leave Feedback</button>
@@ -483,7 +483,7 @@ export default {
 
         // Assign class average to each feedback entry so we can show it
         if (res.data.class_average !== null) {
-          q.feedback.forEach(f => f.class_average = res.data.class_average);
+          q.class_average = res.data.class_average;
         }
       } catch (err) {
         console.error(`Failed to load feedback for question ${q.id}`, err);
