@@ -74,7 +74,6 @@
               </div>
 
               <div v-if="q.type === 'Essay'">
-                <strong>Essay Instructions:</strong> {{ q.grading_instructions || 'None' }}
               </div>
 
               <div><strong>Grading Instructions:</strong> {{ q.grading_instructions || 'None' }}</div>
@@ -171,7 +170,6 @@
                 <strong>Answer:</strong> {{ q.answer || 'Not provided' }}
               </div>
               <div v-if="q.type === 'Essay'">
-                <strong>Essay Instructions:</strong> {{ q.grading_instructions || 'None' }}
               </div>
 
               <div><strong>Grading Instructions:</strong> {{ q.grading_instructions || 'None' }}</div>
@@ -335,34 +333,33 @@ export default {
       this.fullTestbanks = [];
       this.loadingPublished = true;
 
-
       try {
         // Step 1: Get textbook ID if not already set
-        if (!this.textbookId) {
-          const courseRes = await api.get(`/courses/${this.courseId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-          });
-          this.textbookId = courseRes.data.textbook_id;
-        }
-
-        // Step 2: Fetch all courses to get all that share the textbook
-        const courseListRes = await api.get(`/courses`, {
+        // Step 1: Always fetch textbook ID based on courseId
+        const courseRes = await api.get(`/courses/${this.courseId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
-        const matchingCourseIds = (courseListRes.data || [])
-          .filter(c => c.textbook_id == this.textbookId)
-          .map(c => c.course_id);
+        this.textbookId = courseRes.data.textbook_id;
 
-        // Step 3: Get all published tests
-        const testList = await api.get('/tests/published', {
+
+        // Step 2: Get all courses that use the same textbook
+        // Step 2: Fetch all published tests
+        const testListRes = await api.get('/tests/published', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
 
-        const publishedTests = (testList.data || []).filter(
-          t => matchingCourseIds.includes(t.course_id)
+        const allPublishedTests = testListRes.data || [];
+
+        const publishedTests = allPublishedTests.filter(t =>
+          parseInt(t.textbook_id) === parseInt(this.textbookId)
         );
 
-        // Step 4: Load questions for each test (skip broken ones)
+        console.log("🧪 Filtered published tests by textbook:", publishedTests);
+
+
+        console.log("🧪 Filtered published tests:", publishedTests);
+
+        // Step 4: Load questions for each test
         for (const test of publishedTests) {
           try {
             const res = await api.get(`/resources/tests/${test.test_id}/questions`, {
@@ -377,8 +374,6 @@ export default {
               if (q.attachment && !q.attachments) {
                 q.attachments = [q.attachment];
               }
-              console.log("Attachment for question", q.id, ":", q.attachment);
-
             }
 
             this.fullTestbanks.push({
@@ -388,21 +383,19 @@ export default {
               section_number: 'N/A',
               questions
             });
+
           } catch (err) {
-            console.error(`Failed to fetch questions for test ID ${test.test_id}`, err);
-            // Skips to the next test
-          } finally {
-            this.loadingPublished = false;
+            console.error(`❌ Failed to fetch questions for test ID ${test.test_id}`, err);
           }
         }
 
-        console.log("Published test questions loaded:", this.fullTestbanks);
       } catch (err) {
-        console.error("Failed to load published tests:", err);
+        console.error("❌ Failed to load published tests:", err);
+        alert("Failed to load published tests.");
+      } finally {
+        this.loadingPublished = false;
       }
-    }
-
-    ,
+    },
     async fetchTeacherTestbanks() {
       try {
         const res = await api.get(`/testbanks/teacher?course_id=${this.courseId}`, {
@@ -456,31 +449,31 @@ export default {
       this.showTestBankModal = false;
     },
     async assignToDraftPool(testbankId) {
-  const courseId = this.$route.query.course_id;
-  if (!courseId || !this.selectedQuestionToAdd) {
-    console.error("Missing courseId or selectedQuestionToAdd");
-    return;
-  }
+      const courseId = this.$route.query.course_id;
+      if (!courseId || !this.selectedQuestionToAdd) {
+        console.error("Missing courseId or selectedQuestionToAdd");
+        return;
+      }
 
-  try {
-    // Step 1: Copy question into the teacher's course
-    const copyRes = await api.post('/resources/questions/copy', {
-      question_id: this.selectedQuestionToAdd,
-      course_id: courseId
-    });
+      try {
+        // Step 1: Copy question into the teacher's course
+        const copyRes = await api.post('/resources/questions/copy', {
+          question_id: this.selectedQuestionToAdd,
+          course_id: courseId
+        });
 
-    const newQuestionId = copyRes.data.new_question_id;
+        const newQuestionId = copyRes.data.new_question_id;
 
-    // Step 2: Link to draft pool
-    await api.post(`/testbanks/${testbankId}/questions`, {
-      question_ids: [newQuestionId]
-    });
+        // Step 2: Link to draft pool
+        await api.post(`/testbanks/${testbankId}/questions`, {
+          question_ids: [newQuestionId]
+        });
 
-    this.closeTestBankModal();
-  } catch (err) {
-    console.error("❌ Failed to assign question to draft pool:", err);
-  }
-}
+        this.closeTestBankModal();
+      } catch (err) {
+        console.error("❌ Failed to assign question to draft pool:", err);
+      }
+    }
 
     ,
     async loadFeedbackForQuestion(q) {

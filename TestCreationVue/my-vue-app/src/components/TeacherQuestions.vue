@@ -430,90 +430,77 @@ export default {
 
     //function to fetch questions from the database based on selected question type
     async fetchQuestions(type) {
-      this.selectedQuestionType = type;
-      try {
-        const response = await api.get(`/questions`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          },
-          params: {
-            course_id: this.$route.query.courseId,
-            type: type
-          }
-        });
-
-        console.log('Questions fetched:', response.data);
-
-        if (Array.isArray(response.data.questions)) {
-          this.questions = response.data.questions.map((question) => {
-            // Common base
-            const base = {
-              text: question.question_text,
-              type: question.type,
-              points: question.default_points,
-              id: question.id,
-              instructions: question.grading_instructions || '',
-              time: question.est_time,
-              chapter: question.chapter_number,
-              section: question.section_number,
-              image_url: question.attachment && question.attachment.url ? question.attachment.url : '' // ✅ Fixed
-            };
-
-            // Extend based on type
-            switch (question.type) {
-              case 'True/False':
-                return {
-                  ...base,
-                  answer: question.true_false_answer
-                };
-              case 'Multiple Choice':
-                return {
-                  ...base,
-                  correctOption: question.correct_option || null,
-                  incorrectOptions: question.incorrect_options || []
-                };
-
-
-              case 'Matching':
-                return {
-                  ...base,
-                  pairs: (question.matches || []).map(pair => ({
-                    match_id: pair.match_id,
-                    term: pair.prompt_text,
-                    definition: pair.match_text
-                  }))
-
-                };
-              case 'Fill in the Blank':
-                return {
-                  ...base,
-                  blanks: question.blanks || [],
-                  instructions: question.grading_instructions || ''
-                };
-
-              case 'Short Answer':
-                return {
-                  ...base,
-                  answer: question.answer || ''
-                };
-              case 'Essay':
-                return {
-                  ...base,
-                  instructions: question.grading_instructions || ''
-                };
-              default:
-                return base;
-            }
-          });
-        } else {
-          this.questions = [];
-        }
-
-      } catch (error) {
-        console.error('Error fetching questions:', error);
-        this.questions = [];
+  this.selectedQuestionType = type;
+  try {
+    const response = await api.get(`/questions`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      },
+      params: {
+        course_id: this.$route.query.courseId
       }
-    },
+    });
+
+    const allQuestions = response.data.questions;
+
+    // ✅ Explicitly filter by type
+    const filtered = allQuestions.filter(q => q.type === type);
+
+    this.questions = filtered.map((question) => {
+      const base = {
+        text: question.question_text,
+        type: question.type,
+        points: question.default_points,
+        id: question.id,
+        instructions: question.grading_instructions || '',
+        time: question.est_time,
+        chapter: question.chapter_number,
+        section: question.section_number,
+        image_url: question.attachment && question.attachment.url ? question.attachment.url : ''
+      };
+
+      switch (question.type) {
+        case 'True/False':
+          return { ...base, answer: question.true_false_answer };
+        case 'Multiple Choice':
+          return {
+            ...base,
+            correctOption: question.correct_option || null,
+            incorrectOptions: question.incorrect_options || []
+          };
+        case 'Matching':
+          return {
+            ...base,
+            pairs: (question.matches || []).map(pair => ({
+              match_id: pair.match_id,
+              term: pair.prompt_text,
+              definition: pair.match_text
+            }))
+          };
+        case 'Fill in the Blank':
+          return {
+            ...base,
+            blanks: question.blanks || []
+          };
+        case 'Short Answer':
+          return {
+            ...base,
+            answer: question.answer || ''
+          };
+        case 'Essay':
+          return {
+            ...base
+          };
+        default:
+          return base;
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    this.questions = [];
+  }
+}
+,
     //function to display questions fetched
     displayQuestionType(type) {
       this.selectedQuestionType = `Selected Question Type: ${type}`;

@@ -679,10 +679,12 @@ def get_published_tests():
         # Pull all published tests
         cur.execute("""
             SELECT t.tests_id, t.name, t.points_total, t.estimated_time, t.filename,
-                t.course_id, t.user_id, u.username
+                t.course_id, t.user_id, c.textbook_id, u.username
             FROM tests t
             JOIN users u ON t.user_id = u.user_id
-        WHERE t.status = 'Published'
+            JOIN courses c ON t.course_id = c.course_id
+            WHERE t.status = 'Published'
+
         """)
         rows = cur.fetchall()
 
@@ -697,8 +699,10 @@ def get_published_tests():
                 "filename": row[4],
                 "course_id": row[5],
                 "owner_id": str(row[6]),
-                "username": row[7]
+                "textbook_id": row[7],
+                "username": row[8]
             }
+
             published_tests.append(test_data)
 
         return jsonify(published_tests), 200
