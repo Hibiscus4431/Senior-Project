@@ -10,10 +10,10 @@
     </div>
     <div class="center large-paragraph" style="color:#222">
       <div class="page-wrapper">
-        Download all your question data: 
+        <!-- Download all your question data: 
         <div class="button-row">
           <button class="t_button">Download Questions</button>
-        </div>
+        </div> -->
 
 
         Please select or create a course:
