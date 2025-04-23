@@ -758,7 +758,13 @@ export default {
         }
 
         // Deep clone to ensure Vue reactivity and clear stale properties
-        this.questions = JSON.parse(JSON.stringify(finalOrdered));
+        this.questions = finalOrdered.map(q => ({
+          ...q,
+          grading_instructions: q.grading_instructions || ''
+        }));
+        console.log("🟢 Loaded question data:", response.data.questions);
+
+
 
         // Clear any cached memoized data like _shuffledAnswers
         this.questions.forEach(q => {
