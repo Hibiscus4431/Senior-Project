@@ -106,7 +106,7 @@
                 </ul>
               </div>
 
-              <!-- ✅ Buttons only visible when box is selected -->
+              <!-- Buttons only visible when box is selected -->
               <div v-if="selectedQuestionId === q.id" class="button-group">
                 <button @click.stop="openFeedbackForm(q.id)">Leave Feedback</button>
                 <button @click.stop="openTestBankModal(q.id)">Add to Draft Pool</button>
@@ -190,7 +190,7 @@
                   <li v-for="(f, i) in q.feedback" :key="i">
                     <em>{{ f.username }} ({{ f.role }})</em>: "{{ f.comment_field }}"
                     <span v-if="f.rating !== undefined"> - Class Average: {{ f.rating }}/100</span>
-                    </li>
+                  </li>
 
                 </ul>
               </div>
@@ -325,7 +325,7 @@ export default {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         this.textbookId = res.data.textbook_id;
-        console.log("Fetched textbook ID:", this.textbookId); // ✅ Add this
+        console.log("Fetched textbook ID:", this.textbookId);
       } catch (err) {
         console.error("Failed to fetch course textbook:", err);
       }
@@ -389,16 +389,16 @@ export default {
               questions
             });
           } catch (err) {
-            console.error(`❌ Failed to fetch questions for test ID ${test.test_id}`, err);
+            console.error(`Failed to fetch questions for test ID ${test.test_id}`, err);
             // Skips to the next test
           } finally {
             this.loadingPublished = false;
           }
         }
 
-        console.log("✅ Published test questions loaded:", this.fullTestbanks);
+        console.log("Published test questions loaded:", this.fullTestbanks);
       } catch (err) {
-        console.error("🚨 Failed to load published tests:", err);
+        console.error("Failed to load published tests:", err);
       }
     }
 
@@ -444,7 +444,7 @@ export default {
         this.closeFeedbackForm();
       } catch (err) {
         console.error("Error submitting feedback:", err);
-        alert("❌ Failed to submit feedback.");
+        alert("Failed to submit feedback.");
       }
     },
     openTestBankModal(id) {
@@ -456,17 +456,33 @@ export default {
       this.showTestBankModal = false;
     },
     async assignToDraftPool(testbankId) {
-      try {
-        await api.post(`/testbanks/${testbankId}/questions`, {
-          question_ids: [this.selectedQuestionToAdd]
-        }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        this.closeTestBankModal();
-      } catch (err) {
-        console.error("Failed to assign to draft pool:", err);
-      }
-    },
+  const courseId = this.$route.query.course_id;
+  if (!courseId || !this.selectedQuestionToAdd) {
+    console.error("Missing courseId or selectedQuestionToAdd");
+    return;
+  }
+
+  try {
+    // Step 1: Copy question into the teacher's course
+    const copyRes = await api.post('/resources/questions/copy', {
+      question_id: this.selectedQuestionToAdd,
+      course_id: courseId
+    });
+
+    const newQuestionId = copyRes.data.new_question_id;
+
+    // Step 2: Link to draft pool
+    await api.post(`/testbanks/${testbankId}/questions`, {
+      question_ids: [newQuestionId]
+    });
+
+    this.closeTestBankModal();
+  } catch (err) {
+    console.error("❌ Failed to assign question to draft pool:", err);
+  }
+}
+
+    ,
     async loadFeedbackForQuestion(q) {
       try {
         const res = await api.get(`/feedback/question/${q.id}`, {
@@ -498,13 +514,13 @@ export default {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
 
-        alert("✅ Rating submitted!");
+        alert("Rating submitted!");
         const q = this.fullTestbanks.flatMap(tb => tb.questions).find(q => q.id === questionId);
         if (q) await this.loadFeedbackForQuestion(q); // refresh feedback
 
       } catch (err) {
         console.error(`Error submitting rating for question ${questionId}:`, err);
-        alert("❌ Failed to submit rating.");
+        alert("Failed to submit rating.");
       }
     }
 

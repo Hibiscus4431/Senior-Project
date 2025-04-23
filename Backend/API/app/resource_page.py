@@ -83,6 +83,13 @@ def copy_published_question_for_teacher():
 
     teacher_id = auth_data["user_id"]
     data = request.get_json()
+
+    print("📨 incoming data:", data)
+
+    source_question_id = data.get("question_id")
+    course_id = data.get("course_id")
+    print("📌 question_id:", source_question_id, "course_id:", course_id)
+
     source_question_id = data.get("question_id")
     course_id = data.get("course_id")
 
@@ -100,6 +107,7 @@ def copy_published_question_for_teacher():
         WHERE id = %s AND is_published = TRUE;
     """, (source_question_id,))
     original = cur.fetchone()
+    print("📦 original fetched:", original)
 
     if not original:
         return jsonify({"error": "Published question not found"}), 404
@@ -129,21 +137,21 @@ def copy_published_question_for_teacher():
     if attachment_id:
         # Copy Attachments table row
         cur.execute("""
-            INSERT INTO Attachments (file_name, file_path, storage_bucket, uploaded_by)
-            SELECT file_name, file_path, storage_bucket, %s
-            FROM Attachments
+            INSERT INTO Attachments (name, filepath )
+            SELECT name, filepath 
+            FROM attachments
             WHERE attachments_id = %s
             RETURNING attachments_id;
-        """, (teacher_id, attachment_id))
-        new_attachment_id = cur.fetchone()[0]
+        """, (attachment_id,))
+        (new_attachment_id,) = cur.fetchone()
+
 
         # Copy metadata
         cur.execute("""
-            INSERT INTO Attachments_MetaData (attachments_id, key, value)
-            SELECT %s, key, value
-            FROM Attachments_MetaData
-            WHERE attachments_id = %s;
-        """, (new_attachment_id, attachment_id))
+            INSERT INTO attachments_metadata (attachment_id, reference_id, reference_type)
+            VALUES (%s, %s, 'question');
+            """, (new_attachment_id, new_qid))
+
 
         # Update copied question
         cur.execute("""
