@@ -512,7 +512,7 @@ def copy_question_to_course(question_id):
                 chapter_number, section_number
             )
             SELECT owner_id, type, question_text, default_points, source,
-                FALSE, %s, textbook_id, attachment_id,
+                FALSE, %s, NULL, attachment_id,
                 true_false_answer, est_time, grading_instructions,
                 chapter_number, section_number
             FROM questions
@@ -532,20 +532,18 @@ def copy_question_to_course(question_id):
         if attachment_id:
             # Copy attachment row
             cur.execute("""
-                INSERT INTO attachments (file_name, file_path, storage_bucket, uploaded_by)
-                SELECT file_name, file_path, storage_bucket, %s
+                INSERT INTO attachments (name, filepath)
+                SELECT name, filepath
                 FROM attachments
                 WHERE attachments_id = %s
                 RETURNING attachments_id;
-            """, (user_id, attachment_id))
+            """, (attachment_id,))
             new_attachment_id = cur.fetchone()[0]
 
             # Copy metadata
             cur.execute("""
-                INSERT INTO attachments_metadata (attachments_id, key, value)
-                SELECT %s, key, value
-                FROM attachments_metadata
-                WHERE attachments_id = %s;
+                INSERT INTO attachments_metadata (attachment_id, reference_id, reference_value)
+                VALUES (%s, %s, 'question')
             """, (new_attachment_id, attachment_id))
 
             # Update question with new attachment_id
@@ -679,20 +677,18 @@ def copy_question_to_textbook(question_id):
         if attachment_id:
             # Copy attachment row
             cur.execute("""
-                INSERT INTO attachments (file_name, file_path, storage_bucket, uploaded_by)
-                SELECT file_name, file_path, storage_bucket, %s
+                INSERT INTO attachments (name, filepath)
+                SELECT name, filepath
                 FROM attachments
                 WHERE attachments_id = %s
                 RETURNING attachments_id;
-            """, (user_id, attachment_id))
+            """, (attachment_id,))
             new_attachment_id = cur.fetchone()[0]
 
             # Copy metadata
             cur.execute("""
-                INSERT INTO attachments_metadata (attachments_id, key, value)
-                SELECT %s, key, value
-                FROM attachments_metadata
-                WHERE attachments_id = %s;
+                INSERT INTO attachments_metadata (attachment_id, reference_id, reference_type)
+                VALUES (%s, %s, 'question')
             """, (new_attachment_id, attachment_id))
 
             # Update question with new attachment_id
