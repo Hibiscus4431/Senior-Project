@@ -27,7 +27,7 @@ def get_draft_questions():
         if type_filter == "Multiple Choice":
             cur.execute("""
                 SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.est_time, q.source,
-                       q.true_false_answer, q.is_published, q.attachment_id
+                         q.true_false_answer, q.is_published, q.attachment_id, q.grading_instructions
                 FROM test_bank_questions tbq
                 JOIN questions q ON tbq.question_id = q.id
                 WHERE tbq.test_bank_id = %s AND q.type IN ('Multiple Choice', 'Matching', 'True/False', 'Fill in the Blank')
@@ -35,7 +35,7 @@ def get_draft_questions():
         elif type_filter == "Short Answer/Essay":
             cur.execute("""
                 SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.est_time, q.source,
-                       q.is_published, q.attachment_id
+                       q.is_published, q.attachment_id, q.grading_instructions
                 FROM test_bank_questions tbq
                 JOIN questions q ON tbq.question_id = q.id
                 WHERE tbq.test_bank_id = %s AND q.type IN ('Essay', 'Short Answer')
@@ -43,7 +43,7 @@ def get_draft_questions():
         else:  # all questions
             cur.execute("""
                 SELECT q.id, q.owner_id, q.type, q.question_text, q.default_points, q.est_time, q.source,
-                       q.true_false_answer, q.is_published, q.attachment_id
+                       q.true_false_answer, q.is_published, q.attachment_id, q.grading_instructions
                 FROM test_bank_questions tbq
                 JOIN questions q ON tbq.question_id = q.id
                 WHERE tbq.test_bank_id = %s

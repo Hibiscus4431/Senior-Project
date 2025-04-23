@@ -247,7 +247,7 @@
           <input type="text" v-model="time" required />
 
           <label><b>Grading Instructions</b></label>
-          <input type="text" v-model="instructions" required />
+          <input type="text" v-model="grading_instructions" required />
 
           <!-- Show Upload Only When Creating -->
           <div v-if="!editingQuestionId">
@@ -310,7 +310,7 @@ export default {
       answerChoices: '',
       points: '',
       time: '',
-      instructions: '',
+      grading_instructions: '',
       image: '',
       imagePreview: '',
       selectedQuestionType: '',
@@ -499,7 +499,7 @@ export default {
               case 'Essay':
                 return {
                   ...base,
-                  instructions: question.instructions || ''
+                  instructions: question.grading_instructions || ''
                 };
               default:
                 return base;
@@ -585,7 +585,7 @@ export default {
           est_time: parseInt(this.time),
           chapter_number: this.chapter,
           section_number: this.section,
-          grading_instructions: this.instructions,
+          grading_instructions: this.grading_instructions,
           type: this.selectedQuestionType,
           source: 'manual',
           course_id: this.courseId
@@ -650,7 +650,7 @@ export default {
               postData.append('answer', this.answer);
               break;
             case 'Essay':
-              postData.append('grading_instructions', this.instructions);
+              postData.append('grading_instructions', this.grading_instructions);
               break;
           }
 
@@ -691,7 +691,7 @@ export default {
               postData.answer = this.answer;
               break;
             case 'Essay':
-              postData.grading_instructions = this.instructions;
+              postData.grading_instructions = this.grading_instructions;
               break;
           }
 
@@ -799,7 +799,7 @@ export default {
       this.section = question.section;
       this.points = question.points;
       this.time = question.time;
-      this.instructions = question.instructions;
+      this.instructions = question.grading_instructions;
       this.answer = question.answer || '';
       this.selectedQuestionType = question.type;
 
